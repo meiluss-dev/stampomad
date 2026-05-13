@@ -2351,13 +2351,13 @@ function triggerPhotoUpload(tripId){
 // ── SUPABASE AUTH ─────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://nwcefcmcrprqsbgkzqmn.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53Y2VmY21jcnBycXNiZ2t6cW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2ODgwNTEsImV4cCI6MjA5NDI2NDA1MX0.kvvz2oBVeTLwq-BbWeq5yYBJsP5umh0TPIwjDz3thUk';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser = null;
 
 async function initAuth(){
   // Check for existing session
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if(session?.user){
     await onSignedIn(session.user);
   } else {
@@ -2365,7 +2365,7 @@ async function initAuth(){
   }
 
   // Listen for auth changes
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     if(event === 'SIGNED_IN' && session?.user){
       await onSignedIn(session.user);
     } else if(event === 'SIGNED_OUT'){
@@ -2440,7 +2440,7 @@ document.addEventListener('click', e => {
 });
 
 async function signInWithGoogle(){
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin }
   });
@@ -2451,7 +2451,7 @@ async function signInWithEmail(){
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if(!email || !password){ showAuthError('Please fill in all fields'); return; }
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await sb.auth.signInWithPassword({ email, password });
   if(error) showAuthError(error.message);
 }
 
@@ -2461,7 +2461,7 @@ async function signUpWithEmail(){
   const password = document.getElementById('authPasswordSignup').value;
   if(!name || !email || !password){ showAuthError('Please fill in all fields'); return; }
   if(password.length < 6){ showAuthError('Password must be at least 6 characters'); return; }
-  const { error } = await supabase.auth.signUp({
+  const { error } = await sb.auth.signUp({
     email, password,
     options: { data: { full_name: name } }
   });
@@ -2470,7 +2470,7 @@ async function signUpWithEmail(){
 }
 
 async function signOut(){
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   document.getElementById('userDropdown').classList.remove('open');
 }
 
@@ -2496,10 +2496,10 @@ function toggleAuthForm(){
 async function loadDataFromSupabase(user){
   try {
     // Load trips
-    const { data: tripsData } = await supabase.from('trips').select('*').eq('user_id', user.id).order('created_at');
+    const { data: tripsData } = await sb.from('trips').select('*').eq('user_id', user.id).order('created_at');
     if(tripsData) {
       // Load journal entries for each trip
-      const { data: journalData } = await supabase.from('journal_entries').select('*').eq('user_id', user.id);
+      const { data: journalData } = await sb.from('journal_entries').select('*').eq('user_id', user.id);
       trips = tripsData.map(t => ({
         id: t.id,
         name: t.name,
@@ -2519,7 +2519,7 @@ async function loadDataFromSupabase(user){
     }
 
     // Load settings
-    const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single();
+    const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', user.id).single();
     if(settings){
       homebase = settings.homebase || null;
       livedPlaces = settings.lived_places || [];
@@ -2529,14 +2529,14 @@ async function loadDataFromSupabase(user){
     }
 
     // Load routes
-    const { data: routesData } = await supabase.from('routes').select('*').eq('user_id', user.id);
+    const { data: routesData } = await sb.from('routes').select('*').eq('user_id', user.id);
     if(routesData) {
       routes = {};
       routesData.forEach(r => { routes[r.trip_id] = { waypoints: r.waypoints || [], notes: r.notes || '' }; });
     }
 
     // Load photos
-    const { data: photosData } = await supabase.from('trip_photos').select('*').eq('user_id', user.id).order('position');
+    const { data: photosData } = await sb.from('trip_photos').select('*').eq('user_id', user.id).order('position');
     if(photosData){
       tripPhotos = {};
       photosData.forEach(p => {
@@ -2551,7 +2551,7 @@ async function saveTripsToSupabase(){
   if(!currentUser) return;
   try {
     for(const t of trips){
-      await supabase.from('trips').upsert({
+      await sb.from('trips').upsert({
         id: t.id, user_id: currentUser.id,
         name: t.name, code: t.code, continent: t.continent,
         emoji: t.emoji, start_date: t.start, end_date: t.end,
@@ -2559,7 +2559,7 @@ async function saveTripsToSupabase(){
       });
       // Save journal entries
       for(const j of (t.journal || [])){
-        await supabase.from('journal_entries').upsert({
+        await sb.from('journal_entries').upsert({
           id: j.id, user_id: currentUser.id, trip_id: t.id,
           date: j.date, time: j.time, title: j.title, body: j.text
         });
@@ -2571,7 +2571,7 @@ async function saveTripsToSupabase(){
 async function saveSettingsToSupabase(){
   if(!currentUser) return;
   try {
-    await supabase.from('user_settings').upsert({
+    await sb.from('user_settings').upsert({
       user_id: currentUser.id,
       homebase, lived_places: livedPlaces,
       clocks: clockEntries, lang: currentLang,
@@ -2584,7 +2584,7 @@ async function saveRoutesToSupabase(){
   if(!currentUser) return;
   try {
     for(const [tripId, route] of Object.entries(routes)){
-      await supabase.from('routes').upsert({
+      await sb.from('routes').upsert({
         user_id: currentUser.id, trip_id: parseInt(tripId),
         waypoints: route.waypoints, notes: route.notes,
         updated_at: new Date().toISOString()
@@ -2597,11 +2597,11 @@ async function savePhotosToSupabase(tripId){
   if(!currentUser) return;
   try {
     // Delete existing photos for this trip
-    await supabase.from('trip_photos').delete().eq('user_id', currentUser.id).eq('trip_id', tripId);
+    await sb.from('trip_photos').delete().eq('user_id', currentUser.id).eq('trip_id', tripId);
     // Re-insert
     const photos = tripPhotos[tripId] || [];
     for(let i=0; i<photos.length; i++){
-      await supabase.from('trip_photos').insert({
+      await sb.from('trip_photos').insert({
         user_id: currentUser.id, trip_id: tripId,
         photo_data: photos[i], position: i
       });
