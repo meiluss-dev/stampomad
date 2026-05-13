@@ -297,12 +297,73 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 .elev-bar-col:hover .elev-bar-fill{background:linear-gradient(to top,var(--accent),rgba(201,169,110,.4))}
 .elev-tooltip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:10px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10}
 .elev-bar-col:hover .elev-tooltip{opacity:1}
+/* AUTH */
+.auth-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:48px;width:100%;max-width:420px;text-align:center}
+.auth-logo{font-family:'Playfair Display',serif;font-size:32px;color:var(--accent);margin-bottom:8px}
+.auth-logo span{color:var(--text)}
+.auth-tagline{font-size:14px;color:var(--muted);margin-bottom:36px}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:white;color:#333;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-google:hover{background:#f5f5f5;transform:translateY(-1px)}
+.btn-google img{width:20px;height:20px}
+.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:12px;box-sizing:border-box;transition:border-color .2s}
+.auth-input:focus{border-color:var(--accent)}
+.auth-input::placeholder{color:var(--muted)}
+.btn-auth{width:100%;background:var(--accent);color:#0a0f1e;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-auth:hover{opacity:.85}
+.auth-switch{font-size:13px;color:var(--muted);margin-top:16px}
+.auth-switch a{color:var(--accent);cursor:pointer;text-decoration:none}
+.auth-error{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.3);color:var(--red);border-radius:8px;padding:10px;font-size:13px;margin-bottom:12px;display:none}
+.user-menu{position:relative}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#0a0f1e;border:none;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;overflow:hidden}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.user-dropdown{position:absolute;right:0;top:calc(100% + 8px);background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px;min-width:200px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none}
+.user-dropdown.open{display:block}
+.user-dropdown-name{padding:8px 12px;font-size:13px;font-weight:500;border-bottom:1px solid var(--border);margin-bottom:4px}
+.user-dropdown-email{font-size:11px;color:var(--muted);font-weight:400}
+.user-dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;transition:background .15s}
+.user-dropdown-item:hover{background:var(--bg3)}
+.user-dropdown-item.danger{color:var(--red)}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
 </style>
 </head>
 <body>
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">Stampo<span>mad</span></div>
+    <div class="auth-tagline">Stamp the world. Log your journey.</div>
+
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <img src="https://www.google.com/favicon.ico" alt="G">
+      Continue with Google
+    </button>
+
+    <div class="auth-divider">or</div>
+
+    <div id="authError" class="auth-error"></div>
+
+    <div id="authFormLogin">
+      <input class="auth-input" type="email" id="authEmail" placeholder="Email address">
+      <input class="auth-input" type="password" id="authPassword" placeholder="Password">
+      <button class="btn-auth" onclick="signInWithEmail()">Sign in</button>
+      <div class="auth-switch">Don't have an account? <a onclick="toggleAuthForm()">Sign up</a></div>
+    </div>
+
+    <div id="authFormSignup" style="display:none">
+      <input class="auth-input" type="text" id="authName" placeholder="Your name">
+      <input class="auth-input" type="email" id="authEmailSignup" placeholder="Email address">
+      <input class="auth-input" type="password" id="authPasswordSignup" placeholder="Password (min 6 chars)">
+      <button class="btn-auth" onclick="signUpWithEmail()">Create account</button>
+      <div class="auth-switch">Already have an account? <a onclick="toggleAuthForm()">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
 <div id="mapTooltip"><div class="tt-name" id="tt-name"></div><div class="tt-status" id="tt-status"></div></div>
 
 <nav>
@@ -316,6 +377,15 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div id="tripCount">0 countries explored</div>
     <button onclick="changeMapboxToken()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .2s" title="API Keys" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🔑</button>
     <button onclick="openDataModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .2s" title="Export / Import data" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">💾</button>
+    <div class="user-menu">
+      <button class="user-avatar" id="userAvatarBtn" onclick="toggleUserMenu()" title="Account"></button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-name" id="userDropdownName">Loading...</div>
+        <div class="user-dropdown-item" onclick="openDataModal()">💾 Export / Import</div>
+        <div class="user-dropdown-item" onclick="changeMapboxToken()">🔑 API Keys</div>
+        <div class="user-dropdown-item danger" onclick="signOut()">→ Sign out</div>
+      </div>
+    </div>
     <div style="position:relative">
       <button onclick="toggleLangPicker()" id="langBtn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
         🌐 <span id="langLabel">EN</span>
@@ -698,6 +768,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -710,8 +781,8 @@ const numToAlpha={4:'AF',8:'AL',10:'AQ',12:'DZ',16:'AS',20:'AD',24:'AO',28:'AG',
 const countryNames={AF:'Afghanistan',AL:'Albania',AQ:'Antarctica',DZ:'Algeria',AS:'American Samoa',AD:'Andorra',AO:'Angola',AG:'Antigua and Barbuda',AZ:'Azerbaijan',AR:'Argentina',AU:'Australia',AT:'Austria',BS:'Bahamas',BH:'Bahrain',BD:'Bangladesh',AM:'Armenia',BB:'Barbados',BE:'Belgium',BM:'Bermuda',BT:'Bhutan',BO:'Bolivia',BA:'Bosnia and Herzegovina',BW:'Botswana',BR:'Brazil',BZ:'Belize',IO:'British Indian Ocean Territory',SB:'Solomon Islands',VG:'British Virgin Islands',BN:'Brunei',BG:'Bulgaria',MM:'Myanmar',BI:'Burundi',BY:'Belarus',KH:'Cambodia',CM:'Cameroon',CA:'Canada',CV:'Cape Verde',KY:'Cayman Islands',CF:'Central African Republic',LK:'Sri Lanka',TD:'Chad',CL:'Chile',CN:'China',TW:'Taiwan',CX:'Christmas Island',CC:'Cocos Islands',CO:'Colombia',KM:'Comoros',YT:'Mayotte',CG:'Republic of the Congo',CD:'DR Congo',CK:'Cook Islands',CR:'Costa Rica',HR:'Croatia',CU:'Cuba',CY:'Cyprus',CZ:'Czech Republic',BJ:'Benin',DK:'Denmark',DM:'Dominica',DO:'Dominican Republic',EC:'Ecuador',SV:'El Salvador',GQ:'Equatorial Guinea',ET:'Ethiopia',ER:'Eritrea',EE:'Estonia',FO:'Faroe Islands',FK:'Falkland Islands',GS:'South Georgia',FJ:'Fiji',FI:'Finland',AX:'Åland Islands',FR:'France',GF:'French Guiana',PF:'French Polynesia',TF:'French Southern Territories',DJ:'Djibouti',GA:'Gabon',GE:'Georgia',GM:'Gambia',PS:'Palestine',DE:'Germany',GH:'Ghana',GI:'Gibraltar',KI:'Kiribati',GR:'Greece',GL:'Greenland',GD:'Grenada',GP:'Guadeloupe',GU:'Guam',GT:'Guatemala',GN:'Guinea',GY:'Guyana',HT:'Haiti',HM:'Heard Island',VA:'Vatican City',HN:'Honduras',HK:'Hong Kong',HU:'Hungary',IS:'Iceland',IN:'India',ID:'Indonesia',IR:'Iran',IQ:'Iraq',IE:'Ireland',IL:'Israel',IT:'Italy',CI:"Côte d'Ivoire",JM:'Jamaica',JP:'Japan',KZ:'Kazakhstan',JO:'Jordan',KE:'Kenya',KP:'North Korea',KR:'South Korea',KW:'Kuwait',KG:'Kyrgyzstan',LA:'Laos',LB:'Lebanon',LS:'Lesotho',LV:'Latvia',LR:'Liberia',LY:'Libya',LI:'Liechtenstein',LT:'Lithuania',LU:'Luxembourg',MO:'Macao',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',MV:'Maldives',ML:'Mali',MT:'Malta',MQ:'Martinique',MR:'Mauritania',MU:'Mauritius',MX:'Mexico',MC:'Monaco',MN:'Mongolia',MD:'Moldova',ME:'Montenegro',MS:'Montserrat',MA:'Morocco',MZ:'Mozambique',OM:'Oman',NA:'Namibia',NR:'Nauru',NP:'Nepal',NL:'Netherlands',CW:'Curaçao',AW:'Aruba',SX:'Sint Maarten',BQ:'Caribbean Netherlands',NC:'New Caledonia',VU:'Vanuatu',NZ:'New Zealand',NI:'Nicaragua',NE:'Niger',NG:'Nigeria',NU:'Niue',NF:'Norfolk Island',NO:'Norway',MP:'Northern Mariana Islands',FM:'Micronesia',MH:'Marshall Islands',PW:'Palau',PK:'Pakistan',PA:'Panama',PG:'Papua New Guinea',PY:'Paraguay',PE:'Peru',PH:'Philippines',PN:'Pitcairn Islands',PL:'Poland',PT:'Portugal',GW:'Guinea-Bissau',TL:'Timor-Leste',PR:'Puerto Rico',QA:'Qatar',RE:'Réunion',RO:'Romania',RU:'Russia',RW:'Rwanda',BL:'Saint Barthélemy',SH:'Saint Helena',KN:'Saint Kitts and Nevis',AI:'Anguilla',LC:'Saint Lucia',MF:'Saint Martin',PM:'Saint Pierre and Miquelon',VC:'Saint Vincent and the Grenadines',SM:'San Marino',ST:'São Tomé and Príncipe',SA:'Saudi Arabia',SN:'Senegal',RS:'Serbia',SC:'Seychelles',SL:'Sierra Leone',SK:'Slovakia',SI:'Slovenia',SO:'Somalia',ZA:'South Africa',ZW:'Zimbabwe',ES:'Spain',SS:'South Sudan',SD:'Sudan',EH:'Western Sahara',SR:'Suriname',SJ:'Svalbard and Jan Mayen',SZ:'Eswatini',SE:'Sweden',CH:'Switzerland',SY:'Syria',TJ:'Tajikistan',TH:'Thailand',TG:'Togo',TK:'Tokelau',TO:'Tonga',TT:'Trinidad and Tobago',AE:'UAE',TN:'Tunisia',TR:'Turkey',TM:'Turkmenistan',TC:'Turks and Caicos Islands',TV:'Tuvalu',UG:'Uganda',UA:'Ukraine',MK:'North Macedonia',EG:'Egypt',GB:'United Kingdom',GG:'Guernsey',JE:'Jersey',IM:'Isle of Man',TZ:'Tanzania',US:'United States',VI:'US Virgin Islands',BF:'Burkina Faso',UY:'Uruguay',UZ:'Uzbekistan',VE:'Venezuela',WF:'Wallis and Futuna',WS:'Samoa',YE:'Yemen',ZM:'Zambia',XK:'Kosovo',VN:'Vietnam',SG:'Singapore',BN:'Brunei Darussalam',TL:'Timor-Leste',MV:'Maldives',MT:'Malta',LU:'Luxembourg',LI:'Liechtenstein',AD:'Andorra',MC:'Monaco',SM:'San Marino',VA:'Vatican City'};
 
 function loadData(){try{const d=localStorage.getItem(STORE_KEY);if(d)trips=JSON.parse(d)}catch(e){trips=[]}try{const d=localStorage.getItem(HOMEBASE_KEY);if(d)homebase=JSON.parse(d)}catch(e){homebase=null}try{const d=localStorage.getItem(LIVED_KEY);if(d)livedPlaces=JSON.parse(d)}catch(e){livedPlaces=[]}}
-function saveData(){try{localStorage.setItem(STORE_KEY,JSON.stringify(trips))}catch(e){}}
-function saveHomebaseData(){try{localStorage.setItem(HOMEBASE_KEY,JSON.stringify(homebase))}catch(e){}try{localStorage.setItem(LIVED_KEY,JSON.stringify(livedPlaces))}catch(e){}}
+function saveData(){try{localStorage.setItem(STORE_KEY,JSON.stringify(trips))}catch(e){} if(currentUser) saveTripsToSupabase();}
+function saveHomebaseData(){try{localStorage.setItem(HOMEBASE_KEY,JSON.stringify(homebase))}catch(e){}try{localStorage.setItem(LIVED_KEY,JSON.stringify(livedPlaces))}catch(e){} if(currentUser) saveSettingsToSupabase();}
 
 // MAP
 const tooltip=document.getElementById('mapTooltip');
@@ -1238,7 +1309,12 @@ const MAP_STYLES={satellite:'mapbox://styles/mapbox/satellite-streets-v12',outdo
 let currentStyle='satellite';
 
 function loadRoutes(){try{const d=localStorage.getItem(ROUTES_KEY);if(d)routes=JSON.parse(d)}catch(e){}}
-function saveRoutes(){const toSave={};Object.entries(routes).forEach(([id,r])=>{toSave[id]={waypoints:r.waypoints.map(w=>({id:w.id,lng:w.lng,lat:w.lat,type:w.type,name:w.name,imageData:w.imageData||null})),notes:r.notes||''}});try{localStorage.setItem(ROUTES_KEY,JSON.stringify(toSave))}catch(e){}}
+function saveRoutes(){
+  const toSave={};
+  Object.entries(routes).forEach(([id,r])=>{toSave[id]={waypoints:r.waypoints.map(w=>({id:w.id,lng:w.lng,lat:w.lat,type:w.type,name:w.name,imageData:w.imageData||null})),notes:r.notes||''}});
+  try{localStorage.setItem(ROUTES_KEY,JSON.stringify(toSave))}catch(e){}
+  if(currentUser) saveRoutesToSupabase();
+}
 
 function saveApiKeys(){
   const mb = document.getElementById('tokenInput').value.trim();
@@ -2212,8 +2288,13 @@ function loadTripPhotos(){
 }
 function saveTripPhotos(){
   try{ localStorage.setItem(PHOTOS_KEY, JSON.stringify(tripPhotos)); }catch(e){
-    alert('Storage full — try removing some photos. Photos are stored locally in your browser.');
+    alert('Storage full — try removing some photos.');
   }
+}
+
+function saveTripPhotosForTrip(tripId){
+  saveTripPhotos();
+  if(currentUser) savePhotosToSupabase(tripId);
 }
 
 function uploadTripPhotos(tripId, input){
@@ -2267,13 +2348,298 @@ function triggerPhotoUpload(tripId){
   // Handled by the label button instead — this is a no-op fallback
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-loadData();buildCountrySelects();loadRoutes();loadJournalSnaps();loadTripPhotos();loadTranslationCache();renderAll();initMapSearch();initMap();
-// Apply saved language on startup
-if(currentLang !== 'en' && translations[currentLang]){
-  document.getElementById('langLabel').textContent = currentLang.toUpperCase().slice(0,4);
+// ── SUPABASE AUTH ─────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://nwcefcmcrprqsbgkzqmn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53Y2VmY21jcnBycXNiZ2t6cW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2ODgwNTEsImV4cCI6MjA5NDI2NDA1MX0.kvvz2oBVeTLwq-BbWeq5yYBJsP5umh0TPIwjDz3thUk';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentUser = null;
+
+async function initAuth(){
+  // Check for existing session
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session?.user){
+    await onSignedIn(session.user);
+  } else {
+    showAuthScreen();
+  }
+
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_IN' && session?.user){
+      await onSignedIn(session.user);
+    } else if(event === 'SIGNED_OUT'){
+      onSignedOut();
+    }
+  });
 }
+
+async function onSignedIn(user){
+  currentUser = user;
+  hideAuthScreen();
+  updateUserAvatar(user);
+
+  // Migrate localStorage data to Supabase on first login
+  await migrateLocalDataToSupabase(user);
+
+  // Load data from Supabase
+  await loadDataFromSupabase(user);
+
+  // Init app
+  buildCountrySelects();
+  renderAll();
+  initMapSearch();
+  initMap();
+
+  // Apply saved language
+  if(currentLang !== 'en' && translations[currentLang]){
+    document.getElementById('langLabel').textContent = currentLang.toUpperCase().slice(0,4);
+  }
+}
+
+function onSignedOut(){
+  currentUser = null;
+  showAuthScreen();
+  // Clear in-memory data
+  trips = []; homebase = null; livedPlaces = [];
+}
+
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+function hideAuthScreen(){
+  document.getElementById('authScreen').style.display = 'none';
+}
+
+function updateUserAvatar(user){
+  const btn = document.getElementById('userAvatarBtn');
+  const nameEl = document.getElementById('userDropdownName');
+  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const avatar = user.user_metadata?.avatar_url;
+
+  if(avatar){
+    btn.innerHTML = `<img src="${avatar}" alt="${name}">`;
+  } else {
+    btn.textContent = name.charAt(0).toUpperCase();
+  }
+  nameEl.innerHTML = `<div>${name}</div><div class="user-dropdown-email">${user.email}</div>`;
+}
+
+function toggleUserMenu(){
+  const dd = document.getElementById('userDropdown');
+  dd.classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  const menu = document.getElementById('userDropdown');
+  const btn = document.getElementById('userAvatarBtn');
+  if(menu && !menu.contains(e.target) && !btn.contains(e.target)){
+    menu.classList.remove('open');
+  }
+});
+
+async function signInWithGoogle(){
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if(error) showAuthError(error.message);
+}
+
+async function signInWithEmail(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){ showAuthError('Please fill in all fields'); return; }
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) showAuthError(error.message);
+}
+
+async function signUpWithEmail(){
+  const name = document.getElementById('authName').value.trim();
+  const email = document.getElementById('authEmailSignup').value.trim();
+  const password = document.getElementById('authPasswordSignup').value;
+  if(!name || !email || !password){ showAuthError('Please fill in all fields'); return; }
+  if(password.length < 6){ showAuthError('Password must be at least 6 characters'); return; }
+  const { error } = await supabase.auth.signUp({
+    email, password,
+    options: { data: { full_name: name } }
+  });
+  if(error) showAuthError(error.message);
+  else showAuthError('Check your email to confirm your account!', 'success');
+}
+
+async function signOut(){
+  await supabase.auth.signOut();
+  document.getElementById('userDropdown').classList.remove('open');
+}
+
+function showAuthError(msg, type='error'){
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type === 'success' ? 'rgba(82,183,136,.1)' : 'rgba(224,92,92,.1)';
+  el.style.borderColor = type === 'success' ? 'rgba(82,183,136,.3)' : 'rgba(224,92,92,.3)';
+  el.style.color = type === 'success' ? 'var(--green)' : 'var(--red)';
+}
+
+function toggleAuthForm(){
+  const login = document.getElementById('authFormLogin');
+  const signup = document.getElementById('authFormSignup');
+  const isLogin = login.style.display !== 'none';
+  login.style.display = isLogin ? 'none' : 'block';
+  signup.style.display = isLogin ? 'block' : 'none';
+  document.getElementById('authError').style.display = 'none';
+}
+
+// ── SUPABASE DATA SYNC ────────────────────────────────────────────────────────
+async function loadDataFromSupabase(user){
+  try {
+    // Load trips
+    const { data: tripsData } = await supabase.from('trips').select('*').eq('user_id', user.id).order('created_at');
+    if(tripsData) {
+      // Load journal entries for each trip
+      const { data: journalData } = await supabase.from('journal_entries').select('*').eq('user_id', user.id);
+      trips = tripsData.map(t => ({
+        id: t.id,
+        name: t.name,
+        code: t.code,
+        continent: t.continent,
+        emoji: t.emoji || '✈️',
+        start: t.start_date,
+        end: t.end_date,
+        days: t.days || 1,
+        cities: t.cities || '',
+        notes: t.notes || '',
+        quickPin: t.quick_pin,
+        journal: (journalData || []).filter(j => j.trip_id === t.id).map(j => ({
+          id: j.id, date: j.date, time: j.time, title: j.title, text: j.body
+        }))
+      }));
+    }
+
+    // Load settings
+    const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single();
+    if(settings){
+      homebase = settings.homebase || null;
+      livedPlaces = settings.lived_places || [];
+      if(settings.lang && settings.lang !== 'en') currentLang = settings.lang;
+      if(settings.translations) translations = settings.translations;
+      if(settings.clocks && settings.clocks.length) clockEntries = settings.clocks;
+    }
+
+    // Load routes
+    const { data: routesData } = await supabase.from('routes').select('*').eq('user_id', user.id);
+    if(routesData) {
+      routes = {};
+      routesData.forEach(r => { routes[r.trip_id] = { waypoints: r.waypoints || [], notes: r.notes || '' }; });
+    }
+
+    // Load photos
+    const { data: photosData } = await supabase.from('trip_photos').select('*').eq('user_id', user.id).order('position');
+    if(photosData){
+      tripPhotos = {};
+      photosData.forEach(p => {
+        if(!tripPhotos[p.trip_id]) tripPhotos[p.trip_id] = [];
+        tripPhotos[p.trip_id].push(p.photo_data);
+      });
+    }
+  } catch(e) { console.log('Error loading from Supabase:', e); }
+}
+
+async function saveTripsToSupabase(){
+  if(!currentUser) return;
+  try {
+    for(const t of trips){
+      await supabase.from('trips').upsert({
+        id: t.id, user_id: currentUser.id,
+        name: t.name, code: t.code, continent: t.continent,
+        emoji: t.emoji, start_date: t.start, end_date: t.end,
+        days: t.days, cities: t.cities, notes: t.notes, quick_pin: t.quickPin
+      });
+      // Save journal entries
+      for(const j of (t.journal || [])){
+        await supabase.from('journal_entries').upsert({
+          id: j.id, user_id: currentUser.id, trip_id: t.id,
+          date: j.date, time: j.time, title: j.title, body: j.text
+        });
+      }
+    }
+  } catch(e) { console.log('Error saving trips:', e); }
+}
+
+async function saveSettingsToSupabase(){
+  if(!currentUser) return;
+  try {
+    await supabase.from('user_settings').upsert({
+      user_id: currentUser.id,
+      homebase, lived_places: livedPlaces,
+      clocks: clockEntries, lang: currentLang,
+      translations, updated_at: new Date().toISOString()
+    });
+  } catch(e) { console.log('Error saving settings:', e); }
+}
+
+async function saveRoutesToSupabase(){
+  if(!currentUser) return;
+  try {
+    for(const [tripId, route] of Object.entries(routes)){
+      await supabase.from('routes').upsert({
+        user_id: currentUser.id, trip_id: parseInt(tripId),
+        waypoints: route.waypoints, notes: route.notes,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,trip_id' });
+    }
+  } catch(e) { console.log('Error saving routes:', e); }
+}
+
+async function savePhotosToSupabase(tripId){
+  if(!currentUser) return;
+  try {
+    // Delete existing photos for this trip
+    await supabase.from('trip_photos').delete().eq('user_id', currentUser.id).eq('trip_id', tripId);
+    // Re-insert
+    const photos = tripPhotos[tripId] || [];
+    for(let i=0; i<photos.length; i++){
+      await supabase.from('trip_photos').insert({
+        user_id: currentUser.id, trip_id: tripId,
+        photo_data: photos[i], position: i
+      });
+    }
+  } catch(e) { console.log('Error saving photos:', e); }
+}
+
+// Migrate localStorage data to Supabase on first login
+async function migrateLocalDataToSupabase(user){
+  const migrationKey = 'stampomad_migrated_' + user.id;
+  if(localStorage.getItem(migrationKey)) return; // already migrated
+
+  // Check if there's local data to migrate
+  const localTrips = localStorage.getItem('stampomad_v1');
+  if(!localTrips) return;
+
+  try {
+    loadData(); // load from localStorage
+    await saveTripsToSupabase();
+    await saveSettingsToSupabase();
+    // Migrate routes
+    loadRoutes();
+    await saveRoutesToSupabase();
+    // Migrate photos
+    loadTripPhotos();
+    for(const tripId of Object.keys(tripPhotos)){
+      await savePhotosToSupabase(parseInt(tripId));
+    }
+    localStorage.setItem(migrationKey, '1');
+    console.log('✅ Local data migrated to Supabase!');
+  } catch(e) { console.log('Migration error:', e); }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadData();buildCountrySelects();loadRoutes();loadJournalSnaps();loadTripPhotos();loadTranslationCache();
 loadClocks();startClockTick();renderCalendar();populateCurrencySelects();fetchRates();
+// Init auth — shows login screen or loads user data
+initAuth();
 </script>
 </body>
 </html>
