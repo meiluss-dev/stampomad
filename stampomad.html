@@ -2356,6 +2356,17 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null;
 
 async function initAuth(){
+  // Handle OAuth callback — token comes back in URL hash
+  if(window.location.hash.includes('access_token')){
+    const { data, error } = await sb.auth.getSession();
+    if(data?.session?.user){
+      // Clean the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      await onSignedIn(data.session.user);
+      return;
+    }
+  }
+
   // Check for existing session
   const { data: { session } } = await sb.auth.getSession();
   if(session?.user){
@@ -2440,9 +2451,13 @@ document.addEventListener('click', e => {
 });
 
 async function signInWithGoogle(){
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const redirectTo = isLocal
+    ? `http://${window.location.host}/stampomad.html`
+    : 'https://www.stampomad.com';
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin }
+    options: { redirectTo }
   });
   if(error) showAuthError(error.message);
 }
