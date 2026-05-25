@@ -45,13 +45,22 @@ export async function removeMember(supabase: SupabaseClient, membershipId: numbe
   if (error) throw error;
 }
 
-export async function lookupUserByUsername(supabase: SupabaseClient, username: string) {
-  const { data } = await supabase
+export async function lookupUserByUsername(supabase: SupabaseClient, search: string) {
+  // Try exact username match first
+  const { data: exact } = await supabase
     .from('user_profiles')
     .select('user_id, username, display_name, avatar_url')
-    .eq('username', username)
+    .eq('username', search)
     .single();
-  return data;
+  if (exact) return [exact];
+
+  // Fall back to fuzzy search on username and display_name
+  const { data: fuzzy } = await supabase
+    .from('user_profiles')
+    .select('user_id, username, display_name, avatar_url')
+    .or(`username.ilike.%${search}%,display_name.ilike.%${search}%`)
+    .limit(5);
+  return fuzzy || [];
 }
 
 export async function makeGroupTrip(supabase: SupabaseClient, tripId: number, userId: string) {

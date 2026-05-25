@@ -14,6 +14,7 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
   const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<{ user_id: string; username: string; display_name: string; avatar_url: string | null }[]>([]);
   const [found, setFound] = useState<{ user_id: string; username: string; display_name: string; avatar_url: string | null } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [sending, setSending] = useState(false);
@@ -35,13 +36,17 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
     if (!username.trim()) return;
     setSearching(true);
     setFound(null);
+    setResults([]);
     setNotFound(false);
     try {
       const supabase = createClient();
-      const result = await lookupUserByUsername(supabase, username.trim().toLowerCase());
-      if (result && result.user_id !== user?.id) {
-        setFound(result);
-      } else if (result?.user_id === user?.id) {
+      const matches = await lookupUserByUsername(supabase, username.trim().toLowerCase());
+      const filtered = matches.filter(r => r.user_id !== user?.id);
+      if (filtered.length === 1) {
+        setFound(filtered[0]);
+      } else if (filtered.length > 1) {
+        setResults(filtered);
+      } else if (matches.length > 0 && filtered.length === 0) {
         toast("That's you!", 'error');
         setNotFound(true);
       } else {
@@ -87,6 +92,7 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
   function reset() {
     setUsername('');
     setFound(null);
+    setResults([]);
     setNotFound(false);
     setLoaded(false);
     setMembers([]);
@@ -109,9 +115,9 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
         <div className="flex gap-2 mb-4">
           <Input
             value={username}
-            onChange={e => { setUsername(e.target.value); setNotFound(false); setFound(null); }}
+            onChange={e => { setUsername(e.target.value); setNotFound(false); setFound(null); setResults([]); }}
             onKeyDown={e => e.key === 'Enter' && search()}
-            placeholder="Search by username..."
+            placeholder="Search by name or username..."
             className="bg-bg3 border-white/[0.12] text-text"
           />
           <button
@@ -122,6 +128,32 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
             {searching ? '...' : 'Find'}
           </button>
         </div>
+
+        {/* Multiple results */}
+        {results.length > 1 && (
+          <div className="space-y-2 mb-4">
+            <div className="text-[11px] text-text-muted uppercase tracking-wider">Select a user</div>
+            {results.map(r => (
+              <button
+                key={r.user_id}
+                onClick={() => { setFound(r); setResults([]); }}
+                className="flex items-center gap-3 w-full bg-bg3 rounded-xl p-3 cursor-pointer hover:border-teal/30 border border-white/[0.08] transition-all text-left"
+              >
+                {r.avatar_url ? (
+                  <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-bg4 flex items-center justify-center text-sm font-semibold">
+                    {(r.display_name || r.username).charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="text-[13px] font-medium">{r.display_name || r.username}</div>
+                  <div className="text-[11px] text-text-muted">@{r.username}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Found user */}
         {found && (
@@ -149,7 +181,7 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
 
         {notFound && (
           <div className="text-sm text-stamp-red bg-stamp-red/10 border border-stamp-red/20 rounded-lg px-3 py-2 mb-4">
-            No user found with that username. They need a Stampomad profile first.
+            No user found. They need a Stampomad profile with a username first.
           </div>
         )}
 
