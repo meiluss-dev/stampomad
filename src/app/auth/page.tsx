@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthPage() {
@@ -11,9 +11,15 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const supabase = createClient();
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  function getSupabase() {
+    if (!supabaseRef.current) supabaseRef.current = createClient();
+    return supabaseRef.current;
+  }
+  const supabase = typeof window !== 'undefined' ? getSupabase() : null;
 
   async function signInWithGoogle() {
+    if (!supabase) return;
     const redirectTo = `${window.location.origin}/api/auth/callback`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -26,6 +32,7 @@ export default function AuthPage() {
   }
 
   async function signInWithEmail() {
+    if (!supabase) return;
     if (!email || !password) { setError('Please fill in all fields'); return; }
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -34,6 +41,7 @@ export default function AuthPage() {
   }
 
   async function signUpWithEmail() {
+    if (!supabase) return;
     if (!name || !email || !password) { setError('Please fill in all fields'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setError('');
