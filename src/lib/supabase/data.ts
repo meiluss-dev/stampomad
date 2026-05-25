@@ -174,8 +174,8 @@ export async function loadProfileFromSupabase(supabase: SupabaseClient, userId: 
   };
 }
 
-export async function saveProfileToSupabase(supabase: SupabaseClient, userId: string, profile: UserProfile) {
-  const { error } = await supabase.from('user_profiles').upsert({
+export async function saveProfileToSupabase(supabase: SupabaseClient, userId: string, profile: UserProfile, email?: string) {
+  const row: Record<string, unknown> = {
     user_id: userId,
     username: profile.username,
     display_name: profile.displayName,
@@ -183,7 +183,9 @@ export async function saveProfileToSupabase(supabase: SupabaseClient, userId: st
     avatar_url: profile.avatarUrl,
     homebase: profile.homebase,
     updated_at: new Date().toISOString(),
-  });
+  };
+  if (email) row.email = email;
+  const { error } = await supabase.from('user_profiles').upsert(row);
   if (error) throw error;
 }
 
