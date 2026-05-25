@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { TripCard } from '@/components/trips/trip-card';
 import { TripModal } from '@/components/trips/trip-modal';
+import { PackingListModal } from '@/components/trips/packing-list';
 import { RouteMapOverlay } from '@/components/map/route-map-overlay';
 import type { Trip } from '@/types';
 
@@ -24,6 +25,7 @@ export default function TripsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [routeTrip, setRouteTrip] = useState<Trip | null>(null);
+  const [packingTrip, setPackingTrip] = useState<Trip | null>(null);
   const [sort, setSort] = useState<SortKey>('newest');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
@@ -140,7 +142,7 @@ export default function TripsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {displayTrips.map(t => (
-                <TripCard key={t.id} trip={t} onEdit={() => openEdit(t)} onRoute={() => {
+                <TripCard key={t.id} trip={t} onEdit={() => openEdit(t)} onPacking={() => setPackingTrip(t)} onRoute={() => {
                   if (!mapboxToken) { alert('Set your Mapbox token in Settings first.'); return; }
                   setRouteTrip(t);
                 }} />
@@ -151,6 +153,7 @@ export default function TripsPage() {
       )}
 
       <TripModal open={modalOpen} onOpenChange={setModalOpen} trip={editTrip} />
+      {packingTrip && <PackingListModal open={!!packingTrip} onOpenChange={() => setPackingTrip(null)} tripId={packingTrip.id} tripName={`${packingTrip.emoji} ${packingTrip.name}`} />}
       {routeTrip && <RouteMapOverlay trip={routeTrip} open={!!routeTrip} onClose={() => setRouteTrip(null)} />}
     </div>
   );

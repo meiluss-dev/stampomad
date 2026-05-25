@@ -40,6 +40,18 @@ export interface LivedPlace {
   to: string | null;
 }
 
+export interface PackingItem {
+  id: number;
+  text: string;
+  checked: boolean;
+  category: string;
+}
+
+export interface PackingList {
+  tripId: number;
+  items: PackingItem[];
+}
+
 export type TransportMode = 'plane' | 'train' | 'bus' | 'boat' | 'cycling' | 'hiking' | 'motorbike' | 'hitchhiking' | 'car' | 'walking' | 'sleeping-bus';
 
 export interface RouteWaypoint {

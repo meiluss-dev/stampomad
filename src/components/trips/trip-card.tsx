@@ -7,8 +7,8 @@ import { useToast } from '@/components/ui/toast';
 import { countryFlag, fmtDate } from '@/lib/countries';
 import type { Trip } from '@/types';
 
-export function TripCard({ trip: t, onEdit, onRoute }: { trip: Trip; onEdit: () => void; onRoute: () => void }) {
-  const { deleteTrip, tripPhotos, toggleTripPublished, profile } = useStore();
+export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; onEdit: () => void; onRoute: () => void; onPacking: () => void }) {
+  const { deleteTrip, tripPhotos, toggleTripPublished, profile, packingLists } = useStore();
   const { toast } = useToast();
   const photos = tripPhotos[t.id] || [];
   const hasPhotos = photos.length > 0;
@@ -82,6 +82,9 @@ export function TripCard({ trip: t, onEdit, onRoute }: { trip: Trip; onEdit: () 
           </Link>
           <button onClick={onRoute} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             🗺️ Route
+          </button>
+          <button onClick={onPacking} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
+            🧳 Pack{packingLists[t.id]?.items?.length ? ` (${packingLists[t.id].items.filter(i => i.checked).length}/${packingLists[t.id].items.length})` : ''}
           </button>
           <button onClick={onEdit} className="py-[5px] px-3 rounded-lg bg-gold/10 text-gold text-xs cursor-pointer">
             ✏️ Edit

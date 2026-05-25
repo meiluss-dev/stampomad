@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry } from '@/types';
+import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList } from '@/types';
 
 export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: string): Promise<Trip[]> {
   const { data: tripsData, error: tripsError } = await supabase
@@ -195,6 +195,37 @@ export async function setTripPublished(supabase: SupabaseClient, userId: string,
 }
 
 // ── Public data (no auth required, RLS handles access) ──
+
+// ── Packing Lists ──
+
+export async function loadPackingListsFromSupabase(supabase: SupabaseClient, userId: string): Promise<Record<number, PackingList>> {
+  try {
+    const { data } = await supabase
+      .from('user_settings').select('packing_lists').eq('user_id', userId).single();
+    if (!data?.packing_lists) return {};
+    return data.packing_lists as Record<number, PackingList>;
+  } catch {
+    // Column may not exist yet — fall back to empty
+    return {};
+  }
+}
+
+export async function savePackingListsToSupabase(supabase: SupabaseClient, userId: string, tripId: number, list: PackingList) {
+  try {
+    // Load existing, merge, save back
+    const { data } = await supabase
+      .from('user_settings').select('packing_lists').eq('user_id', userId).single();
+    const existing = (data?.packing_lists || {}) as Record<number, PackingList>;
+    existing[tripId] = list;
+    const { error } = await supabase.from('user_settings').update({
+      packing_lists: existing,
+      updated_at: new Date().toISOString(),
+    }).eq('user_id', userId);
+    if (error) console.error('[Stampomad] savePackingLists error:', error);
+  } catch (err) {
+    console.error('[Stampomad] savePackingLists error:', err);
+  }
+}
 
 export async function loadPublicProfile(supabase: SupabaseClient, username: string): Promise<(UserProfile & { userId: string }) | null> {
   const { data, error } = await supabase

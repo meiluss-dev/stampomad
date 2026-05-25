@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry } from '@/types';
+import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList } from '@/types';
 import { countryNames, getContinent, countryFlag } from '@/lib/countries';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -10,6 +10,7 @@ import {
   saveSettingsToSupabase, saveRouteToSupabase, savePhotosToSupabase,
   deleteJournalEntryFromSupabase,
   loadProfileFromSupabase, saveProfileToSupabase, setTripPublished,
+  loadPackingListsFromSupabase, savePackingListsToSupabase,
   type UserProfile,
 } from '@/lib/supabase/data';
 import type { User } from '@supabase/supabase-js';
@@ -27,6 +28,7 @@ interface StoreContextType {
   mapboxToken: string;
   anthropicKey: string;
   profile: UserProfile | null;
+  packingLists: Record<number, PackingList>;
 
   addTrip: (trip: Omit<Trip, 'id' | 'journal'>) => Promise<Trip>;
   updateTrip: (trip: Trip) => Promise<void>;
@@ -49,6 +51,7 @@ interface StoreContextType {
 
   saveProfile: (profile: UserProfile) => Promise<void>;
   toggleTripPublished: (tripId: number, published: boolean) => Promise<void>;
+  savePackingList: (tripId: number, list: PackingList) => Promise<void>;
 
   signOut: () => Promise<void>;
 }
@@ -74,6 +77,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const [mapboxToken, setMapboxTokenState] = useState('');
   const [anthropicKey, setAnthropicKeyState] = useState('');
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [packingLists, setPackingLists] = useState<Record<number, PackingList>>({});
 
   const supabase = useRef(createClient());
 
@@ -87,12 +91,13 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       const userId = user!.id;
       console.log('[Stampomad] Loading data for user:', userId);
 
-      const [tripsData, settings, routesData, photosData, profileData] = await Promise.all([
+      const [tripsData, settings, routesData, photosData, profileData, packingData] = await Promise.all([
         loadTripsFromSupabase(sb, userId),
         loadSettingsFromSupabase(sb, userId),
         loadRoutesFromSupabase(sb, userId),
         loadPhotosFromSupabase(sb, userId),
         loadProfileFromSupabase(sb, userId),
+        loadPackingListsFromSupabase(sb, userId),
       ]);
 
       if (cancelled) return;
@@ -116,6 +121,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       setRoutes(routesData);
       setTripPhotos(photosData);
       if (profileData) setProfile(profileData);
+      setPackingLists(packingData);
       setLoading(false);
       } catch (err) {
         console.error('[Stampomad] Load failed:', err);
@@ -269,6 +275,11 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     setProfile(p);
   }, [user]);
 
+  const savePackingListAction = useCallback(async (tripId: number, list: PackingList) => {
+    setPackingLists(prev => ({ ...prev, [tripId]: list }));
+    if (user) await savePackingListsToSupabase(supabase.current, user.id, tripId, list);
+  }, [user]);
+
   const toggleTripPublishedAction = useCallback(async (tripId: number, published: boolean) => {
     if (!user) return;
     await setTripPublished(supabase.current, user.id, tripId, published);
@@ -289,7 +300,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   return (
     <StoreContext.Provider value={{
       user, loading, trips, visitedCountries, homebase, livedPlaces,
-      routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile,
+      routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile, packingLists,
       addTrip, updateTrip, deleteTrip, toggleVisitedCountry,
       addJournalEntry,
       setHomebase, setLivedPlaces: setLivedPlacesAction,
@@ -300,6 +311,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       setAnthropicKey: setAnthropicKeyAction,
       saveProfile: saveProfileAction,
       toggleTripPublished: toggleTripPublishedAction,
+      savePackingList: savePackingListAction,
       signOut: signOutAction,
     }}>
       {children}
