@@ -276,7 +276,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
 
   const saveProfileAction = useCallback(async (p: UserProfile) => {
     if (!user) return;
-    await saveProfileToSupabase(supabase.current, user.id, p, user.email);
+    await saveProfileToSupabase(supabase.current, user.id, p);
     setProfile(p);
   }, [user]);
 

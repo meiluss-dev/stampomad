@@ -54,14 +54,13 @@ export async function lookupUserByUsername(supabase: SupabaseClient, search: str
     .single();
   if (exact) return [exact];
 
-  // Fuzzy search on username, display_name, and email
+  // Fuzzy search on username and display_name
   const { data: fuzzy } = await supabase
     .from('user_profiles')
-    .select('user_id, username, display_name, avatar_url, email')
-    .or(`username.ilike.%${search}%,display_name.ilike.%${search}%,email.ilike.%${search}%`)
+    .select('user_id, username, display_name, avatar_url')
+    .or(`username.ilike.%${search}%,display_name.ilike.%${search}%`)
     .limit(5);
-  // Strip email from results (used for search only, not exposed to UI)
-  return (fuzzy || []).map(({ email, ...rest }) => rest);
+  return fuzzy || [];
 }
 
 export async function makeGroupTrip(supabase: SupabaseClient, tripId: number, userId: string) {
