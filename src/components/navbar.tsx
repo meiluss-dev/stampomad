@@ -65,8 +65,10 @@ export function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <ThemeSwitcher />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden md:block">
+            <ThemeSwitcher />
+          </div>
           <span className="text-[13px] text-text-muted hidden sm:inline">
             {allCodes.size} countries explored
           </span>
@@ -136,7 +138,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="fixed inset-0 top-[60px] bg-bg2 z-[99] flex flex-col p-6 gap-2 border-t border-white/[0.08] md:hidden">
+        <div className="fixed inset-0 top-[56px] sm:top-[60px] bg-bg2 z-[99] flex flex-col p-6 gap-2 border-t border-white/[0.08] md:hidden">
           {tabs.map(tab => (
             <Link
               key={tab.href}
@@ -149,6 +151,10 @@ export function Navbar() {
               {tab.name}
             </Link>
           ))}
+          <div className="border-t border-white/[0.08] mt-3 pt-4">
+            <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2 px-1">Theme</div>
+            <ThemeSwitcher />
+          </div>
         </div>
       )}
 
