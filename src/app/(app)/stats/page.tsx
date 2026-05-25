@@ -3,6 +3,7 @@
 import { useStore } from '@/lib/store';
 import { getContinent, countryNames, countryFlag, haversine, getCountryCenter, CONT_TOTALS } from '@/lib/countries';
 import { computeBadges } from '@/lib/badges';
+import { ShareStatsCard } from '@/components/stats/share-card';
 
 export default function StatsPage() {
   const { trips, visitedCountries, homebase, livedPlaces, routes } = useStore();
@@ -84,9 +85,12 @@ export default function StatsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Your numbers</div>
-        <h1 className="text-[28px] sm:text-[38px]">Travel Stats</h1>
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Your numbers</div>
+          <h1 className="text-[28px] sm:text-[38px]">Travel Stats</h1>
+        </div>
+        <ShareStatsCard />
       </div>
 
       {/* Hero stats */}
