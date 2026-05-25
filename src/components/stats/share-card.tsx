@@ -209,13 +209,51 @@ export function ShareStatsCard() {
               )}
             </div>
 
-            <div className="p-4 pt-3 border-t border-white/[0.08] flex justify-end gap-2">
-              <button onClick={copyToClipboard} className="px-4 py-2 rounded-lg border border-white/[0.08] text-text-muted text-sm cursor-pointer hover:border-white/20 transition-colors bg-transparent">
-                📋 Copy
-              </button>
-              <button onClick={downloadCard} className="px-5 py-2 rounded-lg bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85 transition-all">
-                ⬇ Download PNG
-              </button>
+            <div className="p-4 pt-3 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[11px] text-text-muted uppercase tracking-wider">Share on</span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => {
+                      const text = `I've visited ${totalCountries} countries across ${continents.size} continents! 🌍✈️`;
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://www.stampomad.com')}`, '_blank');
+                    }}
+                    className="w-8 h-8 rounded-lg bg-bg4 border border-white/[0.08] flex items-center justify-center text-sm cursor-pointer hover:bg-[#1da1f2]/20 hover:border-[#1da1f2]/30 transition-all"
+                    title="Share on X / Twitter"
+                  >𝕏</button>
+                  <button
+                    onClick={() => {
+                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.stampomad.com')}&quote=${encodeURIComponent(`I've visited ${totalCountries} countries! 🌍`)}`, '_blank');
+                    }}
+                    className="w-8 h-8 rounded-lg bg-bg4 border border-white/[0.08] flex items-center justify-center text-sm cursor-pointer hover:bg-[#1877f2]/20 hover:border-[#1877f2]/30 transition-all"
+                    title="Share on Facebook"
+                  >f</button>
+                  <button
+                    onClick={() => {
+                      const text = `I've visited ${totalCountries} countries across ${continents.size} continents! Check out my travel stats on Stampomad 🌍✈️ https://www.stampomad.com`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                    className="w-8 h-8 rounded-lg bg-bg4 border border-white/[0.08] flex items-center justify-center text-sm cursor-pointer hover:bg-[#25d366]/20 hover:border-[#25d366]/30 transition-all"
+                    title="Share on WhatsApp"
+                  >💬</button>
+                  <button
+                    onClick={() => {
+                      const text = `I've visited ${totalCountries} countries across ${continents.size} continents! 🌍\n\nTrack your travels at https://www.stampomad.com`;
+                      navigator.clipboard.writeText(text).then(() => toast('Copied share text!')).catch(() => toast('Failed to copy', 'error'));
+                    }}
+                    className="w-8 h-8 rounded-lg bg-bg4 border border-white/[0.08] flex items-center justify-center text-sm cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all"
+                    title="Copy share text"
+                  >🔗</button>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={copyToClipboard} className="px-4 py-2 rounded-lg border border-white/[0.08] text-text-muted text-sm cursor-pointer hover:border-white/20 transition-colors bg-transparent">
+                  📋 Copy Image
+                </button>
+                <button onClick={downloadCard} className="px-5 py-2 rounded-lg bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85 transition-all">
+                  ⬇ Download PNG
+                </button>
+              </div>
             </div>
           </div>
         </div>

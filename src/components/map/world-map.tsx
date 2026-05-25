@@ -13,11 +13,15 @@ export function WorldMap() {
   const mapLoadedRef = useRef(false);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
-  const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry } = useStore();
+  const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry, wishlist, toggleWishlist } = useStore();
   const toggleRef = useRef(toggleVisitedCountry);
   toggleRef.current = toggleVisitedCountry;
   const visitedRef = useRef(visitedCountries);
   visitedRef.current = visitedCountries;
+  const wishlistRef = useRef(wishlist);
+  wishlistRef.current = wishlist;
+  const toggleWishlistRef = useRef(toggleWishlist);
+  toggleWishlistRef.current = toggleWishlist;
 
   const updateColors = useCallback(() => {
     if (!mapLoadedRef.current) return;
@@ -32,8 +36,9 @@ export function WorldMap() {
         el.classed('homebase', !!(a && a === hc));
         el.classed('lived-in', !!(a && a !== hc && lc.has(a)));
         el.classed('visited', !!(a && a !== hc && !lc.has(a) && vc.has(a)));
+        el.classed('wishlist', !!(a && a !== hc && !lc.has(a) && !vc.has(a) && wishlist.has(a)));
       });
-  }, [trips, visitedCountries, homebase, livedPlaces]);
+  }, [trips, visitedCountries, homebase, livedPlaces, wishlist]);
 
   useEffect(() => {
     if (mapLoadedRef.current) {
@@ -87,8 +92,12 @@ export function WorldMap() {
           const tooltip = tooltipRef.current;
           if (!tooltip) return;
           tooltip.querySelector('.tt-name')!.textContent = name;
+          const isVisited = visitedRef.current.has(alpha);
+          const isWish = wishlistRef.current.has(alpha);
           tooltip.querySelector('.tt-status')!.textContent =
-            visitedRef.current.has(alpha) ? '📍 Visited — right-click to remove' : 'Right-click to mark as visited';
+            isVisited ? '📍 Visited — right-click to remove' :
+            isWish ? '⭐ Wish list — right-click to mark visited, double-click to remove' :
+            'Right-click = visited · Double-click = wish list';
           tooltip.style.display = 'block';
           tooltip.style.left = (event.clientX + 14) + 'px';
           tooltip.style.top = (event.clientY - 10) + 'px';
@@ -102,6 +111,13 @@ export function WorldMap() {
           const alpha = numToAlpha[+d.id];
           if (!alpha) return;
           toggleRef.current(alpha);
+        })
+        .on('dblclick', function (event: MouseEvent, d: any) {
+          event.preventDefault();
+          event.stopPropagation();
+          const alpha = numToAlpha[+d.id];
+          if (!alpha) return;
+          toggleWishlistRef.current(alpha);
         })
         .on('touchstart', function (event: TouchEvent, d: any) {
           touchMoved = false;
@@ -232,17 +248,18 @@ export function WorldMap() {
     ...livedPlaces.map(l => l.code),
     ...(homebase ? [homebase.code] : []),
   ]);
+  const wishlistCount = [...wishlist].filter(c => !allCodes.has(c)).length;
 
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl sm:rounded-[20px] p-3 sm:p-6 mb-7">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
         <h3 className="text-[12px] sm:text-[13px] text-text-muted uppercase tracking-wider">
-          <span className="hidden sm:inline">World map — right-click any country to pin it as visited</span>
+          <span className="hidden sm:inline">Right-click = visited · Double-click = wish list</span>
           <span className="sm:hidden">World map · long-press to pin</span>
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted italic hidden sm:inline">
-            {allCodes.size === 0 ? 'Right-click any country to pin it as visited' : `${allCodes.size} countr${allCodes.size === 1 ? 'y' : 'ies'} on your map`}
+            {allCodes.size === 0 ? 'Right-click to pin, double-click to wish list' : `${allCodes.size} visited${wishlistCount > 0 ? ` · ${wishlistCount} on wish list` : ''}`}
           </span>
           <div className="flex gap-1.5 items-center">
             <button onClick={() => handleZoom(1.5)} className="w-[30px] h-[30px] rounded-lg bg-bg4 border border-white/[0.08] text-text flex items-center justify-center cursor-pointer hover:bg-gold hover:text-bg hover:border-gold transition-all text-base">+</button>
@@ -333,6 +350,9 @@ export function WorldMap() {
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <div className="w-3 h-3 rounded-sm bg-gold" /> Visited
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
+          <div className="w-3 h-3 rounded-sm bg-stamp-blue opacity-55" /> Wish list
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <div className="w-3 h-3 rounded-sm bg-[#1c2d47]" /> Not yet explored

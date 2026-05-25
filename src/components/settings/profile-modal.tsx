@@ -138,7 +138,25 @@ export function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChan
           {profileUrl && (
             <div className="bg-bg3 border border-white/[0.08] rounded-lg px-3 py-2">
               <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Your Profile URL</div>
-              <div className="text-sm text-teal break-all">{profileUrl}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-sm text-teal break-all flex-1">{profileUrl}</div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(profileUrl).then(() => toast('Link copied!')).catch(() => {});
+                  }}
+                  className="shrink-0 px-2.5 py-1 rounded-md bg-bg4 border border-white/[0.08] text-[11px] text-text-muted cursor-pointer hover:border-white/20 transition-colors"
+                >📋 Copy</button>
+              </div>
+              <div className="flex gap-1.5 mt-2">
+                <button
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my travels on Stampomad! 🌍✈️`)}&url=${encodeURIComponent(profileUrl)}`, '_blank')}
+                  className="px-2 py-1 rounded-md bg-bg4 border border-white/[0.08] text-[11px] cursor-pointer hover:bg-[#1da1f2]/20 transition-all"
+                >𝕏 Share</button>
+                <button
+                  onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Check out my travels on Stampomad! 🌍✈️ ${profileUrl}`)}`, '_blank')}
+                  className="px-2 py-1 rounded-md bg-bg4 border border-white/[0.08] text-[11px] cursor-pointer hover:bg-[#25d366]/20 transition-all"
+                >💬 WhatsApp</button>
+              </div>
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { countryFlag, fmtDate } from '@/lib/countries';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { ShareProfileButton } from '@/components/public/share-profile-button';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -73,6 +74,14 @@ export default async function PublicProfilePage({ params }: Props) {
               )}
             </div>
           </div>
+
+          {/* Share */}
+          <ShareProfileButton
+            username={username}
+            displayName={profile.displayName || profile.username}
+            countries={globalStats.countries}
+            trips={realTrips.length}
+          />
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">

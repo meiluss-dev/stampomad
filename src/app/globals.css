@@ -277,6 +277,8 @@
 .country.homebase:hover { fill: var(--sm-stamp-red) !important; filter: brightness(1.2); }
 .country.lived-in { fill: var(--sm-teal) !important; opacity: 0.8 !important; }
 .country.lived-in:hover { fill: var(--sm-teal-light) !important; }
+.country.wishlist { fill: var(--sm-stamp-blue) !important; opacity: 0.55 !important; stroke-dasharray: 2 1; }
+.country.wishlist:hover { fill: var(--sm-stamp-blue) !important; opacity: 0.75 !important; }
 
 @keyframes mapPulse {
   0% { filter: brightness(1); }

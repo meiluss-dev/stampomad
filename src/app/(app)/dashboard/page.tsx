@@ -11,6 +11,7 @@ import { BadgesPanel } from '@/components/dashboard/badges';
 import { CalendarWidget } from '@/components/widgets/calendar-widget';
 import { WorldClockWidget } from '@/components/widgets/world-clock-widget';
 import { CurrencyWidget } from '@/components/widgets/currency-widget';
+import { CountdownWidget } from '@/components/widgets/countdown-widget';
 
 export default function DashboardPage() {
   const { loading, trips, visitedCountries, homebase } = useStore();
@@ -83,6 +84,7 @@ export default function DashboardPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-7">
+        <CountdownWidget />
         <CalendarWidget />
         <WorldClockWidget />
         <CurrencyWidget />

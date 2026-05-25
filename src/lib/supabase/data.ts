@@ -44,6 +44,7 @@ export async function loadSettingsFromSupabase(supabase: SupabaseClient, userId:
     translations: data.translations || {},
     mapboxToken: data.mapbox_token || '',
     anthropicKey: data.anthropic_key || '',
+    wishlist: (data.wishlist || []) as string[],
   };
 }
 
@@ -105,6 +106,7 @@ export async function saveSettingsToSupabase(
     translations: Record<string, Record<string, string>>;
     mapboxToken: string;
     anthropicKey: string;
+    wishlist?: string[];
   }
 ) {
   const { error } = await supabase.from('user_settings').upsert({
@@ -116,6 +118,7 @@ export async function saveSettingsToSupabase(
     translations: settings.translations,
     mapbox_token: settings.mapboxToken || null,
     anthropic_key: settings.anthropicKey || null,
+    wishlist: settings.wishlist || [],
     updated_at: new Date().toISOString(),
   });
   if (error) console.error('[Stampomad] saveSettings error:', error);
