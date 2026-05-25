@@ -1,26 +1,319 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --font-heading: 'Playfair Display', ui-serif, Georgia, serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Stampomad custom colors — set by data-theme */
+  --color-gold: var(--sm-gold);
+  --color-gold-light: var(--sm-gold-light);
+  --color-teal: var(--sm-teal);
+  --color-teal-light: var(--sm-teal-light);
+  --color-stamp-red: var(--sm-stamp-red);
+  --color-stamp-green: var(--sm-stamp-green);
+  --color-stamp-blue: var(--sm-stamp-blue);
+  --color-bg: var(--sm-bg);
+  --color-bg2: var(--sm-bg2);
+  --color-bg3: var(--sm-bg3);
+  --color-bg4: var(--sm-bg4);
+  --color-text: var(--sm-text);
+  --color-text-muted: var(--sm-text-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ═══ Dark theme (default) ═══ */
+:root,
+[data-theme="dark"] {
+  --sm-gold: #c9a96e;
+  --sm-gold-light: #e8c47a;
+  --sm-teal: #4ecdc4;
+  --sm-teal-light: #7eddd8;
+  --sm-stamp-red: #e05c5c;
+  --sm-stamp-green: #52b788;
+  --sm-stamp-blue: #4a9eff;
+  --sm-bg: #0a0f1e;
+  --sm-bg2: #111827;
+  --sm-bg3: #1a2235;
+  --sm-bg4: #1f2d45;
+  --sm-text: #f0ece4;
+  --sm-text-muted: #7a8aa0;
+  --sm-border: rgba(255, 255, 255, 0.08);
+
+  --background: #0a0f1e;
+  --foreground: #f0ece4;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-foreground: #f0ece4;
+  --popover: #111827;
+  --popover-foreground: #f0ece4;
+  --primary: #c9a96e;
+  --primary-foreground: #0a0f1e;
+  --secondary: #1a2235;
+  --secondary-foreground: #f0ece4;
+  --muted: #1a2235;
+  --muted-foreground: #7a8aa0;
+  --accent: #4ecdc4;
+  --accent-foreground: #0a0f1e;
+  --destructive: #e05c5c;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #c9a96e;
+  --chart-1: #c9a96e;
+  --chart-2: #4ecdc4;
+  --chart-3: #e05c5c;
+  --chart-4: #52b788;
+  --chart-5: #4a9eff;
+  --radius: 0.75rem;
+  --sidebar: #111827;
+  --sidebar-foreground: #f0ece4;
+  --sidebar-primary: #c9a96e;
+  --sidebar-primary-foreground: #0a0f1e;
+  --sidebar-accent: #1a2235;
+  --sidebar-accent-foreground: #f0ece4;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #c9a96e;
+}
+
+/* ═══ Light theme ═══ */
+[data-theme="light"] {
+  --sm-gold: #a3863e;
+  --sm-gold-light: #c9a96e;
+  --sm-teal: #2a9d8f;
+  --sm-teal-light: #4ecdc4;
+  --sm-stamp-red: #d04040;
+  --sm-stamp-green: #3d9970;
+  --sm-stamp-blue: #2b7de9;
+  --sm-bg: #f5f3ef;
+  --sm-bg2: #ffffff;
+  --sm-bg3: #eae7e1;
+  --sm-bg4: #ddd9d1;
+  --sm-text: #1a1a1a;
+  --sm-text-muted: #6b7280;
+  --sm-border: rgba(0, 0, 0, 0.1);
+
+  --background: #f5f3ef;
+  --foreground: #1a1a1a;
+  --card: rgba(0, 0, 0, 0.03);
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #a3863e;
+  --primary-foreground: #ffffff;
+  --secondary: #eae7e1;
+  --secondary-foreground: #1a1a1a;
+  --muted: #eae7e1;
+  --muted-foreground: #6b7280;
+  --accent: #2a9d8f;
+  --accent-foreground: #ffffff;
+  --destructive: #d04040;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #a3863e;
+  --chart-1: #a3863e;
+  --chart-2: #2a9d8f;
+  --chart-3: #d04040;
+  --chart-4: #3d9970;
+  --chart-5: #2b7de9;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #a3863e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eae7e1;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-ring: #a3863e;
+}
+
+/* ═══ Colorful theme ═══ */
+[data-theme="colorful"] {
+  --sm-gold: #f59e0b;
+  --sm-gold-light: #fbbf24;
+  --sm-teal: #06b6d4;
+  --sm-teal-light: #22d3ee;
+  --sm-stamp-red: #f43f5e;
+  --sm-stamp-green: #10b981;
+  --sm-stamp-blue: #6366f1;
+  --sm-bg: #0f0a1a;
+  --sm-bg2: #1a1028;
+  --sm-bg3: #251a38;
+  --sm-bg4: #302448;
+  --sm-text: #f8f4ff;
+  --sm-text-muted: #9b8fbf;
+  --sm-border: rgba(255, 255, 255, 0.1);
+
+  --background: #0f0a1a;
+  --foreground: #f8f4ff;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #f8f4ff;
+  --popover: #1a1028;
+  --popover-foreground: #f8f4ff;
+  --primary: #f59e0b;
+  --primary-foreground: #0f0a1a;
+  --secondary: #251a38;
+  --secondary-foreground: #f8f4ff;
+  --muted: #251a38;
+  --muted-foreground: #9b8fbf;
+  --accent: #06b6d4;
+  --accent-foreground: #0f0a1a;
+  --destructive: #f43f5e;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
+  --chart-2: #06b6d4;
+  --chart-3: #f43f5e;
+  --chart-4: #10b981;
+  --chart-5: #6366f1;
+  --sidebar: #1a1028;
+  --sidebar-foreground: #f8f4ff;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #0f0a1a;
+  --sidebar-accent: #251a38;
+  --sidebar-accent-foreground: #f8f4ff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #f59e0b;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground min-h-screen overflow-x-hidden;
+    font-family: 'DM Sans', sans-serif;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Light theme: swap white-alpha borders/bgs to black-alpha */
+[data-theme="light"] {
+  --tw-border-opacity-override: 1;
 }
+[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(0, 0, 0, 0.1) !important; }
+[data-theme="light"] .border-white\/\[0\.12\] { border-color: rgba(0, 0, 0, 0.12) !important; }
+[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(0, 0, 0, 0.04) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(0, 0, 0, 0.03) !important; }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(0, 0, 0, 0.025) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(0, 0, 0, 0.04) !important; }
+[data-theme="light"] .text-white { color: #1a1a1a !important; }
+[data-theme="light"] .shadow-\[0_8px_32px_rgba\(0\,0\,0\,0\.4\)\] { box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--sm-bg4); border-radius: 3px; }
+
+/* Mapbox overrides */
+.mapboxgl-popup-content {
+  background: var(--sm-bg2) !important;
+  color: var(--sm-text) !important;
+  border: 1px solid var(--sm-border) !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+}
+.mapboxgl-popup-tip { border-top-color: var(--sm-bg2) !important; }
+.mapboxgl-popup-close-button { color: var(--sm-text-muted) !important; font-size: 18px !important; }
+
+/* D3 world map */
+.country {
+  fill: var(--sm-bg4);
+  stroke: var(--sm-bg);
+  stroke-width: 0.4;
+  transition: fill 0.15s, opacity 0.15s;
+  cursor: pointer;
+}
+.country:hover { fill: var(--sm-stamp-blue); opacity: 0.9; }
+.country.visited { fill: var(--sm-gold); opacity: 0.85; }
+.country.visited:hover { fill: var(--sm-gold-light); }
+.country.homebase { fill: var(--sm-stamp-red) !important; opacity: 1 !important; }
+.country.homebase:hover { fill: var(--sm-stamp-red) !important; filter: brightness(1.2); }
+.country.lived-in { fill: var(--sm-teal) !important; opacity: 0.8 !important; }
+.country.lived-in:hover { fill: var(--sm-teal-light) !important; }
+
+@keyframes mapPulse {
+  0% { filter: brightness(1); }
+  35% { filter: brightness(2.4); }
+  70% { filter: brightness(1.7); }
+  100% { filter: brightness(1); }
+}
+.country.map-pulse { animation: mapPulse 2s ease-out; }
+
+/* Toast animation */
+@keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+/* AI cursor animation */
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.ai-cursor { display: inline-block; width: 2px; height: 1em; background: var(--sm-gold); margin-left: 2px; vertical-align: text-bottom; animation: blink 0.7s infinite; }
+
+/* Mapbox GL critical styles (bundled CSS import doesn't work with Turbopack) */
+.mapboxgl-map { position: relative; width: 100%; height: 100%; overflow: hidden; font: 12px/20px Helvetica Neue, Arial, Helvetica, sans-serif; }
+.mapboxgl-canvas-container, .mapboxgl-canvas { position: absolute; left: 0; top: 0; }
+.mapboxgl-canvas { width: 100%; height: 100%; }
+.mapboxgl-ctrl-group { background: #fff; border-radius: 4px; }
+.mapboxgl-ctrl-group > button { width: 29px; height: 29px; display: block; padding: 0; outline: none; border: 0; box-sizing: border-box; background-color: transparent; cursor: pointer; overflow: hidden; }
+.mapboxgl-ctrl-group > button + button { border-top: 1px solid #ddd; }
+.mapboxgl-ctrl-group > button:focus { box-shadow: 0 0 2px 2px rgba(0,150,255,.3); }
+.mapboxgl-ctrl { clear: both; pointer-events: auto; }
+.mapboxgl-ctrl-top-left { position: absolute; top: 0; left: 0; }
+.mapboxgl-ctrl-top-right { position: absolute; top: 0; right: 0; }
+.mapboxgl-ctrl-bottom-left { position: absolute; bottom: 0; left: 0; }
+.mapboxgl-ctrl-bottom-right { position: absolute; bottom: 0; right: 0; }
+.mapboxgl-ctrl-top-left .mapboxgl-ctrl, .mapboxgl-ctrl-top-right .mapboxgl-ctrl { margin: 10px 10px 0; }
+.mapboxgl-ctrl-bottom-left .mapboxgl-ctrl, .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl { margin: 0 10px 10px; }
+.mapboxgl-ctrl-attrib { padding: 0 5px; background-color: hsla(0,0%,100%,.5); font-size: 11px; }
+.mapboxgl-ctrl-scale { background-color: hsla(0,0%,100%,.75); font-size: 10px; border: 2px solid #333; border-top: 0; padding: 0 5px; }
+.mapboxgl-popup { position: absolute; top: 0; left: 0; will-change: transform; pointer-events: none; z-index: 2; }
+.mapboxgl-popup-content { position: relative; background: #fff; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.1); padding: 10px 10px 15px; pointer-events: auto; color: #333; }
+.mapboxgl-popup-close-button { position: absolute; right: 0; top: 0; border: 0; background: transparent; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip { border-top-color: #fff; align-self: center; border-bottom: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid; }
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip { border-bottom-color: #fff; align-self: center; border-top: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid; }
+.mapboxgl-popup-tip { width: 0; height: 0; border: 10px solid transparent; z-index: 1; }
+.mapboxgl-marker { position: absolute; top: 0; left: 0; will-change: transform; opacity: 1; transition: opacity .2s; }
