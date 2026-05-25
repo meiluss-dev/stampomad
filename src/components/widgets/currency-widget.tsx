@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useLang } from '@/components/language-provider';
 
 const CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' }, { code: 'EUR', name: 'Euro', symbol: '€' },
@@ -15,6 +16,7 @@ const CURRENCIES = [
 ];
 
 export function CurrencyWidget() {
+  const { t } = useLang();
   const [rates, setRates] = useState<Record<string, number>>({});
   const [from, setFrom] = useState('EUR');
   const [to, setTo] = useState('USD');
@@ -56,7 +58,7 @@ export function CurrencyWidget() {
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
       <div className="flex justify-between items-center mb-3.5">
-        <span className="text-xs text-text-muted uppercase tracking-wider">💱 Currency</span>
+        <span className="text-xs text-text-muted uppercase tracking-wider">💱 {t('widget_currency')}</span>
       </div>
       <div className="flex items-end gap-2">
         <div className="flex-1 flex flex-col gap-1.5">

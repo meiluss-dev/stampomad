@@ -21,7 +21,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-text-muted text-lg">Loading your travels...</div>
+        <div className="text-text-muted text-lg">{t('loading_travels')}</div>
       </div>
     );
   }

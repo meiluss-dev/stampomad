@@ -6,9 +6,11 @@ import { useStore } from '@/lib/store';
 import { fmtDate, countryNames } from '@/lib/countries';
 import { JournalEntryModal } from '@/components/journal/journal-entry-modal';
 import { AISummary } from '@/components/journal/ai-summary';
+import { useLang } from '@/components/language-provider';
 
 export default function JournalPage() {
   const { trips, loading } = useStore();
+  const { t } = useLang();
   const searchParams = useSearchParams();
   const tripParam = searchParams.get('trip');
   const [selectedId, setSelectedId] = useState<number | null>(tripParam ? +tripParam : null);
@@ -37,14 +39,14 @@ export default function JournalPage() {
   return (
     <div>
       <div className="mb-6">
-        <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Travel memories</div>
-        <h1 className="text-[32px]">Trip Journal</h1>
+        <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">{t('journal_sub')}</div>
+        <h1 className="text-[32px]">{t('journal_title')}</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4 sm:gap-6">
         {/* Sidebar */}
         <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 max-h-[40vh] md:max-h-[70vh] overflow-y-auto">
-          <div className="text-[11px] text-text-muted uppercase tracking-wider mb-3">Select a trip</div>
+          <div className="text-[11px] text-text-muted uppercase tracking-wider mb-3">{t('journal_select')}</div>
           {trips.filter(t => !t.quickPin).length === 0 ? (
             <div className="text-[13px] text-text-muted">Add trips first</div>
           ) : (

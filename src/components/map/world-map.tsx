@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '@/lib/store';
+import { useLang } from '@/components/language-provider';
 import { numToAlpha, countryNames, countryFlag, getContinent, tinyCountries } from '@/lib/countries';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
@@ -14,6 +15,7 @@ export function WorldMap() {
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry, wishlist, toggleWishlist } = useStore();
+  const { t } = useLang();
   const toggleRef = useRef(toggleVisitedCountry);
   toggleRef.current = toggleVisitedCountry;
   const visitedRef = useRef(visitedCountries);
@@ -254,8 +256,8 @@ export function WorldMap() {
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl sm:rounded-[20px] p-3 sm:p-6 mb-7">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
         <h3 className="text-[12px] sm:text-[13px] text-text-muted uppercase tracking-wider">
-          <span className="hidden sm:inline">Right-click = visited · Double-click = wish list</span>
-          <span className="sm:hidden">World map · long-press to pin</span>
+          <span className="hidden sm:inline">{t('map_hint_desktop')}</span>
+          <span className="sm:hidden">{t('map_hint_mobile')}</span>
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted italic hidden sm:inline">
@@ -279,7 +281,7 @@ export function WorldMap() {
             onChange={e => { setQuery(e.target.value); setShowResults(true); }}
             onFocus={() => query && setShowResults(true)}
             onKeyDown={e => { if (e.key === 'Escape') { setQuery(''); setShowResults(false); (e.target as HTMLInputElement).blur(); } }}
-            placeholder="Search country or city name..."
+            placeholder={t('map_search')}
             className="flex-1 bg-transparent border-none outline-none py-2.5 text-[13px] text-text placeholder:text-text-muted"
           />
           {query && (
@@ -343,19 +345,19 @@ export function WorldMap() {
 
       <div className="flex gap-3 sm:gap-4 mt-2.5 flex-wrap">
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-          <div className="w-3 h-3 rounded-sm bg-stamp-red" /> Home base
+          <div className="w-3 h-3 rounded-sm bg-stamp-red" /> {t('map_legend_home')}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-          <div className="w-3 h-3 rounded-sm bg-teal" /> Lived here
+          <div className="w-3 h-3 rounded-sm bg-teal" /> {t('map_legend_lived')}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-          <div className="w-3 h-3 rounded-sm bg-gold" /> Visited
+          <div className="w-3 h-3 rounded-sm bg-gold" /> {t('map_legend_visited')}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-          <div className="w-3 h-3 rounded-sm bg-stamp-blue opacity-55" /> Wish list
+          <div className="w-3 h-3 rounded-sm bg-stamp-blue opacity-55" /> {t('map_legend_wishlist')}
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
-          <div className="w-3 h-3 rounded-sm bg-[#1c2d47]" /> Not yet explored
+          <div className="w-3 h-3 rounded-sm bg-[#1c2d47]" /> {t('map_legend_unexplored')}
         </div>
       </div>
 

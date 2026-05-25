@@ -7,6 +7,7 @@ import { TripModal } from '@/components/trips/trip-modal';
 import { PackingListModal } from '@/components/trips/packing-list';
 import { RouteMapOverlay } from '@/components/map/route-map-overlay';
 import { useToast } from '@/components/ui/toast';
+import { useLang } from '@/components/language-provider';
 import type { Trip } from '@/types';
 
 type SortKey = 'newest' | 'oldest' | 'name' | 'duration';
@@ -24,6 +25,7 @@ const FILTER_OPTIONS: FilterKey[] = ['all', 'Europe', 'Asia', 'Americas', 'Afric
 export default function TripsPage() {
   const { trips, loading, mapboxToken } = useStore();
   const { toast } = useToast();
+  const { t } = useLang();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [routeTrip, setRouteTrip] = useState<Trip | null>(null);
@@ -82,11 +84,11 @@ export default function TripsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Adventures logged</div>
-          <h1 className="text-[26px] sm:text-[32px]">My Trips</h1>
+          <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">{t('trips_sub')}</div>
+          <h1 className="text-[26px] sm:text-[32px]">{t('trips_title')}</h1>
         </div>
         <button onClick={openNew} className="bg-gold text-bg px-4 sm:px-5 py-2 sm:py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 hover:-translate-y-px transition-all shrink-0">
-          + Add Trip
+          {t('btn_add_trip')}
         </button>
       </div>
 

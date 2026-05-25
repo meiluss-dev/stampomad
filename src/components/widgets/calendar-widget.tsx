@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
+import { useLang } from '@/components/language-provider';
 
 export function CalendarWidget() {
   const { trips } = useStore();
+  const { t } = useLang();
   const [calDate, setCalDate] = useState(new Date());
 
   const year = calDate.getFullYear();
@@ -55,7 +57,7 @@ export function CalendarWidget() {
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
       <div className="flex justify-between items-center mb-3.5">
-        <span className="text-xs text-text-muted uppercase tracking-wider">📅 Calendar</span>
+        <span className="text-xs text-text-muted uppercase tracking-wider">📅 {t('widget_calendar')}</span>
         <div className="flex items-center gap-1.5 text-[13px] text-text">
           <button onClick={() => nav(-1)} className="w-[26px] h-[26px] rounded-md bg-bg4 border border-white/[0.08] text-text flex items-center justify-center cursor-pointer hover:bg-gold hover:text-bg hover:border-gold transition-all text-sm">‹</button>
           <span>{calDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>

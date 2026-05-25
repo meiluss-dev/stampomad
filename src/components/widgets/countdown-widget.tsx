@@ -43,12 +43,12 @@ export function CountdownWidget() {
           <div className="text-center py-4">
             <div className="text-3xl mb-2">✈️</div>
             <div className="text-sm text-text-muted">{t('no_upcoming')}</div>
-            <div className="text-[11px] text-text-muted mt-1 mb-3">Plan your next adventure!</div>
+            <div className="text-[11px] text-text-muted mt-1 mb-3">{t('plan_adventure')}</div>
             <button
               onClick={() => setShowAddTrip(true)}
               className="px-4 py-2 rounded-xl bg-gold/10 border border-gold/20 text-gold text-sm cursor-pointer hover:bg-gold/15 transition-all"
             >
-              + Add upcoming trip
+              {t('add_upcoming_trip')}
             </button>
           </div>
         </div>
@@ -86,7 +86,7 @@ export function CountdownWidget() {
             <span className="font-[family-name:var(--font-playfair)] text-3xl text-stamp-green">{daysLeft}</span>
             <span className="text-sm text-text-muted">day{daysLeft !== 1 ? 's' : ''}</span>
             <span className="font-[family-name:var(--font-playfair)] text-xl text-stamp-green/70 ml-1">{hoursLeft}h</span>
-            <span className="text-sm text-text-muted">remaining</span>
+            <span className="text-sm text-text-muted">{t('remaining')}</span>
           </div>
           <div className="text-[11px] text-text-muted mt-2">
             {fmtDate(current.start)} — {fmtDate(current.end)}
@@ -106,7 +106,7 @@ export function CountdownWidget() {
         </div>
         {next && (
           <div className="mt-3 flex items-center gap-2 text-[12px] text-text-muted">
-            <span>Next up:</span>
+            <span>{t('next_up')}:</span>
             <span>{next.emoji} {next.name}</span>
             <span className="text-gold">({fmtDate(next.start)})</span>
           </div>
@@ -132,7 +132,7 @@ export function CountdownWidget() {
             onClick={() => setShowAddTrip(true)}
             className="text-[11px] text-gold cursor-pointer hover:text-gold-light transition-colors bg-transparent border-none"
           >
-            + Add trip
+            {t('add_trip')}
           </button>
         </div>
         <div className="bg-gold/5 border border-gold/15 rounded-xl p-4">

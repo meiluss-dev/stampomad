@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { useLang } from '@/components/language-provider';
 import type { ClockEntry } from '@/types';
 
 const ALL_TIMEZONES: ClockEntry[] = [
@@ -26,6 +27,7 @@ const ALL_TIMEZONES: ClockEntry[] = [
 
 export function WorldClockWidget() {
   const { clocks, setClocks } = useStore();
+  const { t } = useLang();
   const [now, setNow] = useState(new Date());
   const [adding, setAdding] = useState(false);
   const [selectedTz, setSelectedTz] = useState('');
@@ -53,7 +55,7 @@ export function WorldClockWidget() {
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
       <div className="flex justify-between items-center mb-3.5">
-        <span className="text-xs text-text-muted uppercase tracking-wider">🕐 World Clock</span>
+        <span className="text-xs text-text-muted uppercase tracking-wider">🕐 {t('widget_clock')}</span>
         <button
           onClick={() => setAdding(!adding)}
           className="w-[26px] h-[26px] rounded-md bg-bg4 border border-white/[0.08] text-text flex items-center justify-center cursor-pointer hover:bg-gold hover:text-bg hover:border-gold transition-all text-sm"

@@ -4,9 +4,11 @@ import { useStore } from '@/lib/store';
 import { getContinent, countryNames, countryFlag, haversine, getCountryCenter, CONT_TOTALS } from '@/lib/countries';
 import { computeBadges } from '@/lib/badges';
 import { ShareStatsCard } from '@/components/stats/share-card';
+import { useLang } from '@/components/language-provider';
 
 export default function StatsPage() {
   const { trips, visitedCountries, homebase, livedPlaces, routes } = useStore();
+  const { t } = useLang();
 
   const real = trips.filter(t => !t.quickPin);
   const allCodes = new Set([...visitedCountries, ...real.map(t => t.code)]);
@@ -90,8 +92,8 @@ export default function StatsPage() {
     <div>
       <div className="flex justify-between items-start mb-8">
         <div>
-          <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Your numbers</div>
-          <h1 className="text-[28px] sm:text-[38px]">Travel Stats</h1>
+          <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">{t('stats_sub')}</div>
+          <h1 className="text-[28px] sm:text-[38px]">{t('stats_title')}</h1>
         </div>
         <ShareStatsCard />
       </div>
@@ -102,7 +104,7 @@ export default function StatsPage() {
           { label: 'Countries', value: totalCountries, sub: `${pctWorld}% of the world`, icon: '🌍', color: 'gold' },
           { label: 'Trips logged', value: totalTrips, sub: `${avgDays}d average`, icon: '✈️', color: 'teal' },
           { label: 'Days abroad', value: totalDays, sub: 'total travel days', icon: '📅', color: 'stamp-red' },
-          { label: 'Badges earned', value: `${earned.length}/${badges.length}`, sub: 'achievements', icon: '🏅', color: 'stamp-blue' },
+          { label: t('badges_earned'), value: `${earned.length}/${badges.length}`, sub: 'achievements', icon: '🏅', color: 'stamp-blue' },
         ].map(s => (
           <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-[3px]`} style={{ background: `var(--color-${s.color})` }} />
@@ -116,7 +118,7 @@ export default function StatsPage() {
 
       {/* Fun facts */}
       <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-6 mb-7">
-        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Highlights</h3>
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">{t('highlights')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {totalKm > 0 && (
             <div className="flex items-start gap-3 bg-bg4 rounded-xl p-4">
@@ -197,7 +199,7 @@ export default function StatsPage() {
 
       {/* Continent progress */}
       <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-6 mb-7">
-        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">World coverage</h3>
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">{t('world_coverage')}</h3>
         <div className="space-y-3">
           {Object.entries(CONT_TOTALS).map(([cont, total]) => {
             const visited = visitedPerCont[cont] || 0;
@@ -220,7 +222,7 @@ export default function StatsPage() {
       {/* Year breakdown */}
       {years.length > 0 && (
         <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-6 mb-7">
-          <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Trips by year</h3>
+          <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">{t('trips_by_year')}</h3>
           <div className="flex items-end gap-2 h-32">
             {years.map(([year, count]) => {
               const maxCount = Math.max(...years.map(([, c]) => c));

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
+import { useLang } from '@/components/language-provider';
 import { HomebaseModal } from '@/components/settings/homebase-modal';
 import { LivedModal } from '@/components/settings/lived-modal';
 
@@ -18,6 +19,7 @@ function livedDuration(from: string, to: string | null): string {
 
 export function HomebaseBar() {
   const { homebase, livedPlaces, removeLivedPlace } = useStore();
+  const { t } = useLang();
   const [hbOpen, setHbOpen] = useState(false);
   const [livedOpen, setLivedOpen] = useState(false);
 
@@ -30,14 +32,14 @@ export function HomebaseBar() {
               🏠
             </div>
             <div>
-              <div className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">Home base</div>
+              <div className="text-[11px] text-text-muted uppercase tracking-wider mb-0.5">{t('home_base')}</div>
               {homebase ? (
                 <>
                   <div className="text-[15px] font-medium">{homebase.flag} {homebase.city || homebase.code}</div>
                   <div className="text-xs text-text-muted">{homebase.code} · {homebase.continent}</div>
                 </>
               ) : (
-                <div className="text-[15px] text-text-muted font-normal">Not set</div>
+                <div className="text-[15px] text-text-muted font-normal">{t('home_not_set')}</div>
               )}
             </div>
           </div>
@@ -46,13 +48,13 @@ export function HomebaseBar() {
               onClick={() => setHbOpen(true)}
               className="px-3.5 py-1.5 rounded-lg border border-white/[0.08] text-text-muted text-xs cursor-pointer hover:border-gold hover:text-gold transition-all"
             >
-              {homebase ? 'Change' : 'Set home base'}
+              {homebase ? t('btn_change') : t('btn_set_home')}
             </button>
             <button
               onClick={() => setLivedOpen(true)}
               className="px-3.5 py-1.5 rounded-lg border border-white/[0.08] text-text-muted text-xs cursor-pointer hover:border-gold hover:text-gold transition-all"
             >
-              + Place I&apos;ve lived
+              {t('btn_add_lived')}
             </button>
           </div>
         </div>
@@ -60,7 +62,7 @@ export function HomebaseBar() {
         {livedPlaces.length > 0 && (
           <div className="border-t border-white/[0.08] mt-3.5 pt-3.5">
             <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2.5">
-              Places I&apos;ve lived
+              {t('lived_places')}
             </div>
             <div className="flex flex-wrap gap-2">
               {livedPlaces.map(l => (

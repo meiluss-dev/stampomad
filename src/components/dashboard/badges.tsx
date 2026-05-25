@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
+import { useLang } from '@/components/language-provider';
 import { computeBadges, type EarnedBadge, type LockedBadge } from '@/lib/badges';
 
 export function BadgesPanel() {
   const { trips, visitedCountries, homebase, livedPlaces } = useStore();
+  const { t } = useLang();
   const [showAll, setShowAll] = useState(false);
 
   const badges = computeBadges(trips, visitedCountries, homebase, livedPlaces);
@@ -20,7 +22,7 @@ export function BadgesPanel() {
     // Show first 3 locked ones as goals
     return (
       <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
-        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-3">Badges to earn</h3>
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-3">{t('badges_to_earn')}</h3>
         <div className="grid grid-cols-3 gap-3">
           {locked.slice(0, 6).map(b => (
             <div key={b.id} className="flex flex-col items-center gap-1.5 bg-bg4 rounded-xl p-3 opacity-50">
@@ -38,7 +40,7 @@ export function BadgesPanel() {
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-xs text-text-muted uppercase tracking-wider">
-          Badges · {earned.length}/{badges.length} earned
+          {t('badges_earned')} · {earned.length}/{badges.length}
         </h3>
         <button
           onClick={() => setShowAll(!showAll)}
