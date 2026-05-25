@@ -23,7 +23,7 @@ export function HomebaseBar() {
 
   return (
     <>
-      <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 px-5 mb-7">
+      <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-3 sm:p-4 px-4 sm:px-5 mb-7">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">

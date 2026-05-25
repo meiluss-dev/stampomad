@@ -34,9 +34,9 @@ export default function JournalPage() {
         <h1 className="text-[32px]">Trip Journal</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4 sm:gap-6">
         {/* Sidebar */}
-        <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 max-h-[70vh] overflow-y-auto">
+        <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 max-h-[40vh] md:max-h-[70vh] overflow-y-auto">
           <div className="text-[11px] text-text-muted uppercase tracking-wider mb-3">Select a trip</div>
           {trips.filter(t => !t.quickPin).length === 0 ? (
             <div className="text-[13px] text-text-muted">Add trips first</div>
@@ -70,13 +70,13 @@ export default function JournalPage() {
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-6">
                 <div>
                   <div className="text-[11px] text-gold uppercase tracking-wider">
                     {selectedTrip.code} · {selectedTrip.continent}
                   </div>
-                  <h2 className="text-2xl my-1">{selectedTrip.emoji} {selectedTrip.name}</h2>
-                  <div className="text-[13px] text-text-muted">
+                  <h2 className="text-xl sm:text-2xl my-1">{selectedTrip.emoji} {selectedTrip.name}</h2>
+                  <div className="text-[12px] sm:text-[13px] text-text-muted">
                     {fmtDate(selectedTrip.start)} – {fmtDate(selectedTrip.end)} · {selectedTrip.days} day{selectedTrip.days !== 1 ? 's' : ''}
                   </div>
                 </div>

@@ -55,7 +55,7 @@ export default function AuthPage() {
 
   return (
     <div className="fixed inset-0 bg-bg flex items-center justify-center">
-      <div className="bg-bg2 border border-white/[0.08] rounded-3xl p-12 w-full max-w-[420px] text-center">
+      <div className="bg-bg2 border border-white/[0.08] rounded-3xl p-6 sm:p-12 w-full max-w-[420px] mx-4 sm:mx-0 text-center">
         <h1 className="font-[family-name:var(--font-playfair)] text-[32px] text-gold mb-2">
           Stampo<span className="text-text font-normal">mad</span>
         </h1>

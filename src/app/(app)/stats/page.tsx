@@ -86,7 +86,7 @@ export default function StatsPage() {
     <div>
       <div className="mb-8">
         <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Your numbers</div>
-        <h1 className="text-[38px]">Travel Stats</h1>
+        <h1 className="text-[28px] sm:text-[38px]">Travel Stats</h1>
       </div>
 
       {/* Hero stats */}
@@ -97,12 +97,12 @@ export default function StatsPage() {
           { label: 'Days abroad', value: totalDays, sub: 'total travel days', icon: '📅', color: 'stamp-red' },
           { label: 'Badges earned', value: `${earned.length}/${badges.length}`, sub: 'achievements', icon: '🏅', color: 'stamp-blue' },
         ].map(s => (
-          <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-5 relative overflow-hidden">
+          <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-[3px]`} style={{ background: `var(--color-${s.color})` }} />
-            <div className="absolute right-4 top-4 text-[28px] opacity-25">{s.icon}</div>
-            <div className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5">{s.label}</div>
-            <div className="font-[family-name:var(--font-playfair)] text-3xl">{s.value}</div>
-            <div className="text-[11px] text-text-muted mt-1">{s.sub}</div>
+            <div className="absolute right-3 sm:right-4 top-3 sm:top-4 text-[22px] sm:text-[28px] opacity-25">{s.icon}</div>
+            <div className="text-[10px] sm:text-[11px] text-text-muted uppercase tracking-wider mb-1.5">{s.label}</div>
+            <div className="font-[family-name:var(--font-playfair)] text-2xl sm:text-3xl">{s.value}</div>
+            <div className="text-[10px] sm:text-[11px] text-text-muted mt-1">{s.sub}</div>
           </div>
         ))}
       </div>
@@ -237,7 +237,7 @@ export default function StatsPage() {
         <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">
           All badges · {earned.length}/{badges.length} earned
         </h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+        <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
           {badges.map(b => (
             <div
               key={b.id}

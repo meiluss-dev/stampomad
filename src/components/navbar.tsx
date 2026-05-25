@@ -44,7 +44,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-white/[0.08] bg-bg/97 sticky top-0 z-[100] backdrop-blur-[10px]">
+      <nav className="flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 border-b border-white/[0.08] bg-bg/97 sticky top-0 z-[100] backdrop-blur-[10px]">
         <div className="font-[family-name:var(--font-playfair)] text-[22px] text-gold tracking-wide">
           Stampo<span className="text-text font-normal">mad</span>
         </div>

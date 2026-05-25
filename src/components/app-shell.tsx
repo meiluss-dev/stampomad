@@ -11,7 +11,7 @@ export function AppShell({ children, initialUser }: { children: React.ReactNode;
     <StoreProvider initialUser={initialUser}>
       <ToastProvider>
         <Navbar />
-        <main className="max-w-[1200px] mx-auto px-8 py-8">
+        <main className="max-w-[1200px] mx-auto px-4 sm:px-8 py-6 sm:py-8">
           {children}
         </main>
         <OnboardingWizard />

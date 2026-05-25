@@ -70,6 +70,10 @@ export function WorldMap() {
       svg.on('mousedown.drag', () => { isDragging = false; dragStart = Date.now(); });
       svg.on('mousemove.drag', () => { if (Date.now() - dragStart > 120) isDragging = true; });
 
+      // Long-press for mobile (replaces right-click)
+      let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+      let touchMoved = false;
+
       g.selectAll('.country')
         .data((countries as any).features)
         .enter()
@@ -98,6 +102,27 @@ export function WorldMap() {
           const alpha = numToAlpha[+d.id];
           if (!alpha) return;
           toggleRef.current(alpha);
+        })
+        .on('touchstart', function (event: TouchEvent, d: any) {
+          touchMoved = false;
+          const alpha = numToAlpha[+d.id];
+          if (!alpha) return;
+          longPressTimer = setTimeout(() => {
+            if (!touchMoved) {
+              event.preventDefault();
+              toggleRef.current(alpha);
+              // Brief visual feedback
+              d3.select(this).classed('map-pulse', true);
+              setTimeout(() => d3.select(this).classed('map-pulse', false), 800);
+            }
+          }, 500);
+        })
+        .on('touchmove', function () {
+          touchMoved = true;
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        })
+        .on('touchend', function () {
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
         });
 
       mapLoadedRef.current = true;
@@ -211,13 +236,14 @@ export function WorldMap() {
   ]);
 
   return (
-    <div className="bg-bg3 border border-white/[0.08] rounded-[20px] p-6 mb-7">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[13px] text-text-muted uppercase tracking-wider">
-          World map — right-click any country to pin it as visited
+    <div className="bg-bg3 border border-white/[0.08] rounded-2xl sm:rounded-[20px] p-3 sm:p-6 mb-7">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <h3 className="text-[12px] sm:text-[13px] text-text-muted uppercase tracking-wider">
+          <span className="hidden sm:inline">World map — right-click any country to pin it as visited</span>
+          <span className="sm:hidden">World map · long-press to pin</span>
         </h3>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-text-muted italic">
+          <span className="text-xs text-text-muted italic hidden sm:inline">
             {allCodes.size === 0 ? 'Right-click any country to pin it as visited' : `${allCodes.size} countr${allCodes.size === 1 ? 'y' : 'ies'} on your map`}
           </span>
           <div className="flex gap-1.5 items-center">
@@ -300,7 +326,7 @@ export function WorldMap() {
         <text x="480" y="255" textAnchor="middle" fill="#7a8aa0" fontSize="14">Loading map data...</text>
       </svg>
 
-      <div className="flex gap-4 mt-2.5 flex-wrap">
+      <div className="flex gap-3 sm:gap-4 mt-2.5 flex-wrap">
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <div className="w-3 h-3 rounded-sm bg-stamp-red" /> Home base
         </div>

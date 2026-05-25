@@ -31,13 +31,13 @@ export default function DashboardPage() {
     <div>
       <div className="mb-7">
         <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1.5">Your travel story</div>
-        <h1 className="text-[38px]">{headlines[Math.min(Math.floor(realTrips.length / 2), 4)]}</h1>
+        <h1 className="text-[28px] sm:text-[38px]">{headlines[Math.min(Math.floor(realTrips.length / 2), 4)]}</h1>
       </div>
 
       {isNewUser && (
-        <div className="bg-gradient-to-r from-gold/10 via-teal/5 to-gold/10 border border-gold/20 rounded-2xl p-6 mb-7">
-          <h2 className="font-[family-name:var(--font-playfair)] text-xl mb-2">Welcome aboard! Here&apos;s how to get started:</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+        <div className="bg-gradient-to-r from-gold/10 via-teal/5 to-gold/10 border border-gold/20 rounded-2xl p-4 sm:p-6 mb-7">
+          <h2 className="font-[family-name:var(--font-playfair)] text-lg sm:text-xl mb-2">Welcome aboard! Here&apos;s how to get started:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">1️⃣</span>
               <div>

@@ -79,9 +79,9 @@ export default function TripsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">Adventures logged</div>
-          <h1 className="text-[32px]">My Trips</h1>
+          <h1 className="text-[26px] sm:text-[32px]">My Trips</h1>
         </div>
-        <button onClick={openNew} className="bg-gold text-bg px-5 py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 hover:-translate-y-px transition-all">
+        <button onClick={openNew} className="bg-gold text-bg px-4 sm:px-5 py-2 sm:py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 hover:-translate-y-px transition-all shrink-0">
           + Add Trip
         </button>
       </div>
@@ -98,20 +98,29 @@ export default function TripsPage() {
       ) : (
         <>
           {/* Controls bar */}
-          <div className="flex flex-wrap items-center gap-3 mb-5">
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search trips..."
-              className="bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2 text-[13px] text-text outline-none focus:border-gold transition-colors w-48 placeholder:text-text-muted"
-            />
-            <div className="flex gap-1">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-5">
+            <div className="flex gap-3 items-center">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search trips..."
+                className="bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2 text-[13px] text-text outline-none focus:border-gold transition-colors flex-1 sm:w-48 placeholder:text-text-muted"
+              />
+              <select
+                value={sort}
+                onChange={e => setSort(e.target.value as SortKey)}
+                className="sm:ml-auto bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2 text-[12px] text-text-muted outline-none cursor-pointer shrink-0"
+              >
+                {SORT_OPTIONS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="flex gap-1 overflow-x-auto pb-1 -mb-1">
               {FILTER_OPTIONS.map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] cursor-pointer border transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-[12px] cursor-pointer border transition-all whitespace-nowrap shrink-0 ${
                     filter === f
                       ? 'bg-gold/12 border-gold/40 text-gold'
                       : 'border-white/[0.08] text-text-muted hover:text-text hover:border-white/20'
@@ -121,13 +130,6 @@ export default function TripsPage() {
                 </button>
               ))}
             </div>
-            <select
-              value={sort}
-              onChange={e => setSort(e.target.value as SortKey)}
-              className="ml-auto bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2 text-[12px] text-text-muted outline-none cursor-pointer"
-            >
-              {SORT_OPTIONS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-            </select>
           </div>
 
           {displayTrips.length === 0 ? (

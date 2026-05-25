@@ -64,13 +64,13 @@ export function StatsGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       {stats.map(s => (
-        <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-6 relative overflow-hidden">
+        <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className={`absolute top-0 left-0 right-0 h-[3px]`}
                style={{ background: `linear-gradient(90deg, var(--color-${s.color}), var(--color-${s.color}-light, var(--color-${s.color})))` }} />
-          <div className="absolute right-5 top-5 text-[28px] opacity-30">{s.icon}</div>
-          <div className="text-[12px] text-text-muted uppercase tracking-wider mb-2">{s.label}</div>
-          <div className="font-[family-name:var(--font-playfair)] text-4xl text-text">{s.value}</div>
-          <div className="text-[12px] text-text-muted mt-1">{s.sub}</div>
+          <div className="absolute right-3 sm:right-5 top-3 sm:top-5 text-[24px] sm:text-[28px] opacity-30">{s.icon}</div>
+          <div className="text-[11px] sm:text-[12px] text-text-muted uppercase tracking-wider mb-1.5 sm:mb-2">{s.label}</div>
+          <div className="font-[family-name:var(--font-playfair)] text-2xl sm:text-4xl text-text">{s.value}</div>
+          <div className="text-[11px] sm:text-[12px] text-text-muted mt-1">{s.sub}</div>
         </div>
       ))}
     </div>
