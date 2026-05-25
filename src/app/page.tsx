@@ -38,7 +38,7 @@ export default async function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.03] via-transparent to-transparent" />
         <div className="max-w-5xl mx-auto px-6 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative">
           <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 rounded-full px-4 py-1.5 text-xs text-gold mb-8">
-            <span>&#10024;</span> Now in beta &mdash; start mapping your travels today
+            <span>&#10024;</span> Now with Group Trips &mdash; travel together, split the bill
           </div>
           <h1 className="font-[family-name:var(--font-playfair)] text-4xl md:text-6xl lg:text-7xl leading-tight mb-6">
             Stamp the world.
@@ -46,7 +46,7 @@ export default async function LandingPage() {
             <span className="text-gold">Log your journey.</span>
           </h1>
           <p className="text-text-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Track every country, map every trip, journal your adventures, and earn badges as you explore the globe.
+            Track every country, map every trip, journal your adventures, travel with friends, and earn badges as you explore the globe.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -73,8 +73,8 @@ export default async function LandingPage() {
             <div className="text-xs text-text-muted mt-1">Countries to explore</div>
           </div>
           <div>
-            <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-teal">25+</div>
-            <div className="text-xs text-text-muted mt-1">Badges to earn</div>
+            <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-teal">15+</div>
+            <div className="text-xs text-text-muted mt-1">Features built in</div>
           </div>
           <div>
             <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-stamp-red">100%</div>
@@ -105,6 +105,11 @@ export default async function LandingPage() {
               desc: 'Record every trip with dates, cities, photos, and notes. Sort and filter by continent, year, or search by name.',
             },
             {
+              icon: '👥',
+              title: 'Group Trips',
+              desc: 'Invite friends to join your trips. Split expenses, track shared budgets, and manage a group packing list together.',
+            },
+            {
               icon: '📔',
               title: 'Travel Journal',
               desc: 'Write journal entries for each trip with rich text. Capture memories, stories, and reflections from your adventures.',
@@ -125,9 +130,34 @@ export default async function LandingPage() {
               desc: 'Plot your trip routes with waypoints, transport modes, and distance calculations. See your journey come to life on the map.',
             },
             {
+              icon: '🌐',
+              title: 'AI Language Translator',
+              desc: 'Translate the entire app into 12+ languages with one click. Powered by AI for natural, accurate translations.',
+            },
+            {
+              icon: '⏳',
+              title: 'Trip Countdown',
+              desc: 'A live ticking countdown to your next adventure. See days, hours, minutes, and seconds until departure.',
+            },
+            {
+              icon: '💱',
+              title: 'Currency Converter',
+              desc: 'Convert between currencies right from your dashboard. Always know the exchange rate wherever you\'re headed.',
+            },
+            {
+              icon: '🕐',
+              title: 'World Clock',
+              desc: 'Track time zones for your favourite cities. Perfect for staying connected across the globe.',
+            },
+            {
+              icon: '🧳',
+              title: 'Packing Lists',
+              desc: 'Build custom packing lists for every trip. Check off items as you pack so you never forget a thing.',
+            },
+            {
               icon: '🌍',
               title: 'Public Profile',
-              desc: 'Share your travel map and stats with a public profile page. Show the world where you\'ve been.',
+              desc: 'Share your travel map and stats with a public profile page. Post to X, WhatsApp, or Facebook in one tap.',
             },
             {
               icon: '🎨',
