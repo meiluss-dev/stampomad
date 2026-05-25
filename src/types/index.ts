@@ -12,6 +12,7 @@ export interface Trip {
   quickPin: boolean;
   fromCode?: string;
   published?: boolean;
+  isGroup?: boolean;
   journal: JournalEntry[];
 }
 
@@ -86,6 +87,68 @@ export interface ClockEntry {
   tz: string;
   label: string;
   city: string;
+}
+
+// ── Group Trips ──
+
+export type MemberRole = 'owner' | 'member';
+export type InviteStatus = 'pending' | 'accepted' | 'declined';
+
+export interface TripMember {
+  id: number;
+  tripId: number;
+  userId: string;
+  role: MemberRole;
+  status: InviteStatus;
+  joinedAt: string;
+  displayName: string;
+  avatarUrl: string | null;
+  username: string;
+}
+
+export interface TripExpense {
+  id: number;
+  tripId: number;
+  paidBy: string; // user_id
+  paidByName: string;
+  amount: number;
+  currency: string;
+  category: string;
+  description: string;
+  splitType: 'equal' | 'custom';
+  splits: ExpenseSplit[];
+  createdAt: string;
+}
+
+export interface ExpenseSplit {
+  userId: string;
+  displayName: string;
+  amount: number;
+  settled: boolean;
+}
+
+export interface SharedItem {
+  id: number;
+  tripId: number;
+  text: string;
+  category: string;
+  assignedTo: string | null; // user_id
+  assignedName: string | null;
+  claimedBy: string | null; // user_id
+  claimedName: string | null;
+  checked: boolean;
+}
+
+export interface GroupInvite {
+  id: number;
+  tripId: number;
+  tripName: string;
+  tripEmoji: string;
+  tripCode: string;
+  inviterName: string;
+  inviterAvatar: string | null;
+  status: InviteStatus;
+  createdAt: string;
 }
 
 export interface AppState {

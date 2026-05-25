@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/components/ui/toast';
 import { countryFlag, fmtDate } from '@/lib/countries';
+import { InviteModal } from '@/components/group/invite-modal';
+import { GroupTripPanel } from '@/components/group/group-trip-panel';
 import type { Trip } from '@/types';
 
 const MAX_PHOTOS = 8;
@@ -42,6 +44,8 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   const [photoIdx, setPhotoIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [showManage, setShowManage] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -224,6 +228,14 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
           <button onClick={onPacking} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             🧳 Pack{packingLists[t.id]?.items?.length ? ` (${packingLists[t.id].items.filter(i => i.checked).length}/${packingLists[t.id].items.length})` : ''}
           </button>
+          <button onClick={() => setInviteOpen(true)} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
+            👥 Invite
+          </button>
+          {t.isGroup && (
+            <button onClick={() => setGroupOpen(true)} className="py-[5px] px-3 rounded-lg bg-gold/10 text-gold text-xs cursor-pointer">
+              👥 Group
+            </button>
+          )}
           <button onClick={onEdit} className="py-[5px] px-3 rounded-lg bg-gold/10 text-gold text-xs cursor-pointer">
             ✏️ Edit
           </button>
@@ -244,6 +256,9 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
           </button>
         </div>
       </div>
+
+      <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} trip={t} />
+      {groupOpen && <GroupTripPanel trip={t} onClose={() => setGroupOpen(false)} />}
     </div>
   );
 }

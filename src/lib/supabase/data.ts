@@ -25,6 +25,7 @@ export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: st
     quickPin: t.quick_pin,
     fromCode: t.from_code || '',
     published: t.published || false,
+    isGroup: t.is_group || false,
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
       .map(j => ({ id: j.id, date: j.date, time: j.time, title: j.title, text: j.body }))

@@ -8,6 +8,7 @@ import { ApiKeysModal } from '@/components/settings/api-keys-modal';
 import { ProfileModal } from '@/components/settings/profile-modal';
 import { ThemeSwitcher } from '@/components/theme-provider';
 import { useLang, LanguageModal } from '@/components/language-provider';
+import { InviteBadge } from '@/components/group/invite-badge';
 
 const tabKeys = [
   { key: 'nav_dashboard', href: '/dashboard', fallback: 'Dashboard' },
@@ -75,6 +76,8 @@ export function Navbar() {
           <span className="text-[13px] text-text-muted hidden sm:inline">
             {allCodes.size} {t('countries_explored')}
           </span>
+
+          <InviteBadge />
 
           <div className="relative" ref={dropdownRef}>
             <button
