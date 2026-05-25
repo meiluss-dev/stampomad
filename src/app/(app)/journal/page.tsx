@@ -24,7 +24,14 @@ export default function JournalPage() {
   );
 
   if (loading) {
-    return <div className="flex items-center justify-center py-20"><div className="text-text-muted text-lg">Loading...</div></div>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="text-4xl mb-3 animate-pulse">📖</div>
+          <div className="text-text-muted text-lg">Loading your journal...</div>
+        </div>
+      </div>
+    );
   }
 
   return (

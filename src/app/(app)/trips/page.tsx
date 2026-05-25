@@ -6,6 +6,7 @@ import { TripCard } from '@/components/trips/trip-card';
 import { TripModal } from '@/components/trips/trip-modal';
 import { PackingListModal } from '@/components/trips/packing-list';
 import { RouteMapOverlay } from '@/components/map/route-map-overlay';
+import { useToast } from '@/components/ui/toast';
 import type { Trip } from '@/types';
 
 type SortKey = 'newest' | 'oldest' | 'name' | 'duration';
@@ -22,6 +23,7 @@ const FILTER_OPTIONS: FilterKey[] = ['all', 'Europe', 'Asia', 'Americas', 'Afric
 
 export default function TripsPage() {
   const { trips, loading, mapboxToken } = useStore();
+  const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [routeTrip, setRouteTrip] = useState<Trip | null>(null);
@@ -143,7 +145,7 @@ export default function TripsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {displayTrips.map(t => (
                 <TripCard key={t.id} trip={t} onEdit={() => openEdit(t)} onPacking={() => setPackingTrip(t)} onRoute={() => {
-                  if (!mapboxToken) { alert('Set your Mapbox token in Settings first.'); return; }
+                  if (!mapboxToken) { toast('Set your Mapbox token in API Keys settings first.', 'error'); return; }
                   setRouteTrip(t);
                 }} />
               ))}

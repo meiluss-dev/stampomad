@@ -18,9 +18,20 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Stampomad — Stamp the World",
-  description: "Log your travels, map your world, share your story.",
+  description: "Track every country, map every trip, journal your adventures, and earn badges as you explore the globe.",
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>",
+  },
+  openGraph: {
+    title: "Stampomad — Stamp the World",
+    description: "Track every country, map every trip, journal your adventures, and earn badges as you explore the globe.",
+    siteName: "Stampomad",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Stampomad — Stamp the World",
+    description: "Track every country, map every trip, journal your adventures.",
   },
 };
 

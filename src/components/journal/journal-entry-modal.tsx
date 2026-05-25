@@ -27,7 +27,7 @@ export function JournalEntryModal({ open, onOpenChange, tripId }: { open: boolea
 
   async function save() {
     if (!date || !text.trim()) {
-      alert('Please add a date and some text.');
+      toast('Please add a date and some text.', 'error');
       return;
     }
     await addJournalEntry(tripId, { date, time, title: title.trim(), text: text.trim() });

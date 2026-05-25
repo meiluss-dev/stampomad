@@ -176,12 +176,10 @@ export function WorldMap() {
     setQuery('');
     setShowResults(false);
     highlightCountry(code);
-    // For tiny countries, offer to pin directly
+    // For tiny countries, auto-pin since they're hard to click
     if (tinyCountries.has(code) && !visitedCountries.has(code) && !trips.some(t => t.code === code)) {
       setTimeout(() => {
-        if (confirm(`${countryNames[code] || code} is very small on the map — pin it as visited directly?`)) {
-          toggleVisitedCountry(code);
-        }
+        toggleVisitedCountry(code);
       }, 800);
     }
   }

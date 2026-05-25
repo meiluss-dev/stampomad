@@ -39,7 +39,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
   }, [open, trip]);
 
   async function save() {
-    if (!name || !country || !start || !end) { alert('Please fill in name, country and dates.'); return; }
+    if (!name || !country || !start || !end) { toast('Please fill in name, country and dates.', 'error'); return; }
     const [code, continent] = country.split('|');
     const fromCode = fromCountry ? fromCountry.split('|')[0] : '';
     const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 864e5) + 1);

@@ -77,8 +77,11 @@ export default function StatsPage() {
     return (
       <div className="text-center py-20">
         <div className="text-6xl mb-4">📊</div>
-        <h1 className="font-[family-name:var(--font-playfair)] text-3xl mb-3">Your Travel Stats</h1>
-        <p className="text-text-muted">Start adding trips and pinning countries to see your stats here!</p>
+        <h1 className="font-[family-name:var(--font-playfair)] text-2xl sm:text-3xl mb-3">Your Travel Stats</h1>
+        <p className="text-text-muted mb-6">Start adding trips and pinning countries to see your stats here!</p>
+        <a href="/trips" className="inline-block px-6 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-85 transition-all">
+          + Add your first trip
+        </a>
       </div>
     );
   }
