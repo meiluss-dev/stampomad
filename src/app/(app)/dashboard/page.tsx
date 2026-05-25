@@ -12,9 +12,11 @@ import { CalendarWidget } from '@/components/widgets/calendar-widget';
 import { WorldClockWidget } from '@/components/widgets/world-clock-widget';
 import { CurrencyWidget } from '@/components/widgets/currency-widget';
 import { CountdownWidget } from '@/components/widgets/countdown-widget';
+import { useLang } from '@/components/language-provider';
 
 export default function DashboardPage() {
   const { loading, trips, visitedCountries, homebase } = useStore();
+  const { t } = useLang();
 
   if (loading) {
     return (
@@ -31,7 +33,7 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-7">
-        <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1.5">Your travel story</div>
+        <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1.5">{t('your_travel_story')}</div>
         <h1 className="text-[28px] sm:text-[38px]">{headlines[Math.min(Math.floor(realTrips.length / 2), 4)]}</h1>
       </div>
 

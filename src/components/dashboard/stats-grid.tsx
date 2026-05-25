@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { haversine, getCountryCenter } from '@/lib/countries';
+import { useLang } from '@/components/language-provider';
 
 function calcTotalDistance(trips: ReturnType<typeof useStore>['trips'], routes: ReturnType<typeof useStore>['routes'], homebase: ReturnType<typeof useStore>['homebase']) {
   let totalKm = 0;
@@ -48,17 +49,19 @@ export function StatsGrid() {
     localStorage.setItem('stampomad-distance-unit', next);
   }
 
+  const { t } = useLang();
+
   const stats = [
-    { label: 'Countries visited', value: codes.size, sub: 'of 195 total', icon: '🌍', color: 'gold' },
+    { label: t('stat_countries'), value: codes.size, sub: t('stat_sub_countries'), icon: '🌍', color: 'gold' },
     {
-      label: 'Distance traveled',
+      label: t('stat_distance'),
       value: displayDist.toLocaleString(),
       sub: <span onClick={toggleUnit} className="cursor-pointer hover:text-gold transition-colors">{unit} · click to switch</span>,
       icon: '✈️',
       color: 'teal',
     },
-    { label: 'Days abroad', value: days, sub: 'total trip days', icon: '📅', color: 'stamp-red' },
-    { label: 'Journal entries', value: entries, sub: 'memories logged', icon: '📝', color: 'stamp-green' },
+    { label: t('stat_days'), value: days, sub: t('stat_sub_days'), icon: '📅', color: 'stamp-red' },
+    { label: t('stat_entries'), value: entries, sub: t('stat_sub_entries'), icon: '📝', color: 'stamp-green' },
   ];
 
   return (

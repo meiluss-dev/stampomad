@@ -7,12 +7,13 @@ import { useStore } from '@/lib/store';
 import { ApiKeysModal } from '@/components/settings/api-keys-modal';
 import { ProfileModal } from '@/components/settings/profile-modal';
 import { ThemeSwitcher } from '@/components/theme-provider';
+import { useLang, LanguageModal } from '@/components/language-provider';
 
-const tabs = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'My Trips', href: '/trips' },
-  { name: 'Journal', href: '/journal' },
-  { name: 'Stats', href: '/stats' },
+const tabKeys = [
+  { key: 'nav_dashboard', href: '/dashboard', fallback: 'Dashboard' },
+  { key: 'nav_trips', href: '/trips', fallback: 'My Trips' },
+  { key: 'nav_journal', href: '/journal', fallback: 'Journal' },
+  { key: 'nav_stats', href: '/stats', fallback: 'Stats' },
 ];
 
 export function Navbar() {
@@ -22,6 +23,8 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [apiKeysOpen, setApiKeysOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const { lang, t } = useLang();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const allCodes = new Set([
@@ -50,7 +53,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex gap-1">
-          {tabs.map(tab => (
+          {tabKeys.map(tab => (
             <Link
               key={tab.href}
               href={tab.href}
@@ -60,7 +63,7 @@ export function Navbar() {
                   : 'text-text-muted hover:text-text hover:bg-white/[0.04]'
               }`}
             >
-              {tab.name}
+              {t(tab.key)}
             </Link>
           ))}
         </div>
@@ -70,7 +73,7 @@ export function Navbar() {
             <ThemeSwitcher />
           </div>
           <span className="text-[13px] text-text-muted hidden sm:inline">
-            {allCodes.size} countries explored
+            {allCodes.size} {t('countries_explored')}
           </span>
 
           <div className="relative" ref={dropdownRef}>
@@ -115,6 +118,12 @@ export function Navbar() {
                   🔑 API Keys
                 </button>
                 <button
+                  onClick={() => { setLangOpen(true); setDropdownOpen(false); }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                >
+                  🌐 Language <span className="ml-auto text-[11px] text-text-muted">{lang.toUpperCase()}</span>
+                </button>
+                <button
                   onClick={async () => { await signOut(); window.location.href = '/auth'; }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] text-stamp-red hover:bg-bg3 w-full text-left transition-colors"
                 >
@@ -139,7 +148,7 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="fixed inset-0 top-[56px] sm:top-[60px] bg-bg2 z-[99] flex flex-col p-6 gap-2 border-t border-white/[0.08] md:hidden">
-          {tabs.map(tab => (
+          {tabKeys.map(tab => (
             <Link
               key={tab.href}
               href={tab.href}
@@ -148,7 +157,7 @@ export function Navbar() {
                 pathname === tab.href ? 'bg-gold text-bg' : 'text-text hover:bg-bg3'
               }`}
             >
-              {tab.name}
+              {t(tab.key)}
             </Link>
           ))}
           <div className="border-t border-white/[0.08] mt-3 pt-4">
@@ -160,6 +169,7 @@ export function Navbar() {
 
       <ApiKeysModal open={apiKeysOpen} onOpenChange={setApiKeysOpen} />
       <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
+      <LanguageModal open={langOpen} onOpenChange={setLangOpen} />
     </>
   );
 }

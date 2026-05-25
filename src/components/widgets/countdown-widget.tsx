@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { fmtDate, countryFlag } from '@/lib/countries';
 import { TripModal } from '@/components/trips/trip-modal';
+import { useLang } from '@/components/language-provider';
 
 function useNow(intervalMs: number) {
   const [now, setNow] = useState(new Date());
@@ -16,6 +17,7 @@ function useNow(intervalMs: number) {
 
 export function CountdownWidget() {
   const { trips } = useStore();
+  const { t } = useLang();
   const [showAddTrip, setShowAddTrip] = useState(false);
   const now = useNow(1000); // tick every second
   const today = now.toISOString().split('T')[0];
@@ -37,10 +39,10 @@ export function CountdownWidget() {
     return (
       <>
         <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
-          <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Next trip</h3>
+          <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">{t('next_trip')}</h3>
           <div className="text-center py-4">
             <div className="text-3xl mb-2">✈️</div>
-            <div className="text-sm text-text-muted">No upcoming trips</div>
+            <div className="text-sm text-text-muted">{t('no_upcoming')}</div>
             <div className="text-[11px] text-text-muted mt-1 mb-3">Plan your next adventure!</div>
             <button
               onClick={() => setShowAddTrip(true)}
@@ -70,7 +72,7 @@ export function CountdownWidget() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stamp-green opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-stamp-green" />
           </span>
-          <h3 className="text-xs text-stamp-green uppercase tracking-wider font-medium">Currently traveling</h3>
+          <h3 className="text-xs text-stamp-green uppercase tracking-wider font-medium">{t('currently_traveling')}</h3>
         </div>
         <div className="bg-stamp-green/8 border border-stamp-green/20 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
@@ -125,7 +127,7 @@ export function CountdownWidget() {
     <>
       <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs text-text-muted uppercase tracking-wider">Next trip</h3>
+          <h3 className="text-xs text-text-muted uppercase tracking-wider">{t('next_trip')}</h3>
           <button
             onClick={() => setShowAddTrip(true)}
             className="text-[11px] text-gold cursor-pointer hover:text-gold-light transition-colors bg-transparent border-none"
