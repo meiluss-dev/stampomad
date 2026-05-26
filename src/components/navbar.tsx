@@ -120,6 +120,13 @@ export function Navbar() {
                 >
                   🔑 API Keys
                 </button>
+                <Link
+                  href="/admin"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                >
+                  🛠️ Admin
+                </Link>
                 <button
                   onClick={() => { setLangOpen(true); setDropdownOpen(false); }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
