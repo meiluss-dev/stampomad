@@ -39,6 +39,8 @@ interface StoreContextType {
   toggleVisitedCountry: (code: string) => Promise<void>;
 
   addJournalEntry: (tripId: number, entry: Omit<JournalEntry, 'id'>) => Promise<void>;
+  updateJournalEntry: (tripId: number, entry: JournalEntry) => Promise<void>;
+  deleteJournalEntry: (tripId: number, entryId: number) => Promise<void>;
 
   setHomebase: (hb: Homebase | null) => Promise<void>;
   setLivedPlaces: (places: LivedPlace[]) => Promise<void>;
@@ -230,6 +232,30 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     trackCreate('journal');
   }, [user, trips]);
 
+  const updateJournalEntry = useCallback(async (tripId: number, entry: JournalEntry) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return { ...t, journal: t.journal.map(j => j.id === entry.id ? entry : j) };
+    }));
+    if (user) {
+      const trip = trips.find(t => t.id === tripId);
+      if (trip) {
+        const updated = { ...trip, journal: trip.journal.map(j => j.id === entry.id ? entry : j) };
+        await saveTripToSupabase(supabase.current, user.id, updated);
+      }
+    }
+  }, [user, trips]);
+
+  const deleteJournalEntryAction = useCallback(async (tripId: number, entryId: number) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return { ...t, journal: t.journal.filter(j => j.id !== entryId) };
+    }));
+    if (user) {
+      await deleteJournalEntryFromSupabase(supabase.current, user.id, entryId);
+    }
+  }, [user]);
+
   const setHomebase = useCallback(async (hb: Homebase | null) => {
     setHomebaseState(hb);
     await persistSettings({ homebase: hb });
@@ -323,7 +349,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       user, loading, trips, visitedCountries, homebase, livedPlaces,
       routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile, packingLists, wishlist,
       addTrip, updateTrip, deleteTrip, toggleVisitedCountry,
-      addJournalEntry,
+      addJournalEntry, updateJournalEntry, deleteJournalEntry: deleteJournalEntryAction,
       setHomebase, setLivedPlaces: setLivedPlacesAction,
       addLivedPlace, removeLivedPlace,
       saveRoute: saveRouteAction, saveTripPhotos: saveTripPhotosAction,

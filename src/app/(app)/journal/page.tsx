@@ -9,12 +9,13 @@ import { AISummary } from '@/components/journal/ai-summary';
 import { useLang } from '@/components/language-provider';
 
 export default function JournalPage() {
-  const { trips, loading } = useStore();
+  const { trips, loading, deleteJournalEntry } = useStore();
   const { t } = useLang();
   const searchParams = useSearchParams();
   const tripParam = searchParams.get('trip');
   const [selectedId, setSelectedId] = useState<number | null>(tripParam ? +tripParam : null);
   const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<import('@/types').JournalEntry | null>(null);
 
   useEffect(() => {
     if (tripParam) setSelectedId(+tripParam);
@@ -92,7 +93,7 @@ export default function JournalPage() {
                 <div className="flex gap-2 shrink-0">
                   {entries.length > 0 && <AISummary trip={selectedTrip} />}
                   <button
-                    onClick={() => setEntryModalOpen(true)}
+                    onClick={() => { setEditingEntry(null); setEntryModalOpen(true); }}
                     className="bg-gold text-bg px-4 py-2 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 transition-all"
                   >
                     + Add Entry
@@ -109,11 +110,33 @@ export default function JournalPage() {
               )}
 
               {entries.map(e => (
-                <div key={e.id} className="border-l-2 border-white/[0.08] pl-5 mb-7 relative">
+                <div key={e.id} className="border-l-2 border-white/[0.08] pl-5 mb-7 relative group">
                   <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-gold" />
-                  <div className="mb-1.5">
-                    <div className="text-xs text-gold">{fmtDate(e.date)}{e.time ? ` · ${e.time}` : ''}</div>
-                    {e.title && <div className="font-[family-name:var(--font-playfair)] text-base mt-0.5">{e.title}</div>}
+                  <div className="flex items-start justify-between gap-3 mb-1.5">
+                    <div>
+                      <div className="text-xs text-gold">{fmtDate(e.date)}{e.time ? ` · ${e.time}` : ''}</div>
+                      {e.title && <div className="font-[family-name:var(--font-playfair)] text-base mt-0.5">{e.title}</div>}
+                    </div>
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button
+                        onClick={() => { setEditingEntry(e); setEntryModalOpen(true); }}
+                        className="text-[11px] text-text-muted hover:text-gold px-2 py-1 rounded-lg border border-white/[0.08] hover:border-gold/30 cursor-pointer transition-all bg-transparent"
+                        title="Edit entry"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Delete this journal entry?')) {
+                            deleteJournalEntry(selectedTrip!.id, e.id);
+                          }
+                        }}
+                        className="text-[11px] text-text-muted hover:text-stamp-red px-2 py-1 rounded-lg border border-white/[0.08] hover:border-stamp-red/30 cursor-pointer transition-all bg-transparent"
+                        title="Delete entry"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                   <div className="text-sm leading-[1.75] text-text/80 whitespace-pre-wrap">{e.text}</div>
                 </div>
@@ -121,8 +144,9 @@ export default function JournalPage() {
 
               <JournalEntryModal
                 open={entryModalOpen}
-                onOpenChange={setEntryModalOpen}
+                onOpenChange={(open) => { setEntryModalOpen(open); if (!open) setEditingEntry(null); }}
                 tripId={selectedTrip.id}
+                entry={editingEntry}
               />
             </>
           )}

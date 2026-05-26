@@ -6,32 +6,60 @@ import { useToast } from '@/components/ui/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import type { JournalEntry } from '@/types';
 
-export function JournalEntryModal({ open, onOpenChange, tripId }: { open: boolean; onOpenChange: (open: boolean) => void; tripId: number }) {
-  const { addJournalEntry } = useStore();
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  tripId: number;
+  entry?: JournalEntry | null;
+}
+
+export function JournalEntryModal({ open, onOpenChange, tripId, entry }: Props) {
+  const { addJournalEntry, updateJournalEntry } = useStore();
   const { toast } = useToast();
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
 
+  const isEditing = !!entry;
+
   useEffect(() => {
     if (open) {
-      const now = new Date();
-      setDate(now.toISOString().split('T')[0]);
-      setTime(now.toTimeString().slice(0, 5));
-      setTitle('');
-      setText('');
+      if (entry) {
+        setDate(entry.date);
+        setTime(entry.time || '');
+        setTitle(entry.title || '');
+        setText(entry.text || '');
+      } else {
+        const now = new Date();
+        setDate(now.toISOString().split('T')[0]);
+        setTime(now.toTimeString().slice(0, 5));
+        setTitle('');
+        setText('');
+      }
     }
-  }, [open]);
+  }, [open, entry]);
 
   async function save() {
     if (!date || !text.trim()) {
       toast('Please add a date and some text.', 'error');
       return;
     }
-    await addJournalEntry(tripId, { date, time, title: title.trim(), text: text.trim() });
-    toast('Journal entry saved!');
+    if (isEditing && entry) {
+      await updateJournalEntry(tripId, {
+        id: entry.id,
+        date,
+        time,
+        title: title.trim(),
+        text: text.trim(),
+      });
+      toast('Entry updated!');
+    } else {
+      await addJournalEntry(tripId, { date, time, title: title.trim(), text: text.trim() });
+      toast('Journal entry saved!');
+    }
     onOpenChange(false);
   }
 
@@ -39,7 +67,7 @@ export function JournalEntryModal({ open, onOpenChange, tripId }: { open: boolea
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-bg2 border-white/[0.12] text-text max-w-[520px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">New Journal Entry</DialogTitle>
+          <DialogTitle className="text-2xl">{isEditing ? 'Edit Journal Entry' : 'New Journal Entry'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3.5">
@@ -68,7 +96,9 @@ export function JournalEntryModal({ open, onOpenChange, tripId }: { open: boolea
         </div>
         <div className="flex gap-3 justify-end mt-6">
           <button onClick={() => onOpenChange(false)} className="px-5 py-2.5 rounded-[10px] border border-white/[0.08] text-text-muted text-sm cursor-pointer">Cancel</button>
-          <button onClick={save} className="px-6 py-2.5 rounded-[10px] bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85">Save Entry</button>
+          <button onClick={save} className="px-6 py-2.5 rounded-[10px] bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85">
+            {isEditing ? 'Update Entry' : 'Save Entry'}
+          </button>
         </div>
       </DialogContent>
     </Dialog>

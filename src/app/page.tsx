@@ -112,7 +112,12 @@ export default async function LandingPage() {
             {
               icon: '📔',
               title: 'Travel Journal',
-              desc: 'Write journal entries for each trip with rich text. Capture memories, stories, and reflections from your adventures.',
+              desc: 'Write journal entries for each trip with rich text. Edit, organise, and relive memories from your adventures.',
+            },
+            {
+              icon: '🤖',
+              title: 'AI Trip Summary',
+              desc: 'Get a beautifully written AI-generated summary of your trip based on your journal entries. One click to capture the story.',
             },
             {
               icon: '📊',
