@@ -2,20 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-// Admin user IDs — add your Supabase user ID here
-const ADMIN_IDS = new Set([
-  process.env.ADMIN_USER_ID || '',
-]);
-
-async function isAdmin(request: NextRequest) {
+async function isAdmin() {
+  const adminId = process.env.ADMIN_USER_ID;
+  if (!adminId) { console.error('[Admin] ADMIN_USER_ID env var not set'); return false; }
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  return ADMIN_IDS.has(user.id);
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) { console.error('[Admin] auth error:', error.message); return false; }
+  if (!user) { console.error('[Admin] no user in session'); return false; }
+  return user.id === adminId;
 }
 
 export async function GET(request: NextRequest) {
-  if (!await isAdmin(request)) {
+  if (!await isAdmin()) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
