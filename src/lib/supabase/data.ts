@@ -74,7 +74,9 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
   const { error } = await supabase.from('trips').upsert({
     id: trip.id, user_id: userId,
     name: trip.name, code: trip.code, continent: trip.continent,
-    emoji: trip.emoji, start_date: trip.start, end_date: trip.end,
+    emoji: trip.emoji,
+    start_date: trip.start || null,
+    end_date: trip.end || null,
     days: trip.days, cities: trip.cities, notes: trip.notes,
     quick_pin: trip.quickPin, from_code: trip.fromCode || '',
     published: trip.published || false,
