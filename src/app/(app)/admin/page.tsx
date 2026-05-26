@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 
-type Tab = 'overview' | 'users' | 'emails' | 'engagement';
+type Tab = 'overview' | 'users' | 'emails' | 'engagement' | 'features' | 'tiers';
 
 interface Overview {
   totalUsers: number;
@@ -50,6 +50,26 @@ interface EmailRow {
   updated_at: string;
 }
 
+interface FeatureUsageItem {
+  feature: string;
+  totalEvents: number;
+  uniqueUsers: number;
+  actions: Record<string, number>;
+  gateHits: number;
+}
+
+interface FeatureUsageData {
+  period: string;
+  totalEvents: number;
+  features: FeatureUsageItem[];
+  dailyTrend: { date: string; count: number }[];
+}
+
+interface TierData {
+  breakdown: Record<string, number>;
+  total: number;
+}
+
 export default function AdminPage() {
   const { user } = useStore();
   const [tab, setTab] = useState<Tab>('overview');
@@ -71,6 +91,12 @@ export default function AdminPage() {
   // Emails
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [emailSearch, setEmailSearch] = useState('');
+
+  // Feature Usage
+  const [featureUsage, setFeatureUsage] = useState<FeatureUsageData | null>(null);
+
+  // Tiers
+  const [tierData, setTierData] = useState<TierData | null>(null);
 
   const fetchApi = useCallback(async (action: string, extra = '') => {
     const res = await fetch(`/api/admin?action=${action}${extra}`);
@@ -99,6 +125,10 @@ export default function AdminPage() {
       fetchApi('engagement').then(d => { if (d) setEngagement(d); });
     } else if (tab === 'emails') {
       fetchApi('emails').then(d => { if (d) setEmails(d.emails || []); });
+    } else if (tab === 'features') {
+      fetchApi('feature-usage', '&days=30').then(d => { if (d) setFeatureUsage(d); });
+    } else if (tab === 'tiers') {
+      fetchApi('tiers').then(d => { if (d) setTierData(d); });
     }
   }, [tab, authorized, userSearch, userPage, fetchApi]);
 
@@ -123,6 +153,8 @@ export default function AdminPage() {
     { key: 'users', label: 'Users', icon: '👥' },
     { key: 'emails', label: 'Email List', icon: '📧' },
     { key: 'engagement', label: 'Engagement', icon: '📈' },
+    { key: 'features', label: 'Feature Usage', icon: '🔥' },
+    { key: 'tiers', label: 'Tiers', icon: '💎' },
   ];
 
   return (
@@ -169,6 +201,8 @@ export default function AdminPage() {
       )}
       {tab === 'emails' && <EmailsTab emails={emails} search={emailSearch} onSearch={setEmailSearch} />}
       {tab === 'engagement' && <EngagementTab engagement={engagement} />}
+      {tab === 'features' && <FeatureUsageTab data={featureUsage} />}
+      {tab === 'tiers' && <TiersTab data={tierData} />}
     </div>
   );
 }
@@ -474,6 +508,200 @@ function EngagementTab({ engagement }: { engagement: Engagement | null }) {
             <div className="text-text-muted text-sm text-center py-4">No users with trips yet</div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Feature Usage Tab ──
+function FeatureUsageTab({ data }: { data: FeatureUsageData | null }) {
+  if (!data) return <div className="text-text-muted text-sm animate-pulse">Loading feature usage...</div>;
+
+  const maxEvents = data.features.length > 0 ? data.features[0].totalEvents : 1;
+  const maxDaily = data.dailyTrend.length > 0 ? Math.max(...data.dailyTrend.map(d => d.count)) : 1;
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4">
+          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Total Events</div>
+          <div className="font-[family-name:var(--font-playfair)] text-2xl">{data.totalEvents.toLocaleString()}</div>
+          <div className="text-[10px] text-text-muted mt-0.5">Last {data.period}</div>
+        </div>
+        <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-4">
+          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Features Used</div>
+          <div className="font-[family-name:var(--font-playfair)] text-2xl">{data.features.length}</div>
+        </div>
+        <div className="bg-bg3 border border-stamp-red/20 rounded-2xl p-4">
+          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Gate Hits</div>
+          <div className="font-[family-name:var(--font-playfair)] text-2xl text-stamp-red">
+            {data.features.reduce((a, f) => a + f.gateHits, 0)}
+          </div>
+          <div className="text-[10px] text-stamp-red mt-0.5">Premium demand signal</div>
+        </div>
+      </div>
+
+      {/* Daily activity chart */}
+      {data.dailyTrend.length > 1 && (
+        <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
+          <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Daily Activity</h3>
+          <div className="flex items-end gap-[2px] h-24">
+            {data.dailyTrend.slice(-30).map((d, i) => {
+              const pct = (d.count / maxDaily) * 100;
+              return (
+                <div key={i} className="flex-1 group relative">
+                  <div
+                    className="bg-teal/60 hover:bg-teal rounded-t transition-colors w-full"
+                    style={{ height: `${Math.max(pct, 2)}%` }}
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-bg2 border border-white/[0.12] rounded-lg px-2 py-1 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none mb-1 z-10">
+                    {d.date}: {d.count} events
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-[10px] text-text-muted mt-2">
+            <span>{data.dailyTrend.slice(-30)[0]?.date}</span>
+            <span>{data.dailyTrend[data.dailyTrend.length - 1]?.date}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Feature ranking */}
+      <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Feature Ranking (by events)</h3>
+        <div className="space-y-3">
+          {data.features.map((f, i) => {
+            const pct = (f.totalEvents / maxEvents) * 100;
+            return (
+              <div key={f.feature} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gold font-[family-name:var(--font-playfair)] text-sm w-5 text-center">{i + 1}</span>
+                    <span className="text-sm font-medium">{f.feature.replace(/_/g, ' ')}</span>
+                    {f.gateHits > 0 && (
+                      <span className="text-[9px] text-stamp-red bg-stamp-red/10 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                        {f.gateHits} gate hits
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-[12px] text-text-muted">
+                    <span>{f.uniqueUsers} users</span>
+                    <span className="text-text font-medium">{f.totalEvents} events</span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="h-full bg-gold/70 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                </div>
+                {/* Action breakdown */}
+                <div className="flex gap-2 pl-7">
+                  {Object.entries(f.actions).map(([action, count]) => (
+                    <span key={action} className="text-[10px] text-text-muted">
+                      {action}: {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {data.features.length === 0 && (
+            <div className="text-text-muted text-sm text-center py-6">
+              No usage data yet — events will appear as users interact with features
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tiers Tab ──
+function TiersTab({ data }: { data: TierData | null }) {
+  if (!data) return <div className="text-text-muted text-sm animate-pulse">Loading tier data...</div>;
+
+  const tiers = [
+    { key: 'free', label: 'Free', color: 'text-muted', bgColor: 'bg-white/[0.06]', icon: '🆓' },
+    { key: 'premium', label: 'Premium', color: 'gold', bgColor: 'bg-gold/10', icon: '✨' },
+    { key: 'lifetime', label: 'Lifetime', color: 'teal', bgColor: 'bg-teal/10', icon: '💎' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Tier breakdown */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {tiers.map(t => {
+          const count = data.breakdown[t.key] || 0;
+          const pct = data.total > 0 ? Math.round((count / data.total) * 100) : 0;
+          return (
+            <div key={t.key} className={`bg-bg3 border border-white/[0.08] rounded-2xl p-5 text-center`}>
+              <div className="text-3xl mb-2">{t.icon}</div>
+              <div className="font-[family-name:var(--font-playfair)] text-3xl mb-1" style={{ color: `var(--color-${t.color})` }}>
+                {count}
+              </div>
+              <div className="text-[11px] text-text-muted uppercase tracking-wider">{t.label}</div>
+              <div className="text-[11px] text-text-muted mt-1">{pct}%</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Visual bar */}
+      <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-5">
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">Distribution</h3>
+        <div className="h-6 rounded-full overflow-hidden flex bg-white/[0.06]">
+          {tiers.map(t => {
+            const count = data.breakdown[t.key] || 0;
+            const pct = data.total > 0 ? (count / data.total) * 100 : 0;
+            if (pct === 0) return null;
+            const colors: Record<string, string> = { free: '#8899a6', premium: '#c9a96e', lifetime: '#5bbfb5' };
+            return (
+              <div
+                key={t.key}
+                className="h-full transition-all duration-500 flex items-center justify-center text-[10px] font-medium"
+                style={{ width: `${pct}%`, backgroundColor: colors[t.key] || '#555', color: '#0f1419' }}
+              >
+                {pct > 8 ? `${t.label} ${count}` : ''}
+              </div>
+            );
+          })}
+        </div>
+        <div className="text-center text-xs text-text-muted mt-3">
+          {data.total} total users
+        </div>
+      </div>
+
+      {/* Monetization readiness */}
+      <div className="bg-bg3 border border-gold/20 rounded-2xl p-5">
+        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-3">Monetization Status</h3>
+        <div className="space-y-2.5 text-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="text-stamp-green">✓</span>
+            <span>Feature flags infrastructure ready</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-stamp-green">✓</span>
+            <span>Usage tracking active</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-stamp-green">✓</span>
+            <span>User tier system in place</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-gold">○</span>
+            <span className="text-text-muted">Stripe integration (not connected)</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-gold">○</span>
+            <span className="text-text-muted">Premium features gated (all currently free)</span>
+          </div>
+        </div>
+        <p className="text-[11px] text-text-muted mt-4 leading-relaxed">
+          To gate a feature, change its tier from &apos;free&apos; to &apos;premium&apos; in{' '}
+          <code className="bg-bg4 px-1.5 py-0.5 rounded text-[10px]">src/lib/features.ts</code>.
+          The FeatureGate component will automatically show an upgrade prompt.
+        </p>
       </div>
     </div>
   );

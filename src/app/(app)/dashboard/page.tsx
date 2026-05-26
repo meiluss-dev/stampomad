@@ -11,6 +11,7 @@ import { CalendarWidget } from '@/components/widgets/calendar-widget';
 import { WorldClockWidget } from '@/components/widgets/world-clock-widget';
 import { CurrencyWidget } from '@/components/widgets/currency-widget';
 import { UpcomingTripsBar } from '@/components/dashboard/upcoming-trips';
+import { SetupChecklist } from '@/components/onboarding/setup-checklist';
 import { useLang } from '@/components/language-provider';
 
 export default function DashboardPage() {
@@ -65,6 +66,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <SetupChecklist />
       <StatsGrid />
       <HomebaseBar />
       <WorldMap />

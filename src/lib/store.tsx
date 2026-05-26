@@ -14,6 +14,8 @@ import {
   type UserProfile,
 } from '@/lib/supabase/data';
 import type { User } from '@supabase/supabase-js';
+import { trackFeatureUsage, trackCreate } from '@/lib/tracking';
+import { clearTierCache } from '@/hooks/use-feature';
 
 interface StoreContextType {
   user: User | null;
@@ -173,6 +175,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     const trip: Trip = { ...tripData, id: Date.now(), journal: [] };
     setTrips(prev => [...prev, trip]);
     if (user) await saveTripToSupabase(supabase.current, user.id, trip);
+    if (!tripData.quickPin) trackCreate('unlimited_trips', { country: tripData.code });
     return trip;
   }, [user]);
 
@@ -224,6 +227,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       const trip = trips.find(t => t.id === tripId);
       if (trip) await saveTripToSupabase(supabase.current, user.id, { ...trip, journal: [...trip.journal, fullEntry] });
     }
+    trackCreate('journal');
   }, [user, trips]);
 
   const setHomebase = useCallback(async (hb: Homebase | null) => {
@@ -252,11 +256,13 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const saveRouteAction = useCallback(async (tripId: number, route: RouteData) => {
     setRoutes(prev => ({ ...prev, [tripId]: route }));
     if (user) await saveRouteToSupabase(supabase.current, user.id, tripId, route);
+    trackFeatureUsage({ feature: 'route_maps' });
   }, [user]);
 
   const saveTripPhotosAction = useCallback(async (tripId: number, photos: string[]) => {
     setTripPhotos(prev => ({ ...prev, [tripId]: photos }));
     if (user) await savePhotosToSupabase(supabase.current, user.id, tripId, photos);
+    trackFeatureUsage({ feature: 'photo_gallery', action: 'create', metadata: { count: photos.length } });
   }, [user]);
 
   const setClocksAction = useCallback(async (newClocks: ClockEntry[]) => {
@@ -297,10 +303,12 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     if (!user) return;
     await setTripPublished(supabase.current, user.id, tripId, published);
     setTrips(prev => prev.map(t => t.id === tripId ? { ...t, published } : t));
+    if (published) trackFeatureUsage({ feature: 'public_profile' });
   }, [user]);
 
   const signOutAction = useCallback(async () => {
     await supabase.current.auth.signOut();
+    clearTierCache();
     setUser(null);
     setTrips([]);
     setVisitedCountries(new Set());

@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       case 'growth': return NextResponse.json(await getGrowth(admin));
       case 'engagement': return NextResponse.json(await getEngagement(admin));
       case 'emails': return NextResponse.json(await getEmails(admin, searchParams));
+      case 'feature-usage': return NextResponse.json(await getFeatureUsage(admin, searchParams));
+      case 'tiers': return NextResponse.json(await getTierBreakdown(admin));
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (err) {
@@ -234,4 +236,85 @@ async function getEmails(admin: ReturnType<typeof createAdminClient>, params: UR
   }
 
   return { emails: data || [], total: (data || []).length };
+}
+
+// ── Feature Usage Analytics ──
+async function getFeatureUsage(admin: ReturnType<typeof createAdminClient>, params: URLSearchParams) {
+  const days = parseInt(params.get('days') || '30');
+  const since = new Date(Date.now() - days * 86400000).toISOString();
+
+  // Total events per feature
+  const { data: events } = await admin
+    .from('usage_events')
+    .select('feature, action')
+    .gte('created_at', since);
+
+  const featureStats: Record<string, { total: number; unique_actions: Record<string, number> }> = {};
+  (events || []).forEach(e => {
+    if (!featureStats[e.feature]) featureStats[e.feature] = { total: 0, unique_actions: {} };
+    featureStats[e.feature].total++;
+    featureStats[e.feature].unique_actions[e.action] = (featureStats[e.feature].unique_actions[e.action] || 0) + 1;
+  });
+
+  // Unique users per feature
+  const { data: uniqueUsers } = await admin
+    .from('usage_events')
+    .select('feature, user_id')
+    .gte('created_at', since);
+
+  const featureUsers: Record<string, Set<string>> = {};
+  (uniqueUsers || []).forEach(e => {
+    if (!featureUsers[e.feature]) featureUsers[e.feature] = new Set();
+    featureUsers[e.feature].add(e.user_id);
+  });
+
+  // Gate hits (premium demand signal)
+  const gateHits: Record<string, number> = {};
+  (events || []).filter(e => e.action === 'gate_hit').forEach(e => {
+    gateHits[e.feature] = (gateHits[e.feature] || 0) + 1;
+  });
+
+  // Daily trend (last N days)
+  const dailyEvents: Record<string, number> = {};
+  const { data: dailyData } = await admin
+    .from('usage_events')
+    .select('created_at')
+    .gte('created_at', since);
+
+  (dailyData || []).forEach(e => {
+    const day = e.created_at?.split('T')[0] || '';
+    dailyEvents[day] = (dailyEvents[day] || 0) + 1;
+  });
+
+  const features = Object.entries(featureStats)
+    .map(([feature, stats]) => ({
+      feature,
+      totalEvents: stats.total,
+      uniqueUsers: featureUsers[feature]?.size || 0,
+      actions: stats.unique_actions,
+      gateHits: gateHits[feature] || 0,
+    }))
+    .sort((a, b) => b.totalEvents - a.totalEvents);
+
+  return {
+    period: `${days} days`,
+    totalEvents: (events || []).length,
+    features,
+    dailyTrend: Object.entries(dailyEvents).sort().map(([date, count]) => ({ date, count })),
+  };
+}
+
+// ── Tier Breakdown ──
+async function getTierBreakdown(admin: ReturnType<typeof createAdminClient>) {
+  const { data } = await admin.from('user_tiers').select('tier');
+
+  const breakdown: Record<string, number> = { free: 0, premium: 0, lifetime: 0 };
+  (data || []).forEach(u => {
+    breakdown[u.tier] = (breakdown[u.tier] || 0) + 1;
+  });
+
+  return {
+    breakdown,
+    total: (data || []).length,
+  };
 }

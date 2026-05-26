@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { loadTripBudget, saveTripBudget, loadBudgetExpenses, addBudgetExpense, deleteBudgetExpense } from '@/lib/supabase/budget-data';
 import type { TripBudget, BudgetExpense } from '@/lib/supabase/budget-data';
 import type { Trip } from '@/types';
+import { trackView } from '@/lib/tracking';
 
 const CATEGORIES = [
   { key: 'food', label: '🍽️ Food', color: 'gold' },
@@ -53,7 +54,7 @@ export function BudgetModal({ open, onOpenChange, trip }: { open: boolean; onOpe
     setLoaded(true);
   }, [user, trip.id, open]);
 
-  useEffect(() => { if (open) load(); }, [open, load]);
+  useEffect(() => { if (open) { load(); trackView('budget_tracker'); } }, [open, load]);
 
   async function handleSaveBudget() {
     if (!user) return;

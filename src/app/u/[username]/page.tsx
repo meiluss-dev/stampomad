@@ -15,13 +15,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient();
   const profile = await loadPublicProfile(supabase, username);
   if (!profile) return { title: 'Not Found — Stampomad' };
+
+  const stats = await loadPublicStats(supabase, profile.userId);
+  const trips = await loadPublicTrips(supabase, profile.userId);
+  const realTrips = trips.filter(t => !t.quickPin);
+  const continents = new Set(realTrips.map(t => t.continent).filter(Boolean)).size;
+  const displayName = profile.displayName || profile.username;
+  const desc = profile.bio || `${displayName} has explored ${stats.countries} countries across ${continents} continents`;
+
+  const ogParams = new URLSearchParams({
+    name: displayName,
+    bio: profile.bio || '',
+    countries: String(stats.countries),
+    trips: String(realTrips.length),
+    continents: String(continents),
+    ...(profile.avatarUrl ? { avatar: profile.avatarUrl } : {}),
+  });
+
+  const ogImage = `/api/og?${ogParams.toString()}`;
+
   return {
-    title: `${profile.displayName || profile.username} — Stampomad`,
-    description: profile.bio || `Follow ${profile.displayName || profile.username}'s travels on Stampomad`,
+    title: `${displayName} — Stampomad`,
+    description: desc,
     openGraph: {
-      title: `${profile.displayName || profile.username} — Stampomad`,
-      description: profile.bio || `Travel journal by ${profile.displayName || profile.username}`,
-      ...(profile.avatarUrl ? { images: [profile.avatarUrl] } : {}),
+      title: `${displayName} — Stampomad`,
+      description: desc,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+      type: 'profile',
+      siteName: 'Stampomad',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${displayName} — Stampomad`,
+      description: desc,
+      images: [ogImage],
     },
   };
 }

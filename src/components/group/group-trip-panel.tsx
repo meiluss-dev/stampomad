@@ -11,6 +11,7 @@ import {
 } from '@/lib/supabase/group-data';
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
+import { trackView } from '@/lib/tracking';
 
 const EXPENSE_CATEGORIES = [
   { key: 'food', label: '🍽️ Food', color: 'gold' },
@@ -61,7 +62,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
     setLoading(false);
   }, [trip.id]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); trackView('group_trips'); }, [loadData]);
 
   // ─── Budget calculations ───
   const totalSpent = expenses.reduce((a, e) => a + e.amount, 0);
