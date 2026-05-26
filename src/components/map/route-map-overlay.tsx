@@ -1057,6 +1057,15 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
         {/* Map */}
         <div className="relative min-h-0">
           <div ref={containerRef} className="absolute inset-0" />
+          {!mapboxToken && (
+            <div className="absolute inset-0 flex items-center justify-center bg-bg z-10">
+              <div className="text-center max-w-sm">
+                <div className="text-4xl mb-3">🗺️</div>
+                <div className="text-lg font-medium text-text mb-2">Map loading...</div>
+                <div className="text-sm text-text-muted">If the map doesn&apos;t appear, please reload the page or contact support.</div>
+              </div>
+            </div>
+          )}
           {/* Tool buttons */}
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
             <button onClick={undo} disabled={!canUndo} className={`w-11 h-11 rounded-lg bg-bg3 border text-base flex items-center justify-center transition-all ${canUndo ? 'border-white/[0.08] text-text cursor-pointer hover:border-gold hover:text-gold' : 'border-white/[0.04] text-text-muted/40 cursor-default'}`} title="Undo (Ctrl+Z)">↩️</button>

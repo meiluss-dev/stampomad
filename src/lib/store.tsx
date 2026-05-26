@@ -124,7 +124,8 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         setHomebaseState(settings.homebase);
         setLivedPlacesState(settings.livedPlaces);
         setClocksState(settings.clocks.length > 0 ? settings.clocks : defaultClocks);
-        if (settings.mapboxToken) setMapboxTokenState(settings.mapboxToken);
+        const validUserToken = settings.mapboxToken && settings.mapboxToken.startsWith('pk.') ? settings.mapboxToken : '';
+        if (validUserToken) setMapboxTokenState(validUserToken);
         else if (process.env.NEXT_PUBLIC_MAPBOX_TOKEN) setMapboxTokenState(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
         if (settings.anthropicKey) setAnthropicKeyState(settings.anthropicKey);
         if (settings.wishlist?.length) setWishlist(new Set(settings.wishlist));
