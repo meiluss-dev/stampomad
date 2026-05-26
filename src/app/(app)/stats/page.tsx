@@ -2,7 +2,6 @@
 
 import { useStore } from '@/lib/store';
 import { getContinent, countryNames, countryFlag, haversine, getCountryCenter, CONT_TOTALS } from '@/lib/countries';
-import { computeBadges } from '@/lib/badges';
 import { ShareStatsCard } from '@/components/stats/share-card';
 import { useLang } from '@/components/language-provider';
 
@@ -61,10 +60,6 @@ export default function StatsPage() {
   const years = Object.entries(byYear).sort((a, b) => +b[0] - +a[0]);
   const busiestYear = years.reduce((a, [y, c]) => c > a[1] ? [y, c] : a, ['', 0] as [string, number]);
 
-  // Badges
-  const badges = computeBadges(trips, visitedCountries, homebase, livedPlaces);
-  const earned = badges.filter(b => b.earned);
-
   // Continent progress
   const visitedPerCont: Record<string, number> = {};
   allCodes.forEach(code => { const c = getContinent(code); visitedPerCont[c] = (visitedPerCont[c] || 0) + 1; });
@@ -104,7 +99,7 @@ export default function StatsPage() {
           { label: 'Countries', value: totalCountries, sub: `${pctWorld}% of the world`, icon: '🌍', color: 'gold' },
           { label: 'Trips logged', value: totalTrips, sub: `${avgDays}d average`, icon: '✈️', color: 'teal' },
           { label: 'Days abroad', value: totalDays, sub: 'total travel days', icon: '📅', color: 'stamp-red' },
-          { label: t('badges_earned'), value: `${earned.length}/${badges.length}`, sub: 'achievements', icon: '🏅', color: 'stamp-blue' },
+          { label: 'Journal entries', value: totalEntries, sub: `${(totalEntries / Math.max(totalTrips, 1)).toFixed(1)} per trip`, icon: '📝', color: 'stamp-blue' },
         ].map(s => (
           <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-5 relative overflow-hidden">
             <div className={`absolute top-0 left-0 right-0 h-[3px]`} style={{ background: `var(--color-${s.color})` }} />
@@ -241,29 +236,6 @@ export default function StatsPage() {
         </div>
       )}
 
-      {/* Badges grid */}
-      <div className="bg-bg3 border border-white/[0.08] rounded-2xl p-6">
-        <h3 className="text-xs text-text-muted uppercase tracking-wider mb-4">
-          All badges · {earned.length}/{badges.length} earned
-        </h3>
-        <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-          {badges.map(b => (
-            <div
-              key={b.id}
-              className={`flex flex-col items-center gap-1 rounded-xl p-3 transition-all ${
-                b.earned ? 'bg-gold/8 border border-gold/20' : 'bg-bg4 border border-white/[0.04] opacity-35'
-              }`}
-              title={b.description}
-            >
-              <span className={`text-2xl ${!b.earned ? 'grayscale' : ''}`}>{b.icon}</span>
-              <span className="text-[10px] text-center leading-tight font-medium">{b.name}</span>
-              {!b.earned && 'progress' in b && b.progress && (
-                <span className="text-[9px] text-text-muted">{b.progress}</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

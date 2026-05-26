@@ -7,7 +7,6 @@ import { WorldMap } from '@/components/map/world-map';
 import { HomebaseBar } from '@/components/dashboard/homebase-bar';
 import { MonthChart, ContinentGrid } from '@/components/dashboard/charts';
 import { EnhancedStats } from '@/components/dashboard/enhanced-stats';
-import { BadgesPanel } from '@/components/dashboard/badges';
 import { CalendarWidget } from '@/components/widgets/calendar-widget';
 import { WorldClockWidget } from '@/components/widgets/world-clock-widget';
 import { CurrencyWidget } from '@/components/widgets/currency-widget';
@@ -69,10 +68,6 @@ export default function DashboardPage() {
       <StatsGrid />
       <HomebaseBar />
       <WorldMap />
-
-      <div className="mb-7">
-        <BadgesPanel />
-      </div>
 
       {realTrips.length > 0 && (
         <>

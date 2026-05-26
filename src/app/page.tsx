@@ -46,7 +46,7 @@ export default async function LandingPage() {
             <span className="text-gold">Log your journey.</span>
           </h1>
           <p className="text-text-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Track every country, map every trip, journal your adventures, travel with friends, and earn badges as you explore the globe.
+            Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -119,12 +119,7 @@ export default async function LandingPage() {
               title: 'Travel Stats',
               desc: 'See your total countries, continents explored, distance traveled, longest trip, busiest year, and more.',
             },
-            {
-              icon: '🏅',
-              title: 'Achievement Badges',
-              desc: '25 badges across 5 categories. Earn them by exploring new continents, logging trips, writing journals, and hitting milestones.',
-            },
-            {
+{
               icon: '🗺️',
               title: 'Route Maps',
               desc: 'Plot your trip routes with waypoints, transport modes, and distance calculations. See your journey come to life on the map.',
