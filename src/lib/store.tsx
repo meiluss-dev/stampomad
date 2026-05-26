@@ -80,7 +80,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const [routes, setRoutes] = useState<Record<number, RouteData>>({});
   const [tripPhotos, setTripPhotos] = useState<Record<number, string[]>>({});
   const [clocks, setClocksState] = useState<ClockEntry[]>([]);
-  const [mapboxToken, setMapboxTokenState] = useState('');
+  const [mapboxToken, setMapboxTokenState] = useState(process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '');
   const [anthropicKey, setAnthropicKeyState] = useState('');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [packingLists, setPackingLists] = useState<Record<number, PackingList>>({});
@@ -120,6 +120,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         setLivedPlacesState(settings.livedPlaces);
         setClocksState(settings.clocks.length > 0 ? settings.clocks : defaultClocks);
         if (settings.mapboxToken) setMapboxTokenState(settings.mapboxToken);
+        else if (process.env.NEXT_PUBLIC_MAPBOX_TOKEN) setMapboxTokenState(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
         if (settings.anthropicKey) setAnthropicKeyState(settings.anthropicKey);
         if (settings.wishlist?.length) setWishlist(new Set(settings.wishlist));
       } else {

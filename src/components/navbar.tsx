@@ -18,9 +18,12 @@ const tabKeys = [
   { key: 'nav_stats', href: '/stats', fallback: 'Stats' },
 ];
 
+const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || '';
+
 export function Navbar() {
   const pathname = usePathname();
   const { user, trips, visitedCountries, profile, signOut } = useStore();
+  const isAdmin = user?.id === ADMIN_ID;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [apiKeysOpen, setApiKeysOpen] = useState(false);
@@ -116,19 +119,23 @@ export function Navbar() {
                     🔗 View Public Page
                   </a>
                 )}
-                <button
-                  onClick={() => { setApiKeysOpen(true); setDropdownOpen(false); }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
-                >
-                  🔑 API Keys
-                </button>
-                <Link
-                  href="/admin"
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
-                >
-                  🛠️ Admin
-                </Link>
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => { setApiKeysOpen(true); setDropdownOpen(false); }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                    >
+                      🔑 API Keys
+                    </button>
+                    <Link
+                      href="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                    >
+                      🛠️ Admin
+                    </Link>
+                  </>
+                )}
                 <button
                   onClick={() => { setLangOpen(true); setDropdownOpen(false); }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
