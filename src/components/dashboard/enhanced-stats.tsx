@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { getContinent, CONT_TOTALS, CONT_COLORS, fmtDate } from '@/lib/countries';
 
@@ -178,14 +179,15 @@ function TripTimeline() {
           </div>
           <div className="flex flex-wrap gap-1.5">
             {byYear[year].sort((a, b) => a.start.localeCompare(b.start)).map(t => (
-              <div
+              <Link
                 key={t.id}
+                href={`/trips?highlight=${t.id}`}
                 className="bg-bg4 border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:border-gold hover:text-gold transition-all"
                 title={fmtDate(t.start)}
               >
                 {t.emoji} {t.name}
                 <span className="text-text-muted text-[10px] ml-1">{t.days}d</span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

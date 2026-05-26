@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { TripCard } from '@/components/trips/trip-card';
 import { TripModal } from '@/components/trips/trip-modal';
@@ -26,6 +27,8 @@ export default function TripsPage() {
   const { trips, loading, mapboxToken } = useStore();
   const { toast } = useToast();
   const { t } = useLang();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [routeTrip, setRouteTrip] = useState<Trip | null>(null);
@@ -49,6 +52,19 @@ export default function TripsPage() {
     }
     return list;
   }, [trips, sort, filter, search]);
+
+  // Scroll to highlighted trip from timeline link
+  useEffect(() => {
+    if (!highlightId || loading) return;
+    const el = document.getElementById(`trip-${highlightId}`);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-gold', 'ring-offset-2', 'ring-offset-bg');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-gold', 'ring-offset-2', 'ring-offset-bg'), 2000);
+      }, 100);
+    }
+  }, [highlightId, loading]);
 
   const totalReal = trips.filter(t => !t.quickPin).length;
 
@@ -146,10 +162,12 @@ export default function TripsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {displayTrips.map(t => (
-                <TripCard key={t.id} trip={t} onEdit={() => openEdit(t)} onPacking={() => setPackingTrip(t)} onRoute={() => {
+                <div key={t.id} id={`trip-${t.id}`} className="transition-all duration-500 rounded-2xl">
+                <TripCard trip={t} onEdit={() => openEdit(t)} onPacking={() => setPackingTrip(t)} onRoute={() => {
                   if (!mapboxToken) { toast('Set your Mapbox token in API Keys settings first.', 'error'); return; }
                   setRouteTrip(t);
                 }} />
+                </div>
               ))}
             </div>
           )}
