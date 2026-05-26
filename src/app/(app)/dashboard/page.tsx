@@ -10,7 +10,7 @@ import { EnhancedStats } from '@/components/dashboard/enhanced-stats';
 import { CalendarWidget } from '@/components/widgets/calendar-widget';
 import { WorldClockWidget } from '@/components/widgets/world-clock-widget';
 import { CurrencyWidget } from '@/components/widgets/currency-widget';
-import { CountdownWidget } from '@/components/widgets/countdown-widget';
+import { UpcomingTripsBar } from '@/components/dashboard/upcoming-trips';
 import { useLang } from '@/components/language-provider';
 
 export default function DashboardPage() {
@@ -68,6 +68,7 @@ export default function DashboardPage() {
       <StatsGrid />
       <HomebaseBar />
       <WorldMap />
+      <UpcomingTripsBar />
 
       {realTrips.length > 0 && (
         <>
@@ -81,7 +82,6 @@ export default function DashboardPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-7">
-        <CountdownWidget />
         <CalendarWidget />
         <WorldClockWidget />
         <CurrencyWidget />

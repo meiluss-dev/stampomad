@@ -64,6 +64,8 @@ export const UI_STRINGS: Record<string, string> = {
   remaining: 'remaining',
   days_to_go: 'days to go',
   next_up: 'Next up',
+  upcoming_trip: 'Upcoming trip',
+  upcoming_trips: 'Upcoming trips',
 
   // Dashboard
   your_travel_story: 'Your travel story',
