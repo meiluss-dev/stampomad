@@ -4,6 +4,7 @@ import { StoreProvider } from '@/lib/store';
 import { Navbar } from '@/components/navbar';
 import { ToastProvider } from '@/components/ui/toast';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
+import { SaveErrorToast } from '@/components/save-error-toast';
 import { LangProvider } from '@/components/language-provider';
 import type { User } from '@supabase/supabase-js';
 
@@ -17,6 +18,7 @@ export function AppShell({ children, initialUser }: { children: React.ReactNode;
             {children}
           </main>
           <OnboardingWizard />
+          <SaveErrorToast />
         </ToastProvider>
       </LangProvider>
     </StoreProvider>

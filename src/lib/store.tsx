@@ -20,6 +20,8 @@ import { clearTierCache } from '@/hooks/use-feature';
 interface StoreContextType {
   user: User | null;
   loading: boolean;
+  saveError: string | null;
+  clearSaveError: () => void;
   trips: Trip[];
   visitedCountries: Set<string>;
   homebase: Homebase | null;
@@ -85,6 +87,9 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [packingLists, setPackingLists] = useState<Record<number, PackingList>>({});
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const clearSaveError = useCallback(() => setSaveError(null), []);
 
   const supabase = useRef(createClient());
 
@@ -162,22 +167,34 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   }> = {}) => {
     if (!user) return;
     const s = settingsRef.current;
-    await saveSettingsToSupabase(supabase.current, user.id, {
-      homebase: overrides.homebase !== undefined ? overrides.homebase : s.homebase,
-      livedPlaces: overrides.livedPlaces !== undefined ? overrides.livedPlaces : s.livedPlaces,
-      clocks: overrides.clocks !== undefined ? overrides.clocks : s.clocks,
-      lang: 'en',
-      translations: {},
-      mapboxToken: overrides.mapboxToken !== undefined ? overrides.mapboxToken : s.mapboxToken,
-      anthropicKey: overrides.anthropicKey !== undefined ? overrides.anthropicKey : s.anthropicKey,
-      wishlist: [...(overrides.wishlist !== undefined ? overrides.wishlist : s.wishlist)],
-    });
+    try {
+      await saveSettingsToSupabase(supabase.current, user.id, {
+        homebase: overrides.homebase !== undefined ? overrides.homebase : s.homebase,
+        livedPlaces: overrides.livedPlaces !== undefined ? overrides.livedPlaces : s.livedPlaces,
+        clocks: overrides.clocks !== undefined ? overrides.clocks : s.clocks,
+        lang: 'en',
+        translations: {},
+        mapboxToken: overrides.mapboxToken !== undefined ? overrides.mapboxToken : s.mapboxToken,
+        anthropicKey: overrides.anthropicKey !== undefined ? overrides.anthropicKey : s.anthropicKey,
+        wishlist: [...(overrides.wishlist !== undefined ? overrides.wishlist : s.wishlist)],
+      });
+    } catch (err) {
+      setSaveError('Failed to save settings. Your changes may be lost on reload.');
+      console.error('[Stampomad] persistSettings failed:', err);
+    }
   }, [user]);
 
   const addTrip = useCallback(async (tripData: Omit<Trip, 'id' | 'journal'>) => {
     const trip: Trip = { ...tripData, id: Date.now(), journal: [] };
     setTrips(prev => [...prev, trip]);
-    if (user) await saveTripToSupabase(supabase.current, user.id, trip);
+    if (user) {
+      try {
+        await saveTripToSupabase(supabase.current, user.id, trip);
+      } catch (err) {
+        setSaveError('Failed to save trip. Your changes may be lost on reload.');
+        console.error('[Stampomad] addTrip save failed:', err);
+      }
+    }
     if (!tripData.quickPin) trackCreate('unlimited_trips', { country: tripData.code });
     return trip;
   }, [user]);
@@ -216,7 +233,14 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       };
       setTrips(prev => [...prev, trip]);
       setVisitedCountries(prev => new Set(prev).add(code));
-      if (user) await saveTripToSupabase(supabase.current, user.id, trip);
+      if (user) {
+        try {
+          await saveTripToSupabase(supabase.current, user.id, trip);
+        } catch (err) {
+          setSaveError('Failed to save pin. Your changes may be lost on reload.');
+          console.error('[Stampomad] toggleVisitedCountry save failed:', err);
+        }
+      }
     }
   }, [user, trips]);
 
@@ -347,7 +371,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
 
   return (
     <StoreContext.Provider value={{
-      user, loading, trips, visitedCountries, homebase, livedPlaces,
+      user, loading, saveError, clearSaveError, trips, visitedCountries, homebase, livedPlaces,
       routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile, packingLists, wishlist,
       addTrip, updateTrip, deleteTrip, toggleVisitedCountry,
       addJournalEntry, updateJournalEntry, deleteJournalEntry: deleteJournalEntryAction,

@@ -81,7 +81,10 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
     quick_pin: trip.quickPin, from_code: trip.fromCode || '',
     published: trip.published || false,
   });
-  if (error) console.error('[Stampomad] saveTrip error:', error);
+  if (error) {
+    console.error('[Stampomad] saveTrip error:', error);
+    throw new Error(`Failed to save trip: ${error.message}`);
+  }
   for (const j of trip.journal || []) {
     const { error: jErr } = await supabase.from('journal_entries').upsert({
       id: j.id, user_id: userId, trip_id: trip.id,
@@ -124,8 +127,12 @@ export async function saveSettingsToSupabase(
     wishlist: settings.wishlist || [],
     updated_at: new Date().toISOString(),
   });
-  if (error) console.error('[Stampomad] saveSettings error:', error);
-  else console.log('[Stampomad] Settings saved, mapbox:', settings.mapboxToken?.substring(0, 15) + '...');
+  if (error) {
+    console.error('[Stampomad] saveSettings error:', error);
+    throw new Error(`Failed to save settings: ${error.message}`);
+  } else {
+    console.log('[Stampomad] Settings saved');
+  }
 }
 
 export async function saveRouteToSupabase(supabase: SupabaseClient, userId: string, tripId: number, route: RouteData) {
