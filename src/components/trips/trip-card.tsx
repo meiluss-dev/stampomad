@@ -7,6 +7,8 @@ import { useToast } from '@/components/ui/toast';
 import { countryFlag, fmtDate } from '@/lib/countries';
 import { InviteModal } from '@/components/group/invite-modal';
 import { GroupTripPanel } from '@/components/group/group-trip-panel';
+import { BudgetModal } from '@/components/trips/budget-modal';
+import { PhotoLightbox } from '@/components/trips/photo-lightbox';
 import type { Trip } from '@/types';
 
 const MAX_PHOTOS = 8;
@@ -46,6 +48,8 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   const [showManage, setShowManage] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
+  const [budgetOpen, setBudgetOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,7 +114,12 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       <div className="w-full h-40 flex items-center justify-center text-[52px] bg-bg4 relative overflow-hidden group">
         {hasPhotos ? (
           <>
-            <img src={photos[photoIdx] || photos[0]} alt="" className="w-full h-full object-cover absolute inset-0 transition-opacity duration-500" />
+            <img
+              src={photos[photoIdx] || photos[0]}
+              alt=""
+              className="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 cursor-pointer"
+              onClick={() => setLightboxIdx(photoIdx)}
+            />
             {photos.length > 1 && (
               <>
                 <button
@@ -228,6 +237,9 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
           <button onClick={onPacking} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             🧳 Pack{packingLists[t.id]?.items?.length ? ` (${packingLists[t.id].items.filter(i => i.checked).length}/${packingLists[t.id].items.length})` : ''}
           </button>
+          <button onClick={() => setBudgetOpen(true)} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
+            💰 Budget
+          </button>
           <button onClick={() => setInviteOpen(true)} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             👥 Invite
           </button>
@@ -258,7 +270,11 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       </div>
 
       <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} trip={t} />
+      <BudgetModal open={budgetOpen} onOpenChange={setBudgetOpen} trip={t} />
       {groupOpen && <GroupTripPanel trip={t} onClose={() => setGroupOpen(false)} />}
+      {lightboxIdx !== null && hasPhotos && (
+        <PhotoLightbox photos={photos} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+      )}
     </div>
   );
 }

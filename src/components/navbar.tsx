@@ -9,6 +9,7 @@ import { ProfileModal } from '@/components/settings/profile-modal';
 import { ThemeSwitcher } from '@/components/theme-provider';
 import { useLang, LanguageModal } from '@/components/language-provider';
 import { InviteBadge } from '@/components/group/invite-badge';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 const tabKeys = [
   { key: 'nav_dashboard', href: '/dashboard', fallback: 'Dashboard' },
@@ -77,6 +78,7 @@ export function Navbar() {
             {allCodes.size} {t('countries_explored')}
           </span>
 
+          <NotificationBell />
           <InviteBadge />
 
           <div className="relative" ref={dropdownRef}>

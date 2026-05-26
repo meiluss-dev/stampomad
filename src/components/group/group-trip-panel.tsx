@@ -9,6 +9,7 @@ import {
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
 } from '@/lib/supabase/group-data';
+import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
 
 const EXPENSE_CATEGORIES = [
@@ -87,6 +88,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
       const supabase = createClient();
       const memberIds = members.filter(m => m.status === 'accepted').map(m => m.userId);
       await addExpense(supabase, trip.id, user.id, parseFloat(expAmount), expCurrency, expCategory, expDesc, 'equal', memberIds);
+      notifyExpenseAdded(supabase, trip.id, user.id, parseFloat(expAmount), expCurrency, expDesc).catch(() => {});
       toast('Expense added!');
       setShowAddExpense(false);
       setExpAmount('');
@@ -117,6 +119,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
     try {
       const supabase = createClient();
       await addSharedItem(supabase, trip.id, itemText.trim(), itemCategory);
+      if (user) notifyItemAdded(supabase, trip.id, user.id, itemText.trim()).catch(() => {});
       toast('Item added!');
       setItemText('');
       setShowAddItem(false);
@@ -131,6 +134,8 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
     if (!user) return;
     const supabase = createClient();
     await claimSharedItem(supabase, itemId, user.id);
+    const item = items.find(i => i.id === itemId);
+    if (item) notifyItemClaimed(supabase, trip.id, user.id, item.text).catch(() => {});
     await loadData();
   }
 

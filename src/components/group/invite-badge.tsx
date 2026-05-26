@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/components/ui/toast';
 import { loadPendingInvites, respondToInvite } from '@/lib/supabase/group-data';
+import { notifyMemberJoined } from '@/lib/supabase/notifications';
 import { createClient } from '@/lib/supabase/client';
 import { countryFlag } from '@/lib/countries';
 import type { GroupInvite } from '@/types';
@@ -29,8 +30,8 @@ export function InviteBadge() {
       await respondToInvite(supabase, invite.id, accept);
       toast(accept ? `Joined ${invite.tripName}!` : 'Invite declined');
       setInvites(prev => prev.filter(i => i.id !== invite.id));
-      if (accept) {
-        // Reload the page to pick up new group trip
+      if (accept && user) {
+        notifyMemberJoined(supabase, invite.tripId, user.id, invite.tripName).catch(() => {});
         window.location.reload();
       }
     } catch {
