@@ -319,3 +319,7 @@
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip { border-bottom-color: #fff; align-self: center; border-top: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid; }
 .mapboxgl-popup-tip { width: 0; height: 0; border: 10px solid transparent; z-index: 1; }
 .mapboxgl-marker { position: absolute; top: 0; left: 0; will-change: transform; opacity: 1; transition: opacity .2s; }
+
+/* Hide scrollbar utility */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

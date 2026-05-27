@@ -40,12 +40,52 @@ export async function GET() {
   // Unique countries visited by anyone
   const visitedCodes = Object.keys(countryCounts);
 
+  // Get recent published trips with user profile info
+  const { data: publishedTrips } = await supabase
+    .from('trips')
+    .select('id, name, code, continent, emoji, start_date, end_date, days, cities, user_id')
+    .eq('published', true)
+    .eq('quick_pin', false)
+    .order('created_at', { ascending: false })
+    .limit(8);
+
+  // Get profile info for these trip owners
+  const ownerIds = [...new Set((publishedTrips || []).map(t => t.user_id))];
+  const { data: profiles } = ownerIds.length > 0
+    ? await supabase
+        .from('user_profiles')
+        .select('user_id, username, display_name, avatar_url')
+        .in('user_id', ownerIds)
+    : { data: [] };
+
+  const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+  // Build recent trips (skip base64 photos to keep response small)
+  const recentTrips = (publishedTrips || []).map(t => {
+    const profile = profileMap.get(t.user_id);
+    return {
+      id: t.id,
+      name: t.name,
+      code: t.code,
+      continent: t.continent,
+      emoji: t.emoji || '✈️',
+      start: t.start_date,
+      end: t.end_date,
+      days: t.days || 0,
+      cities: t.cities || '',
+      username: profile?.username || null,
+      displayName: profile?.display_name || null,
+      avatarUrl: profile?.avatar_url || null,
+    };
+  });
+
   const result = {
     visitedCodes,
     countryCounts,
     totalCountries: visitedCodes.length,
     totalTrips,
     totalUsers,
+    recentTrips,
   };
 
   cache = { data: result, ts: Date.now() };

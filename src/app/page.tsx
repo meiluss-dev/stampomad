@@ -1,15 +1,14 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { GlobeSection } from '@/components/landing/globe-section';
+import { RecentTrips } from '@/components/landing/recent-trips';
 
 export const dynamic = 'force-dynamic';
 
 export default async function LandingPage() {
-  // If already logged in, go straight to dashboard
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect('/dashboard');
+  const isLoggedIn = !!user;
 
   return (
     <div className="min-h-screen bg-bg text-text">
@@ -19,18 +18,29 @@ export default async function LandingPage() {
           Stampo<span className="text-text font-normal">mad</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/auth"
-            className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/auth"
-            className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
-          >
-            Get started
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/auth"
+                className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/auth"
+                className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -54,10 +64,10 @@ export default async function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
                 <Link
-                  href="/auth"
+                  href={isLoggedIn ? '/dashboard' : '/auth'}
                   className="px-8 py-3.5 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
                 >
-                  Start for free
+                  {isLoggedIn ? 'Go to Dashboard' : 'Start for free'}
                 </Link>
                 <a
                   href="#features"
@@ -78,7 +88,10 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Stats bar — now with live data pulled client-side via GlobeSection */}
+      {/* Recent published trips */}
+      <section className="border-t border-white/[0.06]">
+        <RecentTrips />
+      </section>
 
       {/* Features */}
       <section id="features" className="max-w-5xl mx-auto px-6 py-20 md:py-28">
@@ -224,12 +237,21 @@ export default async function LandingPage() {
         <p className="text-text-muted text-lg mb-10 max-w-xl mx-auto">
           Join Stampomad and start turning your travels into a beautiful, living record of everywhere you&apos;ve been.
         </p>
-        <Link
-          href="/auth"
-          className="inline-block px-10 py-4 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
-        >
-          Get started &mdash; it&apos;s free
-        </Link>
+        {isLoggedIn ? (
+          <Link
+            href="/dashboard"
+            className="inline-block px-10 py-4 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
+          >
+            Back to Dashboard
+          </Link>
+        ) : (
+          <Link
+            href="/auth"
+            className="inline-block px-10 py-4 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
+          >
+            Get started &mdash; it&apos;s free
+          </Link>
+        )}
       </section>
 
       {/* Footer */}
