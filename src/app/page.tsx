@@ -18,6 +18,12 @@ export default async function LandingPage() {
           Stampo<span className="text-text font-normal">mad</span>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/explore"
+            className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
+          >
+            Explore
+          </Link>
           {isLoggedIn ? (
             <Link
               href="/dashboard"

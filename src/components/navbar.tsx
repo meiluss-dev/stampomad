@@ -16,6 +16,7 @@ const tabKeys = [
   { key: 'nav_trips', href: '/trips', fallback: 'My Trips' },
   { key: 'nav_journal', href: '/journal', fallback: 'Journal' },
   { key: 'nav_stats', href: '/stats', fallback: 'Stats' },
+  { key: 'nav_explore', href: '/explore', fallback: 'Explore' },
 ];
 
 const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || '';
