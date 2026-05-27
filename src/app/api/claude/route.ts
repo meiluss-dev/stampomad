@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  const apiKey = request.headers.get('x-api-key');
+  const apiKey = request.headers.get('x-api-key') || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'Missing API key' }, { status: 400 });
   }

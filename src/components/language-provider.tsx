@@ -85,11 +85,6 @@ export function LanguageModal({ open, onOpenChange }: { open: boolean; onOpenCha
     }
 
     // Need to translate via API
-    if (!anthropicKey) {
-      setError('Set your Anthropic API key first (🔑 API Keys in the menu)');
-      return;
-    }
-
     setTranslating(true);
     setError('');
 
@@ -100,9 +95,12 @@ export function LanguageModal({ open, onOpenChange }: { open: boolean; onOpenCha
       const stringsToTranslate = Object.entries(UI_STRINGS)
         .map(([k, v]) => `${k}: ${v}`).join('\n');
 
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (anthropicKey) headers['x-api-key'] = anthropicKey;
+
       const response = await fetch('/api/claude', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey },
+        headers,
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 4000,
