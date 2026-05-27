@@ -223,8 +223,8 @@ export default function ExplorePage() {
           Stampo<span className="text-text font-normal">mad</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/auth" className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all">
-            Sign in
+          <Link href="/dashboard" className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all">
+            Dashboard
           </Link>
         </div>
       </nav>
