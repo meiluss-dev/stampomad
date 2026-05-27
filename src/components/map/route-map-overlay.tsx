@@ -1021,22 +1021,22 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
   return (
     <div className="fixed inset-0 z-[300] bg-bg flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px] shrink-0">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px] shrink-0">
         <button onClick={handleClose} className="text-text-muted hover:text-text text-xl cursor-pointer">←</button>
-        <div className="flex-1">
-          <div className="font-[family-name:var(--font-playfair)] text-xl">{trip.emoji} {trip.name}</div>
-          <div className="text-xs text-text-muted mt-0.5">{trip.code}{trip.start ? ` · ${fmtDate(trip.start)} – ${fmtDate(trip.end)}` : ''}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-[family-name:var(--font-playfair)] text-base sm:text-xl truncate">{trip.emoji} {trip.name}</div>
+          <div className="text-[10px] sm:text-xs text-text-muted mt-0.5">{trip.code}{trip.start ? ` · ${fmtDate(trip.start)} – ${fmtDate(trip.end)}` : ''}</div>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide order-last sm:order-none w-full sm:w-auto">
           {Object.keys(MAP_STYLES).map(s => (
-            <button key={s} onClick={() => changeMapStyle(s)} className={`px-3 py-1.5 rounded-lg text-xs cursor-pointer border transition-all ${style === s ? 'bg-gold/15 border-gold text-gold' : 'border-white/[0.08] text-text-muted hover:text-text'}`}>
+            <button key={s} onClick={() => changeMapStyle(s)} className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs cursor-pointer border transition-all whitespace-nowrap ${style === s ? 'bg-gold/15 border-gold text-gold' : 'border-white/[0.08] text-text-muted hover:text-text'}`}>
               {s === 'satellite' ? '🛰️' : s === 'outdoors' ? '🏔️' : s === 'dark' ? '🌙' : '🗺️'} {s[0].toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
         <button
           onClick={() => saveCurrentRoute(true)}
-          className={`px-4 py-1.5 rounded-lg text-xs cursor-pointer border font-medium transition-all ${
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs cursor-pointer border font-medium transition-all whitespace-nowrap ${
             saveStatus === 'saved' ? 'bg-teal/15 border-teal text-teal' :
             saveStatus === 'saving' ? 'bg-gold/10 border-gold/50 text-gold/70' :
             saveStatus === 'error' ? 'bg-stamp-red/15 border-stamp-red text-stamp-red' :
@@ -1049,13 +1049,13 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
            saveStatus === 'error' ? '✗ Error' :
            hasUnsaved ? '💾 Save Route' : '💾 Save'}
         </button>
-        <button onClick={exportMap} className="px-3 py-1.5 rounded-lg text-xs border border-white/[0.08] text-text-muted hover:text-text cursor-pointer">📷 Export</button>
+        <button onClick={exportMap} className="hidden sm:block px-3 py-1.5 rounded-lg text-xs border border-white/[0.08] text-text-muted hover:text-text cursor-pointer">📷 Export</button>
       </div>
 
       {/* Body */}
-      <div className="flex-1 grid grid-cols-[1fr_320px] overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col md:grid md:grid-cols-[1fr_320px] overflow-hidden min-h-0">
         {/* Map */}
-        <div className="relative min-h-0">
+        <div className="relative min-h-[40vh] md:min-h-0 flex-1 md:flex-none">
           <div ref={containerRef} className="absolute inset-0" />
           {!mapboxToken && (
             <div className="absolute inset-0 flex items-center justify-center bg-bg z-10">
@@ -1073,7 +1073,7 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
             <button onClick={clearAllWaypoints} className="w-11 h-11 rounded-lg bg-bg3 border border-white/[0.08] text-text text-base flex items-center justify-center cursor-pointer hover:border-gold hover:text-gold transition-all" title="Clear all">🗑️</button>
           </div>
           {/* Right-click hint */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none">Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo</div>
+          <div className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none">Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo</div>
           {/* Legend */}
           {(() => {
             const usedModes = [...new Set(waypointList.filter(w => w.transport).map(w => w.transport!))];
@@ -1098,7 +1098,7 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
         </div>
 
         {/* Sidebar */}
-        <div className="bg-bg2 border-l border-white/[0.08] flex flex-col overflow-hidden">
+        <div className="bg-bg2 border-t md:border-t-0 md:border-l border-white/[0.08] flex flex-col overflow-hidden max-h-[50vh] md:max-h-none">
           <div className="flex border-b border-white/[0.08] shrink-0">
             {(['route', 'stats', 'notes'] as const).map(tab => (
               <button key={tab} onClick={() => setSidebarTab(tab)}
