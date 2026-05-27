@@ -130,15 +130,6 @@ export async function GET(req: NextRequest) {
     };
   }).filter(u => u.username); // Only show users with public profiles
 
-  // --- Continent stats ---
-  const continentStats: Record<string, { trips: number; travelers: number }> = {};
-  if (allTrips) {
-    const continentUsers: Record<string, Set<string>> = {};
-    for (const t of allTrips) {
-      // We need continent info - fetch from published trips or derive
-    }
-  }
-
   // --- Top destinations ---
   const topDestinations = Object.entries(countryCounts)
     .sort((a, b) => b[1] - a[1])
@@ -147,6 +138,8 @@ export async function GET(req: NextRequest) {
 
   const result = {
     trips,
+    visitedCodes: Object.keys(countryCounts),
+    countryCounts,
     total: count || 0,
     page,
     totalPages: Math.ceil((count || 0) / limit),

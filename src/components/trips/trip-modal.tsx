@@ -11,7 +11,7 @@ import { getContinent } from '@/lib/countries';
 import type { Trip } from '@/types';
 
 export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenChange: (open: boolean) => void; trip: Trip | null }) {
-  const { addTrip, updateTrip } = useStore();
+  const { addTrip, updateTrip, toggleTripPublished, profile } = useStore();
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('✈️');
@@ -21,6 +21,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
   const [end, setEnd] = useState('');
   const [cities, setCities] = useState('');
   const [notes, setNotes] = useState('');
+  const [published, setPublished] = useState(false);
 
   useEffect(() => {
     if (open && trip) {
@@ -32,9 +33,11 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       setEnd(trip.end);
       setCities(trip.cities);
       setNotes(trip.notes);
+      setPublished(trip.published || false);
     } else if (open) {
       setName(''); setEmoji('✈️'); setCountry(''); setFromCountry('');
       setStart(''); setEnd(''); setCities(''); setNotes('');
+      setPublished(false);
     }
   }, [open, trip]);
 
@@ -46,10 +49,19 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
 
     if (trip) {
       await updateTrip({ ...trip, name, code, continent, emoji, start, end, days, cities, notes, fromCode });
-      toast('Trip updated!');
+      // Update published status if changed
+      if (published !== (trip.published || false)) {
+        await toggleTripPublished(trip.id, published);
+      }
+      toast(published ? 'Trip updated & published to Explore!' : 'Trip updated!');
     } else {
-      await addTrip({ name, code, continent, emoji, start, end, days, cities, notes, quickPin: false, fromCode });
-      toast('Trip added!');
+      const newTrip = await addTrip({ name, code, continent, emoji, start, end, days, cities, notes, quickPin: false, fromCode });
+      if (published && newTrip?.id) {
+        await toggleTripPublished(newTrip.id, true);
+        toast('Trip added & published to Explore! 🌍');
+      } else {
+        toast('Trip added!');
+      }
     }
     onOpenChange(false);
   }
@@ -101,6 +113,25 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="What made this trip unforgettable?" className="bg-bg3 border-white/[0.08] text-text min-h-[90px]" />
           </div>
         </div>
+        {/* Publish toggle */}
+        {profile?.username && (
+          <div className="flex items-center justify-between mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+            <div>
+              <div className="text-sm font-medium">{published ? '🌐 Published to Explore' : '🔒 Private trip'}</div>
+              <div className="text-[11px] text-text-muted mt-0.5">
+                {published ? 'Visible on the Explore page for everyone' : 'Only you can see this trip'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPublished(!published)}
+              className={`relative w-11 h-6 rounded-full transition-colors ${published ? 'bg-gold' : 'bg-white/[0.1]'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${published ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-3 justify-end mt-6">
           <button onClick={() => onOpenChange(false)} className="px-5 py-2.5 rounded-[10px] border border-white/[0.08] text-text-muted text-sm cursor-pointer">Cancel</button>
           <button onClick={save} className="px-6 py-2.5 rounded-[10px] bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85">{trip ? 'Update Trip' : 'Save Trip'}</button>

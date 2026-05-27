@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { countryNames, countryFlag } from '@/lib/countries';
+import { Globe } from '@/components/landing/globe';
 
 /* ── Types ── */
 interface Trip {
@@ -40,6 +41,8 @@ interface ExploreData {
   totalPages: number;
   leaderboard: LeaderboardEntry[];
   topDestinations: TopDestination[];
+  visitedCodes: string[];
+  countryCounts: Record<string, number>;
   stats: { totalCountries: number; totalTrips: number; totalTravelers: number };
 }
 
@@ -186,7 +189,7 @@ export default function ExplorePage() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [tab, setTab] = useState<'trips' | 'leaderboard' | 'destinations'>('trips');
+  const [tab, setTab] = useState<'trips' | 'map' | 'leaderboard' | 'destinations'>('trips');
 
   const fetchData = useCallback(async (pg = 1) => {
     setLoading(true);
@@ -285,6 +288,7 @@ export default function ExplorePage() {
         <div className="flex gap-1 border-b border-white/[0.06] mt-6">
           {([
             { key: 'trips' as const, label: '✈️ Trip Feed', count: data?.total },
+            { key: 'map' as const, label: '🗺️ Community Map' },
             { key: 'leaderboard' as const, label: '🏆 Leaderboard' },
             { key: 'destinations' as const, label: '🌍 Top Destinations' },
           ]).map(t => (
@@ -389,6 +393,31 @@ export default function ExplorePage() {
               </>
             )}
           </>
+        )}
+
+        {/* Community Map Tab */}
+        {tab === 'map' && (
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="font-medium text-base mb-1">Community World Map</h2>
+              <p className="text-[12px] text-text-muted">Every gold country has been visited by a Stampomad traveler. Drag to spin, hover to explore.</p>
+            </div>
+            <Globe
+              visitedCodes={data?.visitedCodes || []}
+              countryCounts={data?.countryCounts || {}}
+            />
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-6 mt-6">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm bg-gold" />
+                <span className="text-xs text-text-muted">Visited by community</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm bg-white/[0.06] border border-white/[0.1]" />
+                <span className="text-xs text-text-muted">Not yet explored</span>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Leaderboard Tab */}
