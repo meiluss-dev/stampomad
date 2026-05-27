@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { GlobeSection } from '@/components/landing/globe-section';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,55 +34,51 @@ export default async function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Hero with Globe */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.03] via-transparent to-transparent" />
-        <div className="max-w-5xl mx-auto px-6 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative">
-          <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 rounded-full px-4 py-1.5 text-xs text-gold mb-8">
-            <span>&#10024;</span> Now with Group Trips &mdash; travel together, split the bill
+        <div className="max-w-6xl mx-auto px-6 pt-16 pb-8 md:pt-24 md:pb-12 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4 items-center">
+            {/* Left: Text */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 rounded-full px-4 py-1.5 text-xs text-gold mb-8">
+                <span>&#10024;</span> Now with Group Trips &mdash; travel together, split the bill
+              </div>
+              <h1 className="font-[family-name:var(--font-playfair)] text-4xl md:text-5xl lg:text-6xl leading-tight mb-6">
+                Stamp the world.
+                <br />
+                <span className="text-gold">Log your journey.</span>
+              </h1>
+              <p className="text-text-muted text-lg md:text-xl max-w-lg mb-10 leading-relaxed mx-auto lg:mx-0">
+                Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
+                <Link
+                  href="/auth"
+                  className="px-8 py-3.5 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
+                >
+                  Start for free
+                </Link>
+                <a
+                  href="#features"
+                  className="px-8 py-3.5 border border-white/[0.12] rounded-xl text-base text-text-muted hover:text-text hover:border-white/[0.2] transition-all"
+                >
+                  See features
+                </a>
+              </div>
+            </div>
+
+            {/* Right: Globe */}
+            <GlobeSection />
           </div>
-          <h1 className="font-[family-name:var(--font-playfair)] text-4xl md:text-6xl lg:text-7xl leading-tight mb-6">
-            Stamp the world.
-            <br />
-            <span className="text-gold">Log your journey.</span>
-          </h1>
-          <p className="text-text-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/auth"
-              className="px-8 py-3.5 bg-gold text-bg rounded-xl text-base font-medium hover:opacity-90 transition-all hover:-translate-y-0.5"
-            >
-              Start for free
-            </Link>
-            <a
-              href="#features"
-              className="px-8 py-3.5 border border-white/[0.12] rounded-xl text-base text-text-muted hover:text-text hover:border-white/[0.2] transition-all"
-            >
-              See features
-            </a>
-          </div>
+        </div>
+        {/* Drag hint */}
+        <div className="text-center pb-8 md:pb-12">
+          <span className="text-[11px] text-text-muted/60">Drag to spin &middot; Hover to explore</span>
         </div>
       </section>
 
-      {/* Stats bar */}
-      <section className="border-y border-white/[0.06] bg-bg2/50">
-        <div className="max-w-4xl mx-auto px-6 py-8 grid grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-gold">195</div>
-            <div className="text-xs text-text-muted mt-1">Countries to explore</div>
-          </div>
-          <div>
-            <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-teal">15+</div>
-            <div className="text-xs text-text-muted mt-1">Features built in</div>
-          </div>
-          <div>
-            <div className="font-[family-name:var(--font-playfair)] text-2xl md:text-3xl text-stamp-red">100%</div>
-            <div className="text-xs text-text-muted mt-1">Free to use</div>
-          </div>
-        </div>
-      </section>
+      {/* Stats bar — now with live data pulled client-side via GlobeSection */}
 
       {/* Features */}
       <section id="features" className="max-w-5xl mx-auto px-6 py-20 md:py-28">
