@@ -5,6 +5,7 @@ export const UI_STRINGS: Record<string, string> = {
   nav_trips: 'My Trips',
   nav_journal: 'Journal',
   nav_stats: 'Stats',
+  nav_explore: 'Explore',
 
   // Dashboard stats
   stat_countries: 'Countries visited',
