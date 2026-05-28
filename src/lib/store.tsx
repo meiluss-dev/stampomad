@@ -103,7 +103,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       const userId = user!.id;
       console.log('[Stampomad] Loading data for user:', userId);
 
-      const [tripsData, settings, routesData, photosData, profileData, packingData] = await Promise.all([
+      let [tripsData, settings, routesData, photosData, profileData, packingData] = await Promise.all([
         loadTripsFromSupabase(sb, userId),
         loadSettingsFromSupabase(sb, userId),
         loadRoutesFromSupabase(sb, userId),
@@ -115,6 +115,17 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       if (cancelled) return;
 
       console.log('[Stampomad] Loaded:', tripsData.length, 'trips,', Object.keys(routesData).length, 'routes, settings:', !!settings);
+
+      // Clean up: remove quickPins for countries that already have a real trip
+      const realTripCodes = new Set(tripsData.filter(t => !t.quickPin).map(t => t.code));
+      const dupeQuickPins = tripsData.filter(t => t.quickPin && realTripCodes.has(t.code));
+      if (dupeQuickPins.length > 0) {
+        console.log('[Stampomad] Cleaning up', dupeQuickPins.length, 'redundant quickPins');
+        tripsData = tripsData.filter(t => !(t.quickPin && realTripCodes.has(t.code)));
+        // Remove from DB in background
+        dupeQuickPins.forEach(qp => deleteTripFromSupabase(sb, userId, qp.id).catch(() => {}));
+      }
+
       setTrips(tripsData);
       const vc = new Set<string>();
       tripsData.filter(t => t.quickPin).forEach(t => vc.add(t.code));
