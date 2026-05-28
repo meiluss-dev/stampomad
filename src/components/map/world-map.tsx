@@ -8,11 +8,19 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 
+interface ContextMenu {
+  x: number;
+  y: number;
+  code: string;
+  name: string;
+}
+
 export function WorldMap() {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const mapLoadedRef = useRef(false);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
 
   const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry, wishlist, toggleWishlist } = useStore();
   const { t } = useLang();
@@ -24,6 +32,8 @@ export function WorldMap() {
   wishlistRef.current = wishlist;
   const toggleWishlistRef = useRef(toggleWishlist);
   toggleWishlistRef.current = toggleWishlist;
+  const setContextMenuRef = useRef(setContextMenu);
+  setContextMenuRef.current = setContextMenu;
 
   const updateColors = useCallback(() => {
     if (!mapLoadedRef.current) return;
@@ -97,9 +107,9 @@ export function WorldMap() {
           const isVisited = visitedRef.current.has(alpha);
           const isWish = wishlistRef.current.has(alpha);
           tooltip.querySelector('.tt-status')!.textContent =
-            isVisited ? '📍 Visited — right-click to remove' :
-            isWish ? '⭐ Wish list — right-click to mark visited, double-click to remove' :
-            'Right-click = visited · Double-click = wish list';
+            isVisited ? '📍 Visited — right-click to change' :
+            isWish ? '⭐ Wish list — right-click to change' :
+            'Right-click for options';
           tooltip.style.display = 'block';
           tooltip.style.left = (event.clientX + 14) + 'px';
           tooltip.style.top = (event.clientY - 10) + 'px';
@@ -112,7 +122,8 @@ export function WorldMap() {
           if (isDragging) return;
           const alpha = numToAlpha[+d.id];
           if (!alpha) return;
-          toggleRef.current(alpha);
+          const name = countryNames[alpha] || alpha;
+          setContextMenuRef.current({ x: event.clientX, y: event.clientY, code: alpha, name });
         })
         .on('dblclick', function (event: MouseEvent, d: any) {
           event.preventDefault();
@@ -125,10 +136,15 @@ export function WorldMap() {
           touchMoved = false;
           const alpha = numToAlpha[+d.id];
           if (!alpha) return;
+          const touch = event.touches[0];
+          const touchX = touch.clientX;
+          const touchY = touch.clientY;
           longPressTimer = setTimeout(() => {
             if (!touchMoved) {
               event.preventDefault();
-              toggleRef.current(alpha);
+              if (navigator.vibrate) navigator.vibrate(30);
+              const name = countryNames[alpha] || alpha;
+              setContextMenuRef.current({ x: touchX, y: touchY, code: alpha, name });
               // Brief visual feedback
               d3.select(this).classed('map-pulse', true);
               setTimeout(() => d3.select(this).classed('map-pulse', false), 800);
@@ -257,7 +273,7 @@ export function WorldMap() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
         <h3 className="text-[12px] sm:text-[13px] text-text-muted uppercase tracking-wider">
           <span className="hidden sm:inline">{t('map_hint_desktop')}</span>
-          <span className="sm:hidden">{t('map_hint_mobile')}</span>
+          <span className="sm:hidden">Tap &amp; hold a country for options</span>
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted italic hidden sm:inline">
@@ -361,7 +377,7 @@ export function WorldMap() {
         </div>
       </div>
 
-      {/* Tooltip */}
+      {/* Tooltip (desktop hover) */}
       <div
         ref={tooltipRef}
         className="fixed bg-bg2/95 border border-white/[0.08] rounded-lg px-3.5 py-2 text-[13px] pointer-events-none hidden z-[999] backdrop-blur-[6px]"
@@ -369,6 +385,98 @@ export function WorldMap() {
         <div className="tt-name font-medium text-text" />
         <div className="tt-status text-[11px] text-text-muted mt-0.5" />
       </div>
+
+      {/* Context menu (mobile long-press + desktop right-click) */}
+      {contextMenu && (() => {
+        const code = contextMenu.code;
+        const isVisited = visitedCountries.has(code) || trips.some(t => t.code === code);
+        const isWish = wishlist.has(code);
+        const isHome = homebase?.code === code;
+        const isLived = livedPlaces.some(l => l.code === code);
+
+        return (
+          <div
+            className="fixed inset-0 z-[1000]"
+            onClick={() => setContextMenu(null)}
+            onTouchEnd={() => setContextMenu(null)}
+          >
+            <div
+              className="fixed bg-bg2 border border-white/[0.12] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md z-[1001] w-[220px] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+              style={{
+                left: Math.min(contextMenu.x, (typeof window !== 'undefined' ? window.innerWidth : 400) - 230),
+                top: Math.min(contextMenu.y, (typeof window !== 'undefined' ? window.innerHeight : 600) - 280),
+              }}
+              onClick={e => e.stopPropagation()}
+              onTouchEnd={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-white/[0.06]">
+                <div className="font-medium text-sm">{countryFlag(code)} {contextMenu.name}</div>
+                <div className="text-[11px] text-text-muted mt-0.5">
+                  {isHome ? '🏠 Home base' : isLived ? '🏡 Lived here' : isVisited ? '📍 Visited' : isWish ? '⭐ Wish list' : 'Not explored'}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="py-1.5">
+                {!isVisited && !isHome && !isLived && (
+                  <button
+                    onClick={() => { toggleVisitedCountry(code); setContextMenu(null); }}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
+                  >
+                    <span className="text-base">📍</span> Mark as visited
+                  </button>
+                )}
+                {!isWish && !isVisited && !isHome && !isLived && (
+                  <button
+                    onClick={() => { toggleWishlist(code); setContextMenu(null); }}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
+                  >
+                    <span className="text-base">⭐</span> Add to wish list
+                  </button>
+                )}
+                {isVisited && !isHome && !isLived && (
+                  <>
+                    <button
+                      onClick={() => { toggleWishlist(code); toggleVisitedCountry(code); setContextMenu(null); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
+                    >
+                      <span className="text-base">⭐</span> Move to wish list
+                    </button>
+                    <button
+                      onClick={() => { toggleVisitedCountry(code); setContextMenu(null); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-stamp-red/10 transition-colors cursor-pointer bg-transparent border-none text-stamp-red"
+                    >
+                      <span className="text-base">✕</span> Remove
+                    </button>
+                  </>
+                )}
+                {isWish && (
+                  <>
+                    <button
+                      onClick={() => { toggleVisitedCountry(code); toggleWishlist(code); setContextMenu(null); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
+                    >
+                      <span className="text-base">📍</span> Mark as visited
+                    </button>
+                    <button
+                      onClick={() => { toggleWishlist(code); setContextMenu(null); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-stamp-red/10 transition-colors cursor-pointer bg-transparent border-none text-stamp-red"
+                    >
+                      <span className="text-base">✕</span> Remove from wish list
+                    </button>
+                  </>
+                )}
+                {(isHome || isLived) && (
+                  <div className="px-4 py-2.5 text-[12px] text-text-muted">
+                    {isHome ? 'Change home base in settings' : 'Managed in Places I\'ve Lived'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
