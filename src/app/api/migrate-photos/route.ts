@@ -5,32 +5,42 @@ import { uploadPhoto } from '@/lib/supabase/storage';
 /**
  * POST /api/migrate-photos
  * One-time migration: converts base64 photo_data rows to Storage URLs.
- * Only migrates photos for the authenticated user.
+ * Processes one photo at a time to avoid query timeouts.
+ * Call multiple times if needed — it picks up where it left off.
  */
 export async function POST() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Find all rows with base64 data but no URL
-  const { data: rows, error } = await supabase
+  // Step 1: Get just the IDs (no blob data — fast query)
+  const { data: ids, error } = await supabase
     .from('trip_photos')
-    .select('id, trip_id, photo_data, position')
+    .select('id')
     .eq('user_id', user.id)
     .is('photo_url', null)
     .not('photo_data', 'is', null);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!rows || rows.length === 0) return NextResponse.json({ migrated: 0, message: 'No legacy photos to migrate' });
+  if (!ids || ids.length === 0) return NextResponse.json({ migrated: 0, message: 'No legacy photos to migrate' });
 
   let migrated = 0;
   let failed = 0;
 
-  for (const row of rows) {
+  // Step 2: Process one photo at a time
+  for (const { id } of ids) {
     try {
+      // Fetch single row with blob data
+      const { data: row } = await supabase
+        .from('trip_photos')
+        .select('id, trip_id, photo_data, position')
+        .eq('id', id)
+        .single();
+
+      if (!row || !row.photo_data) { failed++; continue; }
+
       const url = await uploadPhoto(supabase, user.id, row.trip_id, row.photo_data, row.position || 0);
       if (url) {
-        // Update the row: set photo_url, clear photo_data to free space
         await supabase.from('trip_photos').update({
           photo_url: url,
           photo_data: null,
@@ -40,7 +50,7 @@ export async function POST() {
         failed++;
       }
     } catch (err) {
-      console.error(`[Stampomad] Migration failed for photo ${row.id}:`, err);
+      console.error(`[Stampomad] Migration failed for photo ${id}:`, err);
       failed++;
     }
   }
@@ -48,7 +58,7 @@ export async function POST() {
   return NextResponse.json({
     migrated,
     failed,
-    total: rows.length,
-    message: `Migrated ${migrated}/${rows.length} photos to Storage`,
+    total: ids.length,
+    message: `Migrated ${migrated}/${ids.length} photos to Storage`,
   });
 }
