@@ -11,7 +11,7 @@ import { BudgetModal } from '@/components/trips/budget-modal';
 import { PhotoLightbox } from '@/components/trips/photo-lightbox';
 import type { Trip } from '@/types';
 
-const MAX_PHOTOS = 8;
+const MAX_PHOTOS = 20;
 const MAX_SIZE_MB = 2;
 
 function resizeImage(file: File, maxWidth = 1200, quality = 0.8): Promise<string> {
