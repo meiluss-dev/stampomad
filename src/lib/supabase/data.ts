@@ -63,8 +63,16 @@ export async function loadRoutesFromSupabase(supabase: SupabaseClient, userId: s
 }
 
 export async function loadPhotosFromSupabase(supabase: SupabaseClient, userId: string): Promise<Record<number, string[]>> {
-  const { data, error } = await supabase
+  // Try with position ordering first, fall back to without if column doesn't exist
+  let { data, error } = await supabase
     .from('trip_photos').select('*').eq('user_id', userId).order('position');
+  if (error) {
+    console.warn('[Stampomad] loadPhotos with position failed, retrying without order:', error.message);
+    const retry = await supabase
+      .from('trip_photos').select('*').eq('user_id', userId);
+    data = retry.data;
+    error = retry.error;
+  }
   if (error) console.error('[Stampomad] loadPhotos error:', error);
   if (!data) { console.warn('[Stampomad] loadPhotos: no data returned'); return {}; }
   console.log('[Stampomad] loadPhotos:', data.length, 'photo rows loaded');
@@ -322,8 +330,14 @@ export async function loadPublicRoutes(supabase: SupabaseClient, userId: string,
 
 export async function loadPublicPhotos(supabase: SupabaseClient, userId: string, tripIds: number[]): Promise<Record<number, string[]>> {
   if (tripIds.length === 0) return {};
-  const { data } = await supabase
+  let { data } = await supabase
     .from('trip_photos').select('*').eq('user_id', userId).in('trip_id', tripIds).order('position');
+  if (!data) {
+    // Retry without ordering if position column doesn't exist
+    const retry = await supabase
+      .from('trip_photos').select('*').eq('user_id', userId).in('trip_id', tripIds);
+    data = retry.data;
+  }
   if (!data) return {};
   const photos: Record<number, string[]> = {};
   data.forEach(p => {
