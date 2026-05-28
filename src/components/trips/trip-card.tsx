@@ -117,37 +117,41 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   }
 
   return (
-    <div className="bg-bg3 border border-white/[0.08] rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:border-gold hover:shadow-[0_8px_32px_rgba(201,169,110,0.15)]">
+    <div className="bg-bg3 border border-white/[0.08] rounded-2xl overflow-hidden transition-[border-color,box-shadow] duration-300 hover:border-gold hover:shadow-[0_8px_32px_rgba(201,169,110,0.15)]">
       {/* Photo area */}
       <div className="w-full h-40 flex items-center justify-center text-[52px] bg-bg4 relative overflow-hidden group">
         {hasPhotos ? (
           <>
-            <img
-              src={photos[photoIdx] || photos[0]}
-              alt=""
-              className="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 cursor-pointer"
-              onClick={() => setLightboxIdx(photoIdx)}
-            />
+            {/* Stack all photos — only active one is visible (no flash on swap) */}
+            {photos.map((photo, i) => (
+              <img
+                key={photo}
+                src={photo}
+                alt=""
+                className={`w-full h-full object-cover absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === photoIdx ? 'opacity-100 z-[1]' : 'opacity-0 z-0'}`}
+                onClick={() => setLightboxIdx(photoIdx)}
+              />
+            ))}
             {photos.length > 1 && (
               <>
                 <button
                   onClick={e => { e.stopPropagation(); setPhotoIdx(p => (p - 1 + photos.length) % photos.length); }}
-                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm z-[2]"
                 >&#8249;</button>
                 <button
                   onClick={e => { e.stopPropagation(); setPhotoIdx(p => (p + 1) % photos.length); }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm z-[2]"
                 >&#8250;</button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-[2]">
                   {photos.slice(0, 6).map((_, i) => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === photoIdx % photos.length ? 'bg-white scale-125' : 'bg-white/50'}`} />
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === photoIdx % photos.length ? 'bg-white scale-125' : 'bg-white/50'}`} />
                   ))}
                   {photos.length > 6 && <div className="text-white/60 text-[9px] ml-0.5">+{photos.length - 6}</div>}
                 </div>
               </>
             )}
             {/* Add more / manage photos buttons — always visible on mobile */}
-            <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-[2]">
               {photos.length < MAX_PHOTOS && (
                 <button
                   onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}

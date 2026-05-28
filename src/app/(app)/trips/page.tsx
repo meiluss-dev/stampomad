@@ -162,7 +162,7 @@ export default function TripsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {displayTrips.map(t => (
-                <div key={t.id} id={`trip-${t.id}`} className="transition-all duration-500 rounded-2xl">
+                <div key={t.id} id={`trip-${t.id}`}>
                 <TripCard trip={t} onEdit={() => openEdit(t)} onPacking={() => setPackingTrip(t)} onRoute={() => {
                   if (!mapboxToken) { toast('Set your Mapbox token in API Keys settings first.', 'error'); return; }
                   setRouteTrip(t);

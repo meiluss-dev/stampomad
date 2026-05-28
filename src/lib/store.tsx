@@ -339,8 +339,14 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   }, [user]);
 
   const saveTripPhotosAction = useCallback(async (tripId: number, photos: string[]) => {
+    // Optimistic update — show photos immediately (base64 or URLs)
     setTripPhotos(prev => ({ ...prev, [tripId]: photos }));
-    if (user) await savePhotosToSupabase(supabase.current, user.id, tripId, photos);
+    if (user) {
+      await savePhotosToSupabase(supabase.current, user.id, tripId, photos);
+      // Reload photos to get Storage URLs (replaces any base64 with URL)
+      const fresh = await loadPhotosFromSupabase(supabase.current, user.id);
+      setTripPhotos(fresh);
+    }
     trackFeatureUsage({ feature: 'photo_gallery', action: 'create', metadata: { count: photos.length } });
   }, [user]);
 

@@ -63,36 +63,38 @@ export async function loadRoutesFromSupabase(supabase: SupabaseClient, userId: s
 }
 
 export async function loadPhotosFromSupabase(supabase: SupabaseClient, userId: string): Promise<Record<number, string[]>> {
-  // First get the list of trip_ids that have photos (lightweight query)
-  const { data: index, error: indexErr } = await supabase
-    .from('trip_photos').select('id, trip_id').eq('user_id', userId);
-  if (indexErr) { console.error('[Stampomad] loadPhotos index error:', indexErr); return {}; }
-  if (!index || index.length === 0) return {};
+  // Only select URL column (lightweight — no base64 blobs)
+  const { data, error } = await supabase
+    .from('trip_photos').select('trip_id, photo_url').eq('user_id', userId).not('photo_url', 'is', null);
 
-  // Group photo IDs by trip
-  const tripPhotoIds: Record<number, number[]> = {};
-  index.forEach(row => {
-    if (!tripPhotoIds[row.trip_id]) tripPhotoIds[row.trip_id] = [];
-    tripPhotoIds[row.trip_id].push(row.id);
-  });
+  if (error) console.error('[Stampomad] loadPhotos error:', error);
 
-  // Load photos per trip in parallel (avoids single massive query timeout)
-  const tripIds = Object.keys(tripPhotoIds).map(Number);
+  // Also load any legacy base64 photos (photo_url is null but photo_data exists)
+  const { data: legacyData } = await supabase
+    .from('trip_photos').select('trip_id, photo_data').eq('user_id', userId).is('photo_url', null);
+
   const photos: Record<number, string[]> = {};
 
-  await Promise.all(tripIds.map(async (tripId) => {
-    const { data, error } = await supabase
-      .from('trip_photos').select('photo_data').eq('user_id', userId).eq('trip_id', tripId);
-    if (error) {
-      console.error('[Stampomad] loadPhotos error for trip', tripId, ':', error.message);
-      return;
-    }
-    if (data && data.length > 0) {
-      photos[tripId] = data.map(p => p.photo_data);
-    }
-  }));
+  // Modern URL-based photos
+  if (data) {
+    data.forEach(p => {
+      if (!p.photo_url) return;
+      if (!photos[p.trip_id]) photos[p.trip_id] = [];
+      photos[p.trip_id].push(p.photo_url);
+    });
+  }
 
-  console.log('[Stampomad] loadPhotos:', tripIds.length, 'trips with photos,', index.length, 'total photos');
+  // Legacy base64 photos (will be migrated on next save)
+  if (legacyData) {
+    legacyData.forEach(p => {
+      if (!p.photo_data) return;
+      if (!photos[p.trip_id]) photos[p.trip_id] = [];
+      photos[p.trip_id].push(p.photo_data);
+    });
+  }
+
+  const totalPhotos = Object.values(photos).reduce((a, b) => a + b.length, 0);
+  console.log('[Stampomad] loadPhotos:', Object.keys(photos).length, 'trips,', totalPhotos, 'photos');
   return photos;
 }
 
@@ -124,6 +126,9 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
 
 export async function deleteTripFromSupabase(supabase: SupabaseClient, userId: string, tripId: number) {
   await supabase.from('journal_entries').delete().eq('user_id', userId).eq('trip_id', tripId);
+  // Delete photos from Storage bucket first
+  const { deleteAllTripPhotos } = await import('./storage');
+  await deleteAllTripPhotos(supabase, userId, tripId).catch(() => {});
   await supabase.from('trip_photos').delete().eq('user_id', userId).eq('trip_id', tripId);
   await supabase.from('routes').delete().eq('user_id', userId).eq('trip_id', tripId);
   await supabase.from('trips').delete().eq('user_id', userId).eq('id', tripId);
@@ -175,12 +180,47 @@ export async function saveRouteToSupabase(supabase: SupabaseClient, userId: stri
 }
 
 export async function savePhotosToSupabase(supabase: SupabaseClient, userId: string, tripId: number, photos: string[]) {
-  await supabase.from('trip_photos').delete().eq('user_id', userId).eq('trip_id', tripId);
+  // Separate existing Storage URLs from new base64 data
+  const isStorageUrl = (p: string) => p.startsWith('http');
+
+  // Delete removed photos from DB and Storage
+  const { data: existing } = await supabase
+    .from('trip_photos').select('id, photo_url, photo_data').eq('user_id', userId).eq('trip_id', tripId);
+
+  const existingUrls = new Set(photos.filter(isStorageUrl));
+  if (existing) {
+    for (const row of existing) {
+      const url = row.photo_url || row.photo_data;
+      if (!existingUrls.has(url)) {
+        // Photo was removed — delete DB row
+        await supabase.from('trip_photos').delete().eq('id', row.id);
+        // Delete from Storage if it was a URL
+        if (row.photo_url) {
+          const { deletePhotoFromStorage } = await import('./storage');
+          await deletePhotoFromStorage(supabase, row.photo_url);
+        }
+      }
+    }
+  }
+
+  // Upload new base64 photos to Storage, keep existing URLs
+  const { uploadPhoto } = await import('./storage');
   for (let i = 0; i < photos.length; i++) {
-    await supabase.from('trip_photos').insert({
-      user_id: userId, trip_id: tripId,
-      photo_data: photos[i], position: i,
-    });
+    const photo = photos[i];
+    if (isStorageUrl(photo)) {
+      // Existing Storage URL — update position only
+      await supabase.from('trip_photos').update({ position: i })
+        .eq('user_id', userId).eq('trip_id', tripId).eq('photo_url', photo);
+    } else {
+      // New base64 photo — upload to Storage
+      const url = await uploadPhoto(supabase, userId, tripId, photo, i);
+      if (url) {
+        await supabase.from('trip_photos').insert({
+          user_id: userId, trip_id: tripId,
+          photo_url: url, position: i,
+        });
+      }
+    }
   }
 }
 
@@ -342,19 +382,32 @@ export async function loadPublicRoutes(supabase: SupabaseClient, userId: string,
 
 export async function loadPublicPhotos(supabase: SupabaseClient, userId: string, tripIds: number[]): Promise<Record<number, string[]>> {
   if (tripIds.length === 0) return {};
-  let { data } = await supabase
-    .from('trip_photos').select('*').eq('user_id', userId).in('trip_id', tripIds).order('position');
-  if (!data) {
-    // Retry without ordering if position column doesn't exist
-    const retry = await supabase
-      .from('trip_photos').select('*').eq('user_id', userId).in('trip_id', tripIds);
-    data = retry.data;
-  }
-  if (!data) return {};
+
+  // Load URL-based photos (lightweight)
+  const { data } = await supabase
+    .from('trip_photos').select('trip_id, photo_url')
+    .eq('user_id', userId).in('trip_id', tripIds).not('photo_url', 'is', null)
+    .order('position');
+
+  // Fallback: legacy base64 photos
+  const { data: legacyData } = await supabase
+    .from('trip_photos').select('trip_id, photo_data')
+    .eq('user_id', userId).in('trip_id', tripIds).is('photo_url', null);
+
   const photos: Record<number, string[]> = {};
-  data.forEach(p => {
-    if (!photos[p.trip_id]) photos[p.trip_id] = [];
-    photos[p.trip_id].push(p.photo_data);
-  });
+  if (data) {
+    data.forEach(p => {
+      if (!p.photo_url) return;
+      if (!photos[p.trip_id]) photos[p.trip_id] = [];
+      photos[p.trip_id].push(p.photo_url);
+    });
+  }
+  if (legacyData) {
+    legacyData.forEach(p => {
+      if (!p.photo_data) return;
+      if (!photos[p.trip_id]) photos[p.trip_id] = [];
+      photos[p.trip_id].push(p.photo_data);
+    });
+  }
   return photos;
 }
