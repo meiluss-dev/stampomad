@@ -11,6 +11,10 @@ export interface Trip {
   notes: string;
   quickPin: boolean;
   fromCode?: string;
+  fromCity?: string;
+  toCity?: string;
+  travelStyle?: string;
+  rating?: number;
   published?: boolean;
   isGroup?: boolean;
   journal: JournalEntry[];

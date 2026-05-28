@@ -24,6 +24,10 @@ export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: st
     notes: t.notes || '',
     quickPin: t.quick_pin,
     fromCode: t.from_code || '',
+    fromCity: t.from_city || '',
+    toCity: t.to_city || '',
+    travelStyle: t.travel_style || '',
+    rating: t.rating || 0,
     published: t.published || false,
     isGroup: t.is_group || false,
     journal: (journalData || [])
@@ -79,6 +83,8 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
     end_date: trip.end || null,
     days: trip.days, cities: trip.cities, notes: trip.notes,
     quick_pin: trip.quickPin, from_code: trip.fromCode || '',
+    from_city: trip.fromCity || '', to_city: trip.toCity || '',
+    travel_style: trip.travelStyle || '', rating: trip.rating || 0,
     published: trip.published || false,
   });
   if (error) {
@@ -292,6 +298,10 @@ export async function loadPublicTrips(supabase: SupabaseClient, userId: string):
     notes: t.notes || '',
     quickPin: t.quick_pin,
     fromCode: t.from_code || '',
+    fromCity: t.from_city || '',
+    toCity: t.to_city || '',
+    travelStyle: t.travel_style || '',
+    rating: t.rating || 0,
     published: true,
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
