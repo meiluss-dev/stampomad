@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stampomad-v2';
+const CACHE_NAME = 'stampomad-v3';
 const OFFLINE_URL = '/offline';
 
 // Pre-cache only truly static assets (no auth-gated pages)
@@ -39,21 +39,28 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('supabase')
   ) return;
 
-  // For navigation requests (HTML pages), try network first, fallback to offline page
+  // Auth-gated pages — never serve from cache (they need live Supabase data)
+  const AUTH_PAGES = ['/dashboard', '/trips', '/journal', '/stats', '/admin'];
+  const isAuthPage = AUTH_PAGES.some((p) => url.pathname.startsWith(p));
+
+  // For navigation requests (HTML pages)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Cache successful page loads for offline use
-          if (response.ok) {
+          // Only cache public pages for offline use, not auth-gated ones
+          if (response.ok && !isAuthPage) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(() =>
-          caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_URL))
-        )
+        .catch(() => {
+          // Offline: auth pages always get the offline fallback
+          if (isAuthPage) return caches.match(OFFLINE_URL);
+          // Public pages can try cache first, then offline fallback
+          return caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_URL));
+        })
     );
     return;
   }
