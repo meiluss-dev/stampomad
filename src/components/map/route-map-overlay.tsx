@@ -1122,23 +1122,22 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
               </div>
             </div>
           )}
-          {/* Tool buttons */}
-          <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+          {/* Tool buttons — hidden on mobile for clean map */}
+          <div className="hidden md:flex absolute left-3 top-3 flex-col gap-1.5">
             <button onClick={undo} disabled={!canUndo} className={`w-11 h-11 rounded-lg bg-bg3 border text-base flex items-center justify-center transition-all ${canUndo ? 'border-white/[0.08] text-text cursor-pointer hover:border-gold hover:text-gold' : 'border-white/[0.04] text-text-muted/40 cursor-default'}`} title="Undo (Ctrl+Z)">↩️</button>
             <button onClick={redo} disabled={!canRedo} className={`w-11 h-11 rounded-lg bg-bg3 border text-base flex items-center justify-center transition-all ${canRedo ? 'border-white/[0.08] text-text cursor-pointer hover:border-gold hover:text-gold' : 'border-white/[0.04] text-text-muted/40 cursor-default'}`} title="Redo (Ctrl+Shift+Z)">↪️</button>
             <button onClick={clearAllWaypoints} className="w-11 h-11 rounded-lg bg-bg3 border border-white/[0.08] text-text text-base flex items-center justify-center cursor-pointer hover:border-gold hover:text-gold transition-all" title="Clear all">🗑️</button>
           </div>
-          {/* Right-click hint */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none text-center">
-            <span className="hidden md:inline">Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo</span>
-            <span className="md:hidden">Tap &amp; hold to add waypoints</span>
+          {/* Hint — desktop only (mobile hint is in sidebar) */}
+          <div className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none text-center">
+            Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo
           </div>
-          {/* Legend */}
+          {/* Legend — hidden on mobile */}
           {(() => {
             const usedModes = [...new Set(waypointList.filter(w => w.transport).map(w => w.transport!))];
             if (usedModes.length === 0) return null;
             return (
-              <div className="absolute bottom-10 left-3 bg-bg/85 backdrop-blur border border-white/[0.08] rounded-lg px-3 py-2">
+              <div className="hidden md:block absolute bottom-10 left-3 bg-bg/85 backdrop-blur border border-white/[0.08] rounded-lg px-3 py-2">
                 <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Legend</div>
                 {usedModes.map(mode => {
                   const s = getTransportStyle(mode);
@@ -1152,8 +1151,8 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
               </div>
             );
           })()}
-          {/* Coords */}
-          <div className="absolute bottom-3 left-3 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-2 py-1 rounded">{coords}</div>
+          {/* Coords — hidden on mobile */}
+          <div className="hidden md:block absolute bottom-3 left-3 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-2 py-1 rounded">{coords}</div>
         </div>
 
         {/* Sidebar */}
