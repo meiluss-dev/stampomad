@@ -614,7 +614,8 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
       });
     }
 
-    const popup = new (mapboxgl as any).Popup({ offset: 18, closeButton: true, maxWidth: '280px' });
+    const isMobile = window.innerWidth < 768;
+    const popup = new (mapboxgl as any).Popup({ offset: 18, closeButton: true, maxWidth: isMobile ? '260px' : '280px' });
     marker.setPopup(popup);
 
     function buildPopupHTML(w: WaypointState) {
@@ -707,7 +708,16 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
       const w = waypointsRef.current.find(w => w.id === wId);
       if (w) {
         popup.setHTML(buildPopupHTML(w));
-        popup.once('open', () => bindPopupEvents(w));
+        popup.once('open', () => {
+          bindPopupEvents(w);
+          // On mobile, pan map so the popup is visible
+          if (window.innerWidth < 768 && mapRef.current) {
+            const mapEl = mapRef.current.getContainer();
+            const mapHeight = mapEl.clientHeight;
+            // Pan to position the marker in the lower third so popup shows above it
+            mapRef.current.panTo([w.lng, w.lat], { offset: [0, mapHeight * 0.2], duration: 300 });
+          }
+        });
       }
       marker.togglePopup();
     });
