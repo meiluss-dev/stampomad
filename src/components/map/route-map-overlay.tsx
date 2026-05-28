@@ -914,9 +914,8 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
         }
       });
 
-      map.on('contextmenu', (e: any) => {
-        e.preventDefault();
-        const { lng, lat } = e.lngLat;
+      // Shared function to show the add waypoint/highlight context menu
+      function showAddMenu(lng: number, lat: number) {
         const hasWaypoints = waypointsRef.current.filter(w => w.type === 'waypoint').length > 0;
         const menuEl = document.createElement('div');
         menuEl.style.cssText = "font-family:'DM Sans',sans-serif;background:color-mix(in srgb, var(--sm-bg) 95%, transparent);border:1px solid var(--sm-border);border-radius:10px;padding:4px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:160px;z-index:999;max-height:400px;overflow-y:auto";
@@ -936,6 +935,11 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
         html += `<button data-action="highlight" style="${btnStyle}">⭐ Add Highlight</button>`;
         menuEl.innerHTML = html;
 
+        const ctxMarker = new (mapboxgl as any).Popup({ closeButton: true, closeOnClick: true, anchor: 'top-left', offset: [0, 0] })
+          .setLngLat([lng, lat])
+          .setDOMContent(menuEl)
+          .addTo(map);
+
         menuEl.querySelectorAll('button').forEach(btn => {
           btn.addEventListener('mouseenter', () => { btn.style.background = 'color-mix(in srgb, var(--sm-text) 8%, transparent)'; });
           btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
@@ -946,11 +950,53 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
             ctxMarker.remove();
           });
         });
-        const ctxMarker = new (mapboxgl as any).Popup({ closeButton: false, closeOnClick: true, anchor: 'top-left', offset: [0, 0] })
-          .setLngLat([lng, lat])
-          .setDOMContent(menuEl)
-          .addTo(map);
+      }
+
+      // Desktop: right-click to add waypoints
+      map.on('contextmenu', (e: any) => {
+        e.preventDefault();
+        showAddMenu(e.lngLat.lng, e.lngLat.lat);
       });
+
+      // Mobile: long-press (tap and hold) to add waypoints
+      let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+      let touchMoved = false;
+      const mapCanvas = map.getCanvas();
+
+      mapCanvas.addEventListener('touchstart', (e: TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        touchMoved = false;
+        longPressTimer = setTimeout(() => {
+          if (touchMoved) return;
+          // Prevent the map from panning after long-press
+          e.preventDefault();
+          // Get map coordinates from touch point
+          const touch = e.touches[0];
+          const rect = mapCanvas.getBoundingClientRect();
+          const point = new (mapboxgl as any).Point(
+            touch.clientX - rect.left,
+            touch.clientY - rect.top
+          );
+          const lngLat = map.unproject(point);
+          // Haptic feedback if available
+          if (navigator.vibrate) navigator.vibrate(50);
+          showAddMenu(lngLat.lng, lngLat.lat);
+        }, 600);
+      }, { passive: false });
+
+      mapCanvas.addEventListener('touchmove', () => {
+        touchMoved = true;
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      });
+
+      mapCanvas.addEventListener('touchend', () => {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      });
+
+      mapCanvas.addEventListener('touchcancel', () => {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      });
+
       map.on('mousemove', (e: any) => {
         const { lng, lat } = e.lngLat;
         setCoords(`${lat.toFixed(4)}°, ${lng.toFixed(4)}°`);
@@ -1073,7 +1119,10 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
             <button onClick={clearAllWaypoints} className="w-11 h-11 rounded-lg bg-bg3 border border-white/[0.08] text-text text-base flex items-center justify-center cursor-pointer hover:border-gold hover:text-gold transition-all" title="Clear all">🗑️</button>
           </div>
           {/* Right-click hint */}
-          <div className="hidden md:block absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none">Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo</div>
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 text-[11px] text-text-muted bg-bg/80 backdrop-blur px-3 py-1.5 rounded-lg pointer-events-none text-center">
+            <span className="hidden md:inline">Right-click to add waypoints · Ctrl+Z undo · Ctrl+Shift+Z redo</span>
+            <span className="md:hidden">Tap &amp; hold to add waypoints</span>
+          </div>
           {/* Legend */}
           {(() => {
             const usedModes = [...new Set(waypointList.filter(w => w.transport).map(w => w.transport!))];
@@ -1112,9 +1161,9 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
             {/* Route tab */}
             {sidebarTab === 'route' && (
               <>
-                <div className="text-[11px] text-text-muted mb-3"><strong className="text-text">Right-click</strong> the map to add 📍 waypoints or ⭐ highlights</div>
+                <div className="text-[11px] text-text-muted mb-3"><strong className="text-text hidden md:inline">Right-click</strong><strong className="text-text md:hidden">Tap &amp; hold</strong> the map to add 📍 waypoints or ⭐ highlights</div>
                 {waypointList.length === 0 ? (
-                  <div className="text-center py-5 text-text-muted text-[13px]">Right-click the map to start building your route</div>
+                  <div className="text-center py-5 text-text-muted text-[13px]"><span className="hidden md:inline">Right-click</span><span className="md:hidden">Tap &amp; hold</span> the map to start building your route</div>
                 ) : (
                   waypointList.map(w => {
                     const isH = w.type === 'highlight';
