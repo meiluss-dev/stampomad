@@ -145,6 +145,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       }
 
       setRoutes(routesData);
+      console.log('[Stampomad] Setting photos:', Object.keys(photosData).length, 'trips with photos, total photos:', Object.values(photosData).reduce((a, b) => a + b.length, 0));
       setTripPhotos(photosData);
       if (profileData) setProfile(profileData);
       setPackingLists(packingData);

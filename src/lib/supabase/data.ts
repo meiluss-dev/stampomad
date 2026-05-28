@@ -63,9 +63,11 @@ export async function loadRoutesFromSupabase(supabase: SupabaseClient, userId: s
 }
 
 export async function loadPhotosFromSupabase(supabase: SupabaseClient, userId: string): Promise<Record<number, string[]>> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('trip_photos').select('*').eq('user_id', userId).order('position');
-  if (!data) return {};
+  if (error) console.error('[Stampomad] loadPhotos error:', error);
+  if (!data) { console.warn('[Stampomad] loadPhotos: no data returned'); return {}; }
+  console.log('[Stampomad] loadPhotos:', data.length, 'photo rows loaded');
   const photos: Record<number, string[]> = {};
   data.forEach(p => {
     if (!photos[p.trip_id]) photos[p.trip_id] = [];
