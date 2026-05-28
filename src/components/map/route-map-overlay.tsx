@@ -706,19 +706,23 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
       e.stopPropagation();
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
       const w = waypointsRef.current.find(w => w.id === wId);
-      if (w) {
-        popup.setHTML(buildPopupHTML(w));
-        popup.once('open', () => {
-          bindPopupEvents(w);
-          // On mobile, pan map so the popup is visible
-          if (window.innerWidth < 768 && mapRef.current) {
-            const mapEl = mapRef.current.getContainer();
-            const mapHeight = mapEl.clientHeight;
-            // Pan to position the marker in the lower third so popup shows above it
-            mapRef.current.panTo([w.lng, w.lat], { offset: [0, mapHeight * 0.2], duration: 300 });
-          }
-        });
+      if (!w) return;
+
+      // On mobile: expand the sidebar editor instead of map popup
+      if (window.innerWidth < 768) {
+        setExpandedWp(prev => prev === wId ? null : wId);
+        setSidebarTab('route');
+        // Scroll sidebar to the expanded waypoint after a tick
+        setTimeout(() => {
+          const el = document.getElementById(`sidebar-wp-${wId}`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        return;
       }
+
+      // Desktop: use map popup
+      popup.setHTML(buildPopupHTML(w));
+      popup.once('open', () => bindPopupEvents(w));
       marker.togglePopup();
     });
     el.addEventListener('dblclick', (e) => { e.stopPropagation(); if (clickTimerRef.current) clearTimeout(clickTimerRef.current); });
@@ -1189,7 +1193,7 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
                             <span className="text-[10px]" style={{ color: ts.color }}>{ts.emoji} {ts.label}</span>
                           </div>
                         )}
-                        <div className={`rounded-[10px] bg-bg3 border mb-1 transition-colors ${isExpanded ? 'border-gold/40' : 'border-white/[0.08] hover:border-gold'}`}>
+                        <div id={`sidebar-wp-${w.id}`} className={`rounded-[10px] bg-bg3 border mb-1 transition-colors ${isExpanded ? 'border-gold/40' : 'border-white/[0.08] hover:border-gold'}`}>
                           <div
                             onClick={() => { setExpandedWp(isExpanded ? null : w.id); flyToWaypoint(w.id); }}
                             className="flex items-center gap-2 p-2.5 cursor-pointer"
