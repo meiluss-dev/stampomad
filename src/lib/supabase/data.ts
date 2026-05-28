@@ -63,24 +63,36 @@ export async function loadRoutesFromSupabase(supabase: SupabaseClient, userId: s
 }
 
 export async function loadPhotosFromSupabase(supabase: SupabaseClient, userId: string): Promise<Record<number, string[]>> {
-  // Try with position ordering first, fall back to without if column doesn't exist
-  let { data, error } = await supabase
-    .from('trip_photos').select('*').eq('user_id', userId).order('position');
-  if (error) {
-    console.warn('[Stampomad] loadPhotos with position failed, retrying without order:', error.message);
-    const retry = await supabase
-      .from('trip_photos').select('*').eq('user_id', userId);
-    data = retry.data;
-    error = retry.error;
-  }
-  if (error) console.error('[Stampomad] loadPhotos error:', error);
-  if (!data) { console.warn('[Stampomad] loadPhotos: no data returned'); return {}; }
-  console.log('[Stampomad] loadPhotos:', data.length, 'photo rows loaded');
-  const photos: Record<number, string[]> = {};
-  data.forEach(p => {
-    if (!photos[p.trip_id]) photos[p.trip_id] = [];
-    photos[p.trip_id].push(p.photo_data);
+  // First get the list of trip_ids that have photos (lightweight query)
+  const { data: index, error: indexErr } = await supabase
+    .from('trip_photos').select('id, trip_id').eq('user_id', userId);
+  if (indexErr) { console.error('[Stampomad] loadPhotos index error:', indexErr); return {}; }
+  if (!index || index.length === 0) return {};
+
+  // Group photo IDs by trip
+  const tripPhotoIds: Record<number, number[]> = {};
+  index.forEach(row => {
+    if (!tripPhotoIds[row.trip_id]) tripPhotoIds[row.trip_id] = [];
+    tripPhotoIds[row.trip_id].push(row.id);
   });
+
+  // Load photos per trip in parallel (avoids single massive query timeout)
+  const tripIds = Object.keys(tripPhotoIds).map(Number);
+  const photos: Record<number, string[]> = {};
+
+  await Promise.all(tripIds.map(async (tripId) => {
+    const { data, error } = await supabase
+      .from('trip_photos').select('photo_data').eq('user_id', userId).eq('trip_id', tripId);
+    if (error) {
+      console.error('[Stampomad] loadPhotos error for trip', tripId, ':', error.message);
+      return;
+    }
+    if (data && data.length > 0) {
+      photos[tripId] = data.map(p => p.photo_data);
+    }
+  }));
+
+  console.log('[Stampomad] loadPhotos:', tripIds.length, 'trips with photos,', index.length, 'total photos');
   return photos;
 }
 
