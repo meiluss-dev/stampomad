@@ -419,7 +419,7 @@ export function WorldMap() {
 
               {/* Actions */}
               <div className="py-1.5">
-                {!isVisited && !isHome && !isLived && (
+                {!isVisited && !isWish && !isHome && !isLived && (
                   <button
                     onClick={() => { toggleVisitedCountry(code); setContextMenu(null); }}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
@@ -427,7 +427,7 @@ export function WorldMap() {
                     <span className="text-base">📍</span> Mark as visited
                   </button>
                 )}
-                {!isWish && !isVisited && !isHome && !isLived && (
+                {!isVisited && !isWish && !isHome && !isLived && (
                   <button
                     onClick={() => { toggleWishlist(code); setContextMenu(null); }}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-gold/10 transition-colors cursor-pointer bg-transparent border-none text-text"
