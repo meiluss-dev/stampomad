@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
   <rect width="192" height="192" rx="40" fill="#0f1419"/>
-  <text x="96" y="120" font-size="100" text-anchor="middle" font-family="serif">✈️</text>
+  <!-- Gold circle -->
+  <circle cx="96" cy="86" r="52" fill="#c9a96e" opacity="0.15"/>
+  <!-- Airplane -->
+  <g transform="translate(96,86)" fill="#c9a96e">
+    <path d="M-4,-30 L4,-30 L4,-8 L28,8 L28,14 L4,6 L4,20 L12,26 L12,30 L0,26 L-12,30 L-12,26 L-4,20 L-4,6 L-28,14 L-28,8 L-4,-8 Z"/>
+  </g>
+  <!-- Text -->
+  <text x="96" y="160" font-size="22" text-anchor="middle" font-family="Georgia, serif" font-weight="600" fill="#c9a96e" letter-spacing="1">STAMPOMAD</text>
 </svg>

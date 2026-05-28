@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Maskable icon: safe zone is inner 80% (51.2px padding each side) -->
+  <rect width="512" height="512" fill="#0f1419"/>
+  <!-- Airplane centered in safe zone -->
+  <g transform="translate(256,230) scale(3.2)" fill="#c9a96e">
+    <path d="M-4,-30 L4,-30 L4,-8 L28,8 L28,14 L4,6 L4,20 L12,26 L12,30 L0,26 L-12,30 L-12,26 L-4,20 L-4,6 L-28,14 L-28,8 L-4,-8 Z"/>
+  </g>
+  <text x="256" y="400" font-size="48" text-anchor="middle" font-family="Georgia, serif" font-weight="600" fill="#c9a96e" letter-spacing="2">STAMPOMAD</text>
+</svg>

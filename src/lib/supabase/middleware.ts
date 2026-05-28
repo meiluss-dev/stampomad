@@ -35,6 +35,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/api') &&
     !request.nextUrl.pathname.startsWith('/u/') &&
     !request.nextUrl.pathname.startsWith('/explore') &&
+    !request.nextUrl.pathname.startsWith('/offline') &&
     request.nextUrl.pathname !== '/'
   ) {
     const url = request.nextUrl.clone();

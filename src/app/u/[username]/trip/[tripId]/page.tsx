@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { loadPublicProfile, loadPublicTrips, loadPublicRoutes, loadPublicPhotos, loadPublicMapboxToken } from '@/lib/supabase/data';
 import { PublicRouteMap } from '@/components/map/public-route-map';
-import { countryFlag, fmtDate, haversine } from '@/lib/countries';
+import { countryFlag, countryNames, fmtDate, haversine } from '@/lib/countries';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -20,9 +20,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const trips = await loadPublicTrips(supabase, profile.userId);
   const trip = trips.find(t => t.id === Number(tripId));
   if (!trip) return { title: 'Not Found — Stampomad' };
+
+  const routes = await loadPublicRoutes(supabase, profile.userId, [trip.id]);
+  const route = routes[trip.id];
+  const wpCount = route?.waypoints?.filter((w: { type: string }) => w.type === 'waypoint').length || 0;
+  const displayName = profile.displayName || profile.username;
+  const desc = `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${fmtDate(trip.end)} · ${trip.days} days`;
+
+  const ogParams = new URLSearchParams({
+    type: 'trip',
+    name: trip.name,
+    emoji: trip.emoji,
+    country: countryNames[trip.code.toUpperCase()] || trip.code,
+    days: String(trip.days),
+    cities: trip.cities || '',
+    author: displayName,
+    waypoints: String(wpCount),
+  });
+
+  const ogImage = `/api/og?${ogParams.toString()}`;
+
   return {
-    title: `${trip.name} — ${profile.displayName || profile.username} — Stampomad`,
-    description: `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${fmtDate(trip.end)} · ${trip.days} days`,
+    title: `${trip.name} — ${displayName} — Stampomad`,
+    description: desc,
+    openGraph: {
+      title: `${trip.name} — ${displayName} — Stampomad`,
+      description: desc,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+      siteName: 'Stampomad',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${trip.name} — ${displayName}`,
+      description: desc,
+      images: [ogImage],
+    },
   };
 }
 

@@ -6,6 +6,7 @@ import { ToastProvider } from '@/components/ui/toast';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
 import { SaveErrorToast } from '@/components/save-error-toast';
 import { LangProvider } from '@/components/language-provider';
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
 import type { User } from '@supabase/supabase-js';
 
 export function AppShell({ children, initialUser }: { children: React.ReactNode; initialUser: User }) {
@@ -19,6 +20,7 @@ export function AppShell({ children, initialUser }: { children: React.ReactNode;
           </main>
           <OnboardingWizard />
           <SaveErrorToast />
+          <PWAInstallPrompt />
         </ToastProvider>
       </LangProvider>
     </StoreProvider>

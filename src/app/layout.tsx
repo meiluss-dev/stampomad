@@ -29,16 +29,19 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Stampomad",
   },
+  metadataBase: new URL('https://www.stampomad.com'),
   openGraph: {
     title: "Stampomad — Stamp the World",
     description: "Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.",
     siteName: "Stampomad",
     type: "website",
+    images: [{ url: "/api/og?type=home", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stampomad — Stamp the World",
     description: "Track every country, map every trip, journal your adventures.",
+    images: ["/api/og?type=home"],
   },
 };
 
