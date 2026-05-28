@@ -889,12 +889,17 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
 
         console.log('[Map] Creating map with center:', center, 'style:', MAP_STYLES[style]);
         (mapboxgl as any).accessToken = mapboxToken;
+        const isMobile = window.innerWidth < 768;
         const map = new (mapboxgl as any).Map({
           container: containerRef.current,
           style: MAP_STYLES[style],
           center,
           zoom: savedWp.length > 0 ? 6 : 4,
+          attributionControl: false, // We'll add compact attribution
+          logoPosition: 'bottom-right',
         });
+        // Add compact attribution (required by Mapbox ToS)
+        map.addControl(new (mapboxgl as any).AttributionControl({ compact: true }), 'bottom-right');
         console.log('[Map] Map instance created');
 
         mapRef.current = map;
@@ -904,8 +909,11 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
         setTimeout(() => { console.log('[Map] resize at 100ms'); map.resize(); }, 100);
         setTimeout(() => { console.log('[Map] resize at 500ms'); map.resize(); }, 500);
 
-      map.addControl(new (mapboxgl as any).NavigationControl(), 'top-right');
-      map.addControl(new (mapboxgl as any).ScaleControl(), 'bottom-right');
+      // Desktop: full controls. Mobile: clean map
+      if (!isMobile) {
+        map.addControl(new (mapboxgl as any).NavigationControl(), 'top-right');
+        map.addControl(new (mapboxgl as any).ScaleControl(), 'bottom-right');
+      }
 
       map.on('load', () => {
         console.log('[Map] MAP LOADED - tiles should be visible');
