@@ -60,11 +60,18 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [photos.length]);
 
+  const uploadingRef = useRef(false);
+
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
+    // Guard against double-firing (e.g. React strict mode or mobile quirks)
+    if (uploadingRef.current) return;
+    uploadingRef.current = true;
+
     const remaining = MAX_PHOTOS - photos.length;
     if (remaining <= 0) {
       toast(`Maximum ${MAX_PHOTOS} photos per trip`, 'error');
+      uploadingRef.current = false;
       return;
     }
 
@@ -91,6 +98,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       toast(`${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''} added!`);
     }
     setUploading(false);
+    uploadingRef.current = false;
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -124,11 +132,11 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
               <>
                 <button
                   onClick={e => { e.stopPropagation(); setPhotoIdx(p => (p - 1 + photos.length) % photos.length); }}
-                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
                 >&#8249;</button>
                 <button
                   onClick={e => { e.stopPropagation(); setPhotoIdx(p => (p + 1) % photos.length); }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer border-none text-sm"
                 >&#8250;</button>
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
                   {photos.slice(0, 6).map((_, i) => (
@@ -138,8 +146,8 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
                 </div>
               </>
             )}
-            {/* Add more / manage photos buttons */}
-            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Add more / manage photos buttons — always visible on mobile */}
+            <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               {photos.length < MAX_PHOTOS && (
                 <button
                   onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
@@ -149,7 +157,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
               )}
               <button
                 onClick={e => { e.stopPropagation(); setShowManage(!showManage); }}
-                className="w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer border-none text-xs hover:bg-black/80 transition-colors"
+                className={`w-7 h-7 rounded-full text-white flex items-center justify-center cursor-pointer border-none text-xs hover:bg-black/80 transition-colors ${showManage ? 'bg-gold' : 'bg-black/60'}`}
                 title="Manage photos"
               >&#9881;</button>
             </div>
@@ -189,11 +197,11 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       {showManage && hasPhotos && (
         <div className="bg-bg4 border-b border-white/[0.06] p-2.5 flex gap-2 overflow-x-auto">
           {photos.map((photo, i) => (
-            <div key={i} className="relative shrink-0 group/thumb">
+            <div key={i} className="relative shrink-0">
               <img src={photo} alt="" className="w-14 h-14 object-cover rounded-lg border border-white/[0.08]" />
               <button
                 onClick={() => removePhoto(i)}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-stamp-red text-white text-[10px] flex items-center justify-center cursor-pointer border-none opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-stamp-red text-white text-[11px] flex items-center justify-center cursor-pointer border-2 border-bg4"
               >×</button>
             </div>
           ))}
