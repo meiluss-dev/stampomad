@@ -243,6 +243,9 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
           >
             📖 Journal
           </Link>
+          <button onClick={() => fileInputRef.current?.click()} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
+            📷 Photos{hasPhotos ? ` (${photos.length})` : ''}
+          </button>
           <button onClick={onRoute} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             🗺️ Route
           </button>
