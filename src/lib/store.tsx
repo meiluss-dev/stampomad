@@ -187,9 +187,24 @@ export function StoreProvider({ children, initialUser }: { children: React.React
 
   const addTrip = useCallback(async (tripData: Omit<Trip, 'id' | 'journal'>) => {
     const trip: Trip = { ...tripData, id: Date.now(), journal: [] };
-    setTrips(prev => [...prev, trip]);
+
+    // If adding a real trip, remove any existing quickPin for the same country
+    let quickPinId: number | null = null;
+    setTrips(prev => {
+      if (!tripData.quickPin) {
+        const existing = prev.find(t => t.quickPin && t.code === tripData.code);
+        if (existing) quickPinId = existing.id;
+        return [...prev.filter(t => !(t.quickPin && t.code === tripData.code)), trip];
+      }
+      return [...prev, trip];
+    });
+    if (quickPinId !== null) {
+      setVisitedCountries(prev => { const n = new Set(prev); n.delete(tripData.code); return n; });
+    }
+
     if (user) {
       try {
+        if (quickPinId !== null) await deleteTripFromSupabase(supabase.current, user.id, quickPinId);
         await saveTripToSupabase(supabase.current, user.id, trip);
       } catch (err) {
         setSaveError('Failed to save trip. Your changes may be lost on reload.');
