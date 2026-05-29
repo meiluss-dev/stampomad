@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { GlobeSection } from '@/components/landing/globe-section';
 import { RecentTrips } from '@/components/landing/recent-trips';
+import { WebAppJsonLd } from '@/components/seo/json-ld';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour (ISR)
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -12,6 +13,14 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
+      <WebAppJsonLd data={{
+        name: 'Stampomad',
+        description: 'Free travel tracker app. Log countries visited, map trip routes, write travel journals, and share your adventures. Works offline.',
+        url: 'https://www.stampomad.com',
+        applicationCategory: 'TravelApplication',
+        operatingSystem: 'Web, Android, iOS',
+        offers: { price: '0', priceCurrency: 'USD' },
+      }} />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.08] bg-bg/80 backdrop-blur-md sticky top-0 z-50">
         <div className="font-[family-name:var(--font-playfair)] text-[22px] text-gold tracking-wide">
@@ -61,9 +70,9 @@ export default async function LandingPage() {
                 <span>&#10024;</span> Now with Group Trips &mdash; travel together, split the bill
               </div>
               <h1 className="font-[family-name:var(--font-playfair)] text-4xl md:text-5xl lg:text-6xl leading-tight mb-6">
-                Stamp the world.
+                Track your travels.
                 <br />
-                <span className="text-gold">Log your journey.</span>
+                <span className="text-gold">Map every adventure.</span>
               </h1>
               <p className="text-text-muted text-lg md:text-xl max-w-lg mb-10 leading-relaxed mx-auto lg:mx-0">
                 Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.
@@ -261,12 +270,45 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-text-muted">
-          <div className="font-[family-name:var(--font-playfair)] text-base text-gold">
-            Stampo<span className="text-text font-normal">mad</span>
+      <footer className="border-t border-white/[0.06] py-10 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="font-[family-name:var(--font-playfair)] text-base text-gold mb-3">
+                Stampo<span className="text-text font-normal">mad</span>
+              </div>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Free travel tracker to log countries, map trips, and journal your adventures.
+              </p>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Product</div>
+              <div className="flex flex-col gap-2">
+                <Link href="/explore" className="text-sm text-text-muted hover:text-gold transition-colors">Explore</Link>
+                <Link href="/help" className="text-sm text-text-muted hover:text-gold transition-colors">Help Center</Link>
+                <Link href="/auth" className="text-sm text-text-muted hover:text-gold transition-colors">Sign Up Free</Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Features</div>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-text-muted">Country Tracker</span>
+                <span className="text-sm text-text-muted">Trip Journal</span>
+                <span className="text-sm text-text-muted">Route Maps</span>
+                <span className="text-sm text-text-muted">Group Trips</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Support</div>
+              <div className="flex flex-col gap-2">
+                <Link href="/help" className="text-sm text-text-muted hover:text-gold transition-colors">FAQ</Link>
+                <Link href="/feedback" className="text-sm text-text-muted hover:text-gold transition-colors">Feedback</Link>
+              </div>
+            </div>
           </div>
-          <div>&copy; {new Date().getFullYear()} Stampomad. Stamp the world.</div>
+          <div className="border-t border-white/[0.06] pt-6 text-center text-xs text-text-muted">
+            &copy; {new Date().getFullYear()} Stampomad. Track your travels, map every adventure.
+          </div>
         </div>
       </footer>
     </div>

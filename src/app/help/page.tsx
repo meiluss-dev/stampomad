@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FAQJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
 interface FAQ {
   q: string;
@@ -113,6 +114,12 @@ export default function HelpPage() {
   return (
     <div className={hasNavbar ? '' : 'min-h-screen bg-bg text-text'}>
       {/* Header — only shown for logged-out visitors */}
+      <FAQJsonLd items={faqs.map(f => ({ question: f.q, answer: f.a }))} />
+      <BreadcrumbJsonLd items={[
+        { name: 'Stampomad', url: 'https://www.stampomad.com' },
+        { name: 'Help Center', url: 'https://www.stampomad.com/help' },
+      ]} />
+
       {!hasNavbar && (
         <div className="border-b border-white/[0.06] px-4 sm:px-8 py-4">
           <div className="max-w-[800px] mx-auto flex items-center justify-between">

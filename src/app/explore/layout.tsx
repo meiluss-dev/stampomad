@@ -25,11 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 
   return {
-    title: 'Explore — Stampomad',
-    description: `Discover travel adventures from ${travelers} travelers across ${countries} countries. Browse trips, routes, and stories from the Stampomad community.`,
+    title: 'Explore Travel Adventures — Stampomad',
+    description: `Explore ${trips} trip stories from ${travelers} travelers across ${countries} countries. Browse routes, travel journals, photos, and trip reviews from the Stampomad community. Find your next destination.`,
     openGraph: {
-      title: 'Explore — Stampomad',
-      description: `Discover travel adventures from ${travelers} travelers across ${countries} countries.`,
+      title: 'Explore Travel Adventures — Stampomad',
+      description: `Explore ${trips} trips from ${travelers} travelers across ${countries} countries. Find your next destination.`,
       images: [{ url: `/api/og?${ogParams.toString()}`, width: 1200, height: 630 }],
       siteName: 'Stampomad',
     },

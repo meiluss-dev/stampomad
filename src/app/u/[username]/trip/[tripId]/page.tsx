@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { RouteWaypoint } from '@/types';
 import { TripPhotoGrid, WaypointMedia } from '@/components/public/trip-media';
+import { TripJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
 interface Props {
   params: Promise<{ username: string; tripId: string }>;
@@ -105,6 +106,23 @@ export default async function PublicTripPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-bg text-text">
+      <TripJsonLd data={{
+        name: trip.name,
+        description: `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${fmtDate(trip.end)} · ${trip.days} days in ${countryNames[trip.code.toUpperCase()] || trip.code}`,
+        url: `https://www.stampomad.com/u/${username}/trip/${tripId}`,
+        startDate: trip.start,
+        endDate: trip.end,
+        location: countryNames[trip.code.toUpperCase()] || trip.code,
+        author: {
+          name: profile.displayName || profile.username,
+          url: `https://www.stampomad.com/u/${username}`,
+        },
+      }} />
+      <BreadcrumbJsonLd items={[
+        { name: 'Stampomad', url: 'https://www.stampomad.com' },
+        { name: profile.displayName || profile.username, url: `https://www.stampomad.com/u/${username}` },
+        { name: trip.name, url: `https://www.stampomad.com/u/${username}/trip/${tripId}` },
+      ]} />
       {/* Header */}
       <header className="border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px]">
         <div className="max-w-[800px] mx-auto px-6 py-6">

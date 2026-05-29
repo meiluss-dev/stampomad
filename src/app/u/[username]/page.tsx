@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ShareProfileButton } from '@/components/public/share-profile-button';
+import { PersonJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -72,6 +73,17 @@ export default async function PublicProfilePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-bg text-text">
+      <PersonJsonLd data={{
+        name: profile.displayName || profile.username,
+        url: `https://www.stampomad.com/u/${username}`,
+        description: profile.bio || `${profile.displayName || profile.username} has explored ${globalStats.countries} countries`,
+        image: profile.avatarUrl || undefined,
+      }} />
+      <BreadcrumbJsonLd items={[
+        { name: 'Stampomad', url: 'https://www.stampomad.com' },
+        { name: 'Explore', url: 'https://www.stampomad.com/explore' },
+        { name: profile.displayName || profile.username, url: `https://www.stampomad.com/u/${username}` },
+      ]} />
       {/* Header */}
       <header className="border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px]">
         <div className="max-w-[900px] mx-auto px-6 py-8">
