@@ -10,6 +10,7 @@ import { ThemeSwitcher } from '@/components/theme-provider';
 import { useLang, LanguageModal } from '@/components/language-provider';
 import { InviteBadge } from '@/components/group/invite-badge';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { AppReviewModal } from '@/components/app-review-modal';
 
 const tabKeys = [
   { key: 'nav_dashboard', href: '/dashboard', fallback: 'Dashboard' },
@@ -30,6 +31,7 @@ export function Navbar() {
   const [apiKeysOpen, setApiKeysOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const { lang, t } = useLang();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -173,6 +175,12 @@ export function Navbar() {
                 >
                   💬 Feedback
                 </Link>
+                <button
+                  onClick={() => { setReviewOpen(true); setDropdownOpen(false); }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                >
+                  ⭐ Rate Stampomad
+                </button>
                 <div className="border-t border-white/[0.06] my-1" />
                 <button
                   onClick={async () => { await signOut(); window.location.href = '/auth'; }}
@@ -221,6 +229,7 @@ export function Navbar() {
       <ApiKeysModal open={apiKeysOpen} onOpenChange={setApiKeysOpen} />
       <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
       <LanguageModal open={langOpen} onOpenChange={setLangOpen} />
+      <AppReviewModal open={reviewOpen} onClose={() => setReviewOpen(false)} displayName={profile?.displayName || profile?.username || ''} />
     </>
   );
 }

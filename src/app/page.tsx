@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { GlobeSection } from '@/components/landing/globe-section';
 import { RecentTrips } from '@/components/landing/recent-trips';
+import { Testimonials } from '@/components/landing/testimonials';
 import { WebAppJsonLd } from '@/components/seo/json-ld';
 
 export const revalidate = 3600; // Revalidate every hour (ISR)
@@ -243,6 +244,9 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials */}
+      <Testimonials />
 
       {/* CTA */}
       <section className="max-w-3xl mx-auto px-6 py-20 md:py-28 text-center">
