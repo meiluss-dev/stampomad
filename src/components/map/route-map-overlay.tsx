@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { getCountryCenter, haversine, fmtDate, numToAlpha } from '@/lib/countries';
 import type { Trip, RouteWaypoint, TransportMode } from '@/types';
+import { StampLogo } from '@/components/stamp-logo';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const topojson: { feature: (topology: any, object: any) => any };
@@ -1088,12 +1090,32 @@ export function RouteMapOverlay({ trip, open, onClose }: { trip: Trip; open: boo
 
   return (
     <div className="fixed inset-0 z-[300] bg-bg flex flex-col">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px] shrink-0">
-        <button onClick={handleClose} className="text-text-muted hover:text-text text-xl cursor-pointer">←</button>
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px] shrink-0">
+        <Link href="/" className="hover:opacity-80 transition-opacity hidden sm:block">
+          <StampLogo size="sm" />
+        </Link>
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+          {[
+            { href: '/dashboard', label: 'Dashboard' },
+            { href: '/trips', label: 'My Trips' },
+            { href: '/journal', label: 'Journal' },
+            { href: '/stats', label: 'Stats' },
+            { href: '/explore', label: 'Explore' },
+          ].map(nav => (
+            <Link key={nav.href} href={nav.href} className="px-3 py-1.5 rounded-full text-xs text-text-muted hover:text-text hover:bg-white/[0.04] transition-all whitespace-nowrap">
+              {nav.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* Route header */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 border-b border-white/[0.08] bg-bg/95 shrink-0">
+        <button onClick={handleClose} className="text-text-muted hover:text-text text-lg cursor-pointer">←</button>
         <div className="flex-1 min-w-0">
-          <div className="font-[family-name:var(--font-playfair)] text-base sm:text-xl truncate">{trip.emoji} {trip.name}</div>
-          <div className="text-[10px] sm:text-xs text-text-muted mt-0.5">{trip.code}{trip.start ? ` · ${fmtDate(trip.start)} – ${fmtDate(trip.end)}` : ''}</div>
+          <div className="font-[family-name:var(--font-playfair)] text-sm sm:text-lg truncate">{trip.emoji} {trip.name}</div>
+          <div className="text-[10px] sm:text-xs text-text-muted">{trip.code}{trip.start ? ` · ${fmtDate(trip.start)} – ${fmtDate(trip.end)}` : ''}</div>
         </div>
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide order-last sm:order-none w-full sm:w-auto">
           {Object.keys(MAP_STYLES).map(s => (
