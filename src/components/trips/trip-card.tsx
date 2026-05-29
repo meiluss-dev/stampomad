@@ -263,9 +263,12 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
         <div className="flex gap-2.5 text-xs text-text-muted flex-wrap">
           <span>{fmtDate(t.start)}</span>
           <span>→</span>
-          <span>{fmtDate(t.end)}</span>
-          <span className="bg-teal/10 text-teal px-2 py-0.5 rounded-[10px] text-[11px]">
-            {t.days} day{t.days !== 1 ? 's' : ''}
+          <span>{t.end ? fmtDate(t.end) : <span className="text-gold italic">Ongoing</span>}</span>
+          <span className={`px-2 py-0.5 rounded-[10px] text-[11px] ${t.end ? 'bg-teal/10 text-teal' : 'bg-gold/10 text-gold'}`}>
+            {t.end
+              ? `${t.days} day${t.days !== 1 ? 's' : ''}`
+              : `Day ${Math.max(1, Math.round((Date.now() - new Date(t.start).getTime()) / 864e5) + 1)}`
+            }
           </span>
         </div>
         {t.cities && <div className="text-[13px] text-text-muted mt-2 leading-snug">📍 {t.cities}</div>}

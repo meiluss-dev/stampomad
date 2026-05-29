@@ -174,7 +174,7 @@ export default async function PublicProfilePage({ params }: Props) {
                       </div>
                       <div className="font-[family-name:var(--font-playfair)] text-lg mb-1.5">{trip.name}</div>
                       <div className="flex gap-2 text-xs text-text-muted flex-wrap">
-                        <span>{fmtDate(trip.start)} → {fmtDate(trip.end)}</span>
+                        <span>{fmtDate(trip.start)} → {trip.end ? fmtDate(trip.end) : <em className="text-gold">Ongoing</em>}</span>
                         <span className="bg-teal/10 text-teal px-2 py-0.5 rounded-[10px] text-[11px]">
                           {trip.days} day{trip.days !== 1 ? 's' : ''}
                         </span>

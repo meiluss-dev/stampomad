@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const route = routes[trip.id];
   const wpCount = route?.waypoints?.filter((w: { type: string }) => w.type === 'waypoint').length || 0;
   const displayName = profile.displayName || profile.username;
-  const desc = `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${fmtDate(trip.end)} · ${trip.days} days`;
+  const desc = `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${trip.end ? fmtDate(trip.end) : 'Ongoing'} · ${trip.days} days`;
 
   const ogParams = new URLSearchParams({
     type: 'trip',
@@ -110,10 +110,10 @@ export default async function PublicTripPage({ params }: Props) {
     <div className="min-h-screen bg-bg text-text">
       <TripJsonLd data={{
         name: trip.name,
-        description: `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${fmtDate(trip.end)} · ${trip.days} days in ${countryNames[trip.code.toUpperCase()] || trip.code}`,
+        description: `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${trip.end ? fmtDate(trip.end) : 'Ongoing'} · ${trip.days} days in ${countryNames[trip.code.toUpperCase()] || trip.code}`,
         url: `https://www.stampomad.com/u/${username}/trip/${tripId}`,
         startDate: trip.start,
-        endDate: trip.end,
+        endDate: trip.end || undefined,
         location: countryNames[trip.code.toUpperCase()] || trip.code,
         author: {
           name: profile.displayName || profile.username,
@@ -138,7 +138,7 @@ export default async function PublicTripPage({ params }: Props) {
               <h1 className="font-[family-name:var(--font-playfair)] text-3xl">{trip.name}</h1>
               <div className="flex items-center gap-3 mt-2 text-sm text-text-muted flex-wrap">
                 <span>{countryFlag(trip.code)} {trip.code}</span>
-                <span>{fmtDate(trip.start)} → {fmtDate(trip.end)}</span>
+                <span>{fmtDate(trip.start)} → {trip.end ? fmtDate(trip.end) : <em className="text-gold">Ongoing</em>}</span>
                 <span className="bg-teal/10 text-teal px-2 py-0.5 rounded-[10px] text-[11px]">
                   {trip.days} day{trip.days !== 1 ? 's' : ''}
                 </span>

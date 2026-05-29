@@ -66,19 +66,22 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
   }, [open, trip, homebase]);
 
   async function save() {
-    if (!name || !country || !start || !end) { toast('Please fill in name, country and dates.', 'error'); return; }
+    if (!name || !country || !start) { toast('Please fill in name, country and start date.', 'error'); return; }
     const [code, continent] = country.split('|');
     const fromCode = fromCountry ? fromCountry.split('|')[0] : '';
-    const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 864e5) + 1);
+    const endDate = end || '';
+    const days = endDate
+      ? Math.max(1, Math.round((new Date(endDate).getTime() - new Date(start).getTime()) / 864e5) + 1)
+      : Math.max(1, Math.round((Date.now() - new Date(start).getTime()) / 864e5) + 1);
 
     if (trip) {
-      await updateTrip({ ...trip, name, code, continent, emoji, start, end, days, cities, notes, fromCode, fromCity, toCity, travelStyle, rating });
+      await updateTrip({ ...trip, name, code, continent, emoji, start, end: endDate, days, cities, notes, fromCode, fromCity, toCity, travelStyle, rating });
       if (published !== (trip.published || false)) {
         await toggleTripPublished(trip.id, published);
       }
       toast(published ? 'Trip updated & published to Explore!' : 'Trip updated!');
     } else {
-      const newTrip = await addTrip({ name, code, continent, emoji, start, end, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, rating });
+      const newTrip = await addTrip({ name, code, continent, emoji, start, end: endDate, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, rating });
       if (published && newTrip?.id) {
         await toggleTripPublished(newTrip.id, true);
         toast('Trip added & published to Explore! 🌍');
@@ -106,9 +109,11 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
             {fromLabel && <span className="text-text">{fromCity ? `${countryFlag(fromCountry.split('|')[0])} ${fromCity}` : fromLabel}</span>}
             {fromLabel && toLabel && <span className="text-gold">→</span>}
             {toLabel && <span className="text-text">{toCity ? `${countryFlag(country.split('|')[0])} ${toCity}` : toLabel}</span>}
-            {start && end && (
+            {start && (
               <span className="ml-auto text-[11px] text-text-muted">
-                {Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 864e5) + 1)} days
+                {end
+                  ? `${Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 864e5) + 1)} days`
+                  : 'Ongoing'}
               </span>
             )}
           </div>
@@ -152,7 +157,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
               <Input type="date" value={start} onChange={e => setStart(e.target.value)} className="bg-bg3 border-white/[0.08] text-text" />
             </div>
             <div>
-              <label className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5 block">End date</label>
+              <label className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5 block">End date <span className="normal-case tracking-normal opacity-60">(optional)</span></label>
               <Input type="date" value={end} onChange={e => setEnd(e.target.value)} className="bg-bg3 border-white/[0.08] text-text" />
             </div>
           </div>
