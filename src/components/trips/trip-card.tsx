@@ -40,7 +40,7 @@ function resizeImage(file: File, maxWidth = 1200, quality = 0.8): Promise<string
 }
 
 export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; onEdit: () => void; onRoute: () => void; onPacking: () => void }) {
-  const { deleteTrip, tripPhotos, saveTripPhotos, toggleTripPublished, profile, packingLists, routes } = useStore();
+  const { deleteTrip, tripPhotos, saveTripPhotos, toggleTripPublished, profile, packingLists, routes, mapboxToken } = useStore();
   const { toast } = useToast();
   const photos = tripPhotos[t.id] || [];
   const hasPhotos = photos.length > 0;
@@ -138,7 +138,8 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
         t,
         routes[t.id] || null,
         photos,
-        (done, total) => setDownloadProgress(`${done}/${total} photos`),
+        (done, total, phase) => setDownloadProgress(`${done}/${total} ${phase}`),
+        mapboxToken,
       );
       setOfflineStatus('downloaded');
       toast('Trip saved for offline!');

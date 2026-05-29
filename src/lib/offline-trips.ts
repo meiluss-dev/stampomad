@@ -5,6 +5,7 @@
  */
 
 import type { Trip, RouteData } from '@/types';
+import { downloadMapTiles, estimateTileCount } from './offline-maps';
 
 const DB_NAME = 'stampomad-offline';
 const DB_VERSION = 2;
@@ -36,12 +37,13 @@ export interface OfflineTripPack {
   downloadedAt: string;
 }
 
-/** Save a trip pack to IndexedDB and cache photos */
+/** Save a trip pack to IndexedDB and cache photos + map tiles */
 export async function downloadTripForOffline(
   trip: Trip,
   route: RouteData | null,
   photos: string[],
-  onProgress?: (done: number, total: number) => void,
+  onProgress?: (done: number, total: number, phase: string) => void,
+  mapboxToken?: string,
 ): Promise<void> {
   // 1. Cache photo URLs via Cache API
   const cache = await caches.open(CACHE_NAME);
@@ -50,7 +52,6 @@ export async function downloadTripForOffline(
 
   for (const url of photoUrls) {
     try {
-      // Check if already cached
       const existing = await cache.match(url);
       if (!existing) {
         const response = await fetch(url);
@@ -59,11 +60,29 @@ export async function downloadTripForOffline(
         }
       }
       cached++;
-      onProgress?.(cached, photoUrls.length);
+      onProgress?.(cached, photoUrls.length, 'photos');
     } catch (err) {
       console.warn('[Stampomad] Failed to cache photo:', url, err);
       cached++;
-      onProgress?.(cached, photoUrls.length);
+      onProgress?.(cached, photoUrls.length, 'photos');
+    }
+  }
+
+  // 2. Cache map tiles if route has waypoints
+  const waypoints = route?.waypoints || [];
+  if (mapboxToken && waypoints.length > 0) {
+    const coords = waypoints.map(w => ({ lng: w.lng, lat: w.lat }));
+    const tileCount = estimateTileCount(coords);
+    console.log(`[Stampomad] Downloading ~${tileCount} map tiles for offline...`);
+    try {
+      await downloadMapTiles(
+        mapboxToken,
+        coords,
+        [6, 7, 8, 9, 10], // regional + city detail
+        (done, total) => onProgress?.(done, total, 'map tiles'),
+      );
+    } catch (err) {
+      console.warn('[Stampomad] Map tile download failed:', err);
     }
   }
 
