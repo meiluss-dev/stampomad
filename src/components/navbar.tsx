@@ -158,6 +158,22 @@ export function Navbar() {
                 >
                   🌐 Language <span className="ml-auto text-[11px] text-text-muted">{lang.toUpperCase()}</span>
                 </button>
+                <div className="border-t border-white/[0.06] my-1" />
+                <Link
+                  href="/help"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                >
+                  📚 Help & FAQ
+                </Link>
+                <Link
+                  href="/feedback"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-bg3 w-full text-left transition-colors"
+                >
+                  💬 Feedback
+                </Link>
+                <div className="border-t border-white/[0.06] my-1" />
                 <button
                   onClick={async () => { await signOut(); window.location.href = '/auth'; }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-[13px] text-stamp-red hover:bg-bg3 w-full text-left transition-colors"
