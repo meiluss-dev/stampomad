@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import type { RouteWaypoint } from '@/types';
 import { TripPhotoGrid, WaypointMedia } from '@/components/public/trip-media';
 import { TripJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
+import { TripReviews } from '@/components/public/trip-reviews';
 
 interface Props {
   params: Promise<{ username: string; tripId: string }>;
@@ -84,10 +85,11 @@ export default async function PublicTripPage({ params }: Props) {
   const trip = trips.find(t => t.id === Number(tripId));
   if (!trip) notFound();
 
-  const [routes, photos, mapboxToken] = await Promise.all([
+  const [routes, photos, mapboxToken, { data: { user: currentUser } }] = await Promise.all([
     loadPublicRoutes(supabase, profile.userId, [trip.id]),
     loadPublicPhotos(supabase, profile.userId, [trip.id]),
     loadPublicMapboxToken(supabase, profile.userId),
+    supabase.auth.getUser(),
   ]);
 
   const route = routes[trip.id];
@@ -268,6 +270,9 @@ export default async function PublicTripPage({ params }: Props) {
             </div>
           </section>
         )}
+
+        {/* Reviews */}
+        <TripReviews tripId={trip.id} currentUserId={currentUser?.id} />
       </main>
 
       {/* Footer */}
