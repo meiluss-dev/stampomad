@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface FAQ {
@@ -97,6 +97,12 @@ export default function HelpPage() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [search, setSearch] = useState('');
 
+  // Detect if we're inside AppShell (logged in) by checking for the navbar
+  const [hasNavbar, setHasNavbar] = useState(false);
+  useEffect(() => {
+    setHasNavbar(!!document.querySelector('nav'));
+  }, []);
+
   const filtered = search.trim()
     ? faqs.filter(f =>
         f.q.toLowerCase().includes(search.toLowerCase()) ||
@@ -105,18 +111,23 @@ export default function HelpPage() {
     : faqs;
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      {/* Header */}
-      <div className="border-b border-white/[0.06] px-4 sm:px-8 py-4">
-        <div className="max-w-[800px] mx-auto flex items-center justify-between">
-          <Link href="/" className="font-[family-name:var(--font-playfair)] text-xl text-gold hover:opacity-80 transition-opacity">
-            Stampo<span className="text-text font-normal">mad</span>
-          </Link>
-          <Link href="/auth" className="text-sm text-text-muted hover:text-gold transition-colors">
-            Sign in
-          </Link>
+    <div className={hasNavbar ? '' : 'min-h-screen bg-bg text-text'}>
+      {/* Header — only shown for logged-out visitors */}
+      {!hasNavbar && (
+        <div className="border-b border-white/[0.06] px-4 sm:px-8 py-4">
+          <div className="max-w-[800px] mx-auto flex items-center justify-between">
+            <Link href="/" className="font-[family-name:var(--font-playfair)] text-xl text-gold hover:opacity-80 transition-opacity">
+              Stampo<span className="text-text font-normal">mad</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/explore" className="text-sm text-text-muted hover:text-gold transition-colors">Explore</Link>
+              <Link href="/auth" className="px-4 py-2 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+                Sign in
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="max-w-[800px] mx-auto px-4 sm:px-8 py-8 sm:py-12">
         <div className="text-center mb-10">
