@@ -9,6 +9,7 @@ import { InviteModal } from '@/components/group/invite-modal';
 import { GroupTripPanel } from '@/components/group/group-trip-panel';
 import { BudgetModal } from '@/components/trips/budget-modal';
 import { PhotoLightbox } from '@/components/trips/photo-lightbox';
+import { downloadTripForOffline, isDownloaded as checkDownloaded, removeOfflineTripPack } from '@/lib/offline-trips';
 import type { Trip } from '@/types';
 
 const MAX_PHOTOS = 20;
@@ -39,7 +40,7 @@ function resizeImage(file: File, maxWidth = 1200, quality = 0.8): Promise<string
 }
 
 export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; onEdit: () => void; onRoute: () => void; onPacking: () => void }) {
-  const { deleteTrip, tripPhotos, saveTripPhotos, toggleTripPublished, profile, packingLists } = useStore();
+  const { deleteTrip, tripPhotos, saveTripPhotos, toggleTripPublished, profile, packingLists, routes } = useStore();
   const { toast } = useToast();
   const photos = tripPhotos[t.id] || [];
   const hasPhotos = photos.length > 0;
@@ -50,8 +51,15 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   const [groupOpen, setGroupOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [offlineStatus, setOfflineStatus] = useState<'none' | 'downloading' | 'downloaded'>('none');
+  const [downloadProgress, setDownloadProgress] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if trip is downloaded for offline
+  useEffect(() => {
+    checkDownloaded(t.id).then(yes => { if (yes) setOfflineStatus('downloaded'); });
+  }, [t.id]);
 
   // Auto-rotate photos
   useEffect(() => {
@@ -114,6 +122,31 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
     if (!confirm('Delete this trip and all its journal entries?')) return;
     await deleteTrip(t.id);
     toast('Trip deleted');
+  }
+
+  async function handleOfflineDownload() {
+    if (offlineStatus === 'downloaded') {
+      await removeOfflineTripPack(t.id);
+      setOfflineStatus('none');
+      toast('Removed offline copy');
+      return;
+    }
+    setOfflineStatus('downloading');
+    setDownloadProgress('Starting...');
+    try {
+      await downloadTripForOffline(
+        t,
+        routes[t.id] || null,
+        photos,
+        (done, total) => setDownloadProgress(`${done}/${total} photos`),
+      );
+      setOfflineStatus('downloaded');
+      toast('Trip saved for offline!');
+    } catch {
+      setOfflineStatus('none');
+      toast('Download failed', 'error');
+    }
+    setDownloadProgress('');
   }
 
   return (
@@ -278,6 +311,19 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
               {t.published ? '🌐 Public' : '🔒 Private'}
             </button>
           )}
+          <button
+            onClick={handleOfflineDownload}
+            disabled={offlineStatus === 'downloading'}
+            className={`py-[5px] px-3 rounded-lg text-xs cursor-pointer border transition-colors ${
+              offlineStatus === 'downloaded'
+                ? 'bg-teal/15 text-teal border-teal/30'
+                : offlineStatus === 'downloading'
+                ? 'bg-white/[0.03] text-text-muted border-white/[0.08] animate-pulse'
+                : 'bg-white/[0.03] text-text-muted border-white/[0.08] hover:border-teal/30 hover:text-teal'
+            }`}
+          >
+            {offlineStatus === 'downloaded' ? '✅ Offline' : offlineStatus === 'downloading' ? `⬇️ ${downloadProgress}` : '📥 Offline'}
+          </button>
           <button onClick={handleDelete} className="py-[5px] px-3 rounded-lg bg-stamp-red/10 text-stamp-red border border-stamp-red/20 text-xs cursor-pointer">
             Delete
           </button>

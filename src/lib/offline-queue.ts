@@ -5,7 +5,7 @@
  */
 
 const DB_NAME = 'stampomad-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'pending-ops';
 
 export interface PendingOp {
@@ -23,6 +23,9 @@ function openDB(): Promise<IDBDatabase> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('offline-trips')) {
+        db.createObjectStore('offline-trips', { keyPath: 'id' });
       }
     };
     req.onsuccess = () => resolve(req.result);
