@@ -4,6 +4,7 @@ import { GlobeSection } from '@/components/landing/globe-section';
 import { RecentTrips } from '@/components/landing/recent-trips';
 import { Testimonials } from '@/components/landing/testimonials';
 import { WebAppJsonLd } from '@/components/seo/json-ld';
+import { StampLogo } from '@/components/stamp-logo';
 
 export const revalidate = 3600; // Revalidate every hour (ISR)
 
@@ -24,9 +25,7 @@ export default async function LandingPage() {
       }} />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.08] bg-bg/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="font-[family-name:var(--font-playfair)] text-[22px] text-gold tracking-wide">
-          Stampo<span className="text-text font-normal">mad</span>
-        </div>
+        <StampLogo size="md" />
         <div className="flex items-center gap-3">
           <Link
             href="/explore"
@@ -278,8 +277,8 @@ export default async function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="font-[family-name:var(--font-playfair)] text-base text-gold mb-3">
-                Stampo<span className="text-text font-normal">mad</span>
+              <div className="mb-3">
+                <StampLogo size="sm" />
               </div>
               <p className="text-xs text-text-muted leading-relaxed">
                 Free travel tracker to log countries, map trips, and journal your adventures.

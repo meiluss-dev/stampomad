@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description: "Track every country, map every trip, journal your adventures, and travel with friends as you explore the globe.",
   manifest: "/manifest.json",
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>",
+    icon: "/icon-192.svg",
     apple: "/icon-192.svg",
   },
   appleWebApp: {
