@@ -11,16 +11,16 @@ declare const topojson: { feature: (topology: any, object: any) => any };
 let mapboxgl: any = null;
 
 const TRANSPORT_MODES: { id: TransportMode; label: string; emoji: string; color: string; dash?: number[] }[] = [
-  { id: 'plane', label: 'Plane', emoji: '✈️', color: '#999999', dash: [8, 6] },
+  { id: 'plane', label: 'Plane', emoji: '✈️', color: '#60a5fa', dash: [8, 6] },
   { id: 'train', label: 'Train', emoji: '🚂', color: '#a855f7' },
   { id: 'bus', label: 'Bus', emoji: '🚌', color: '#22c55e' },
   { id: 'sleeping-bus', label: 'Sleeping Bus', emoji: '🛏️', color: '#2dd4bf' },
   { id: 'boat', label: 'Boat', emoji: '⛵', color: '#38bdf8' },
   { id: 'cycling', label: 'Cycling', emoji: '🚲', color: '#3b82f6' },
   { id: 'hiking', label: 'Hiking', emoji: '🥾', color: '#ef4444' },
-  { id: 'motorbike', label: 'Motorbike', emoji: '🏍️', color: '#1e293b' },
+  { id: 'motorbike', label: 'Motorbike', emoji: '🏍️', color: '#e879f9' },
   { id: 'hitchhiking', label: 'Hitchhiking', emoji: '👍', color: '#f59e0b' },
-  { id: 'car', label: 'Car', emoji: '🚗', color: '#64748b' },
+  { id: 'car', label: 'Car', emoji: '🚗', color: '#fb923c' },
   { id: 'walking', label: 'Walking', emoji: '🚶', color: '#92400e', dash: [4, 4] },
 ];
 

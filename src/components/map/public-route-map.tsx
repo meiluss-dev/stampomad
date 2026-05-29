@@ -7,16 +7,16 @@ import type { RouteWaypoint, TransportMode } from '@/types';
 let mapboxgl: any = null;
 
 const TRANSPORT_COLORS: Record<string, { color: string; dash?: number[] }> = {
-  plane: { color: '#999999', dash: [8, 6] },
+  plane: { color: '#60a5fa', dash: [8, 6] },
   train: { color: '#a855f7' },
   bus: { color: '#22c55e' },
   'sleeping-bus': { color: '#2dd4bf' },
   boat: { color: '#38bdf8' },
   cycling: { color: '#3b82f6' },
   hiking: { color: '#ef4444' },
-  motorbike: { color: '#1e293b' },
+  motorbike: { color: '#e879f9' },
   hitchhiking: { color: '#f59e0b' },
-  car: { color: '#64748b' },
+  car: { color: '#fb923c' },
   walking: { color: '#92400e', dash: [4, 4] },
 };
 
