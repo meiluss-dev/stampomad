@@ -1,7 +1,7 @@
-const CACHE_NAME = 'stampomad-v3';
+const CACHE_NAME = 'stampomad-v4';
 const OFFLINE_URL = '/offline';
 
-// Pre-cache only truly static assets (no auth-gated pages)
+// Pre-cache the offline page and icons
 const PRECACHE = [
   '/offline',
   '/icon-192.svg',
@@ -26,7 +26,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — network-first with offline fallback
+// Fetch — network-first with smart offline fallback
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -48,7 +48,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Only cache public pages for offline use, not auth-gated ones
+          // Cache public pages + the offline page for offline use
           if (response.ok && !isAuthPage) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
@@ -56,9 +56,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Offline: auth pages always get the offline fallback
+          // Offline — always show offline page for auth pages
           if (isAuthPage) return caches.match(OFFLINE_URL);
-          // Public pages can try cache first, then offline fallback
+          // Public pages can try cache first
           return caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_URL));
         })
     );
@@ -68,7 +68,7 @@ self.addEventListener('fetch', (event) => {
   // For static assets (JS, CSS, images, fonts) — stale-while-revalidate
   if (
     url.pathname.startsWith('/_next/static/') ||
-    url.pathname.match(/\.(svg|png|jpg|webp|woff2?|css|js)$/)
+    url.pathname.match(/\.(svg|png|jpg|jpeg|webp|woff2?|css|js)$/)
   ) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
@@ -78,8 +78,25 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
-        });
+        }).catch(() => cached);
         return cached || fetched;
+      })
+    );
+    return;
+  }
+
+  // For trip photo URLs from Supabase Storage — cache them
+  if (url.hostname.includes('supabase') && url.pathname.includes('trip-photos')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => new Response('', { status: 404 }));
       })
     );
     return;

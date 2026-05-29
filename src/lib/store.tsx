@@ -127,6 +127,22 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       }
 
       setTrips(tripsData);
+
+      // Cache trip summaries for offline page (lightweight, no journal/photos)
+      try {
+        const offlineCache = tripsData.filter(t => !t.quickPin).map(t => ({
+          id: t.id, name: t.name, code: t.code, continent: t.continent,
+          emoji: t.emoji, start: t.start, end: t.end, days: t.days,
+          cities: t.cities, travelStyle: t.travelStyle, rating: t.rating,
+        }));
+        localStorage.setItem('stampomad_offline_trips', JSON.stringify(offlineCache));
+        localStorage.setItem('stampomad_offline_stats', JSON.stringify({
+          countries: new Set(tripsData.filter(t => !t.quickPin).map(t => t.code)).size,
+          trips: tripsData.filter(t => !t.quickPin).length,
+          days: tripsData.filter(t => !t.quickPin).reduce((s, t) => s + (t.days || 0), 0),
+        }));
+      } catch {}
+
       const vc = new Set<string>();
       tripsData.filter(t => t.quickPin).forEach(t => vc.add(t.code));
       setVisitedCountries(vc);
