@@ -16,6 +16,8 @@ import {
 import type { User } from '@supabase/supabase-js';
 import { trackFeatureUsage, trackCreate } from '@/lib/tracking';
 import { clearTierCache } from '@/hooks/use-feature';
+import { enqueueOp, getPendingCount, isOnline } from '@/lib/offline-queue';
+import { flushOfflineQueue } from '@/lib/offline-sync';
 
 interface StoreContextType {
   user: User | null;
@@ -61,6 +63,9 @@ interface StoreContextType {
   savePackingList: (tripId: number, list: PackingList) => Promise<void>;
   toggleWishlist: (code: string) => Promise<void>;
 
+  pendingOps: number;
+  isOffline: boolean;
+
   signOut: () => Promise<void>;
 }
 
@@ -88,6 +93,8 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const [packingLists, setPackingLists] = useState<Record<number, PackingList>>({});
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [pendingOps, setPendingOps] = useState(0);
+  const [offline, setOffline] = useState(false);
 
   const clearSaveError = useCallback(() => setSaveError(null), []);
 
@@ -186,6 +193,41 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Online/offline detection + auto-sync
+  const tripsRef = useRef(trips);
+  tripsRef.current = trips;
+
+  useEffect(() => {
+    setOffline(!navigator.onLine);
+    getPendingCount().then(setPendingOps).catch(() => {});
+
+    const goOnline = async () => {
+      setOffline(false);
+      if (!user) return;
+      const count = await getPendingCount().catch(() => 0);
+      if (count > 0) {
+        console.log('[Stampomad] Back online, syncing', count, 'pending operations...');
+        const result = await flushOfflineQueue(
+          supabase.current,
+          user.id,
+          (tripId) => tripsRef.current.find(t => t.id === tripId),
+        );
+        setPendingOps(0);
+        if (result.synced > 0) {
+          console.log(`[Stampomad] Synced ${result.synced} operations`);
+        }
+      }
+    };
+    const goOffline = () => setOffline(true);
+
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, [user]);
 
   const settingsRef = useRef({ homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist });
   settingsRef.current = { homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist };
@@ -296,7 +338,15 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     }));
     if (user) {
       const trip = trips.find(t => t.id === tripId);
-      if (trip) await saveTripToSupabase(supabase.current, user.id, { ...trip, journal: [...trip.journal, fullEntry] });
+      if (trip) {
+        try {
+          await saveTripToSupabase(supabase.current, user.id, { ...trip, journal: [...trip.journal, fullEntry] });
+        } catch {
+          await enqueueOp({ type: 'journal_add', tripId, payload: { entry: fullEntry } });
+          setPendingOps(prev => prev + 1);
+          console.log('[Stampomad] Journal entry queued for offline sync');
+        }
+      }
     }
     trackCreate('journal');
   }, [user, trips]);
@@ -310,7 +360,13 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       const trip = trips.find(t => t.id === tripId);
       if (trip) {
         const updated = { ...trip, journal: trip.journal.map(j => j.id === entry.id ? entry : j) };
-        await saveTripToSupabase(supabase.current, user.id, updated);
+        try {
+          await saveTripToSupabase(supabase.current, user.id, updated);
+        } catch {
+          await enqueueOp({ type: 'journal_update', tripId, payload: { entry } });
+          setPendingOps(prev => prev + 1);
+          console.log('[Stampomad] Journal update queued for offline sync');
+        }
       }
     }
   }, [user, trips]);
@@ -321,7 +377,13 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       return { ...t, journal: t.journal.filter(j => j.id !== entryId) };
     }));
     if (user) {
-      await deleteJournalEntryFromSupabase(supabase.current, user.id, entryId);
+      try {
+        await deleteJournalEntryFromSupabase(supabase.current, user.id, entryId);
+      } catch {
+        await enqueueOp({ type: 'journal_delete', tripId, payload: { entryId } });
+        setPendingOps(prev => prev + 1);
+        console.log('[Stampomad] Journal delete queued for offline sync');
+      }
     }
   }, [user]);
 
@@ -435,6 +497,8 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       toggleTripPublished: toggleTripPublishedAction,
       savePackingList: savePackingListAction,
       toggleWishlist: toggleWishlistAction,
+      pendingOps,
+      isOffline: offline,
       signOut: signOutAction,
     }}>
       {children}

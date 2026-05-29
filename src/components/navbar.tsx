@@ -23,7 +23,7 @@ const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || '';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, trips, visitedCountries, profile, signOut } = useStore();
+  const { user, trips, visitedCountries, profile, pendingOps, isOffline, signOut } = useStore();
   const isAdmin = user?.id === ADMIN_ID;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -81,6 +81,21 @@ export function Navbar() {
           <span className="text-[13px] text-text-muted hidden sm:inline">
             {allCodes.size} {t('countries_explored')}
           </span>
+
+          {/* Offline / sync indicator */}
+          {isOffline && (
+            <div className="flex items-center gap-1.5 text-xs text-stamp-red">
+              <span className="w-2 h-2 rounded-full bg-stamp-red animate-pulse" />
+              <span className="hidden sm:inline">Offline</span>
+              {pendingOps > 0 && <span className="text-[10px]">({pendingOps})</span>}
+            </div>
+          )}
+          {!isOffline && pendingOps > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-teal animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-teal" />
+              <span className="hidden sm:inline">Syncing...</span>
+            </div>
+          )}
 
           <NotificationBell />
           <InviteBadge />
