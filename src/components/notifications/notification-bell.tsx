@@ -17,50 +17,84 @@ const TYPE_ICONS: Record<string, string> = {
   chat_message: '💬',
 };
 
-let audioCtx: AudioContext | null = null;
+// iOS-compatible notification sound using HTML Audio element
+// iOS Safari only allows audio playback initiated by user gesture,
+// but once an Audio element has been "unlocked" by a tap, it can be
+// replayed programmatically via .play().
 
-function getAudioContext() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+let notifAudio: HTMLAudioElement | null = null;
+let audioUnlocked = false;
+
+function createNotifAudio(): HTMLAudioElement {
+  // Generate a tiny WAV with a two-tone chime using Web Audio, encode as data URI
+  // Fallback: use a minimal base64-encoded WAV beep
+  const audio = new Audio();
+  // Tiny 44100Hz mono WAV: two sine tones (C5 523Hz + E5 659Hz)
+  const sampleRate = 44100;
+  const duration = 0.5;
+  const samples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(samples);
+  for (let i = 0; i < samples; i++) {
+    const t = i / sampleRate;
+    const env1 = t < 0.25 ? Math.max(0, 1 - t * 4) : 0;
+    const env2 = t >= 0.12 && t < 0.45 ? Math.max(0, 1 - (t - 0.12) * 3) : 0;
+    buffer[i] = (Math.sin(2 * Math.PI * 523.25 * t) * env1 + Math.sin(2 * Math.PI * 659.25 * t) * env2) * 0.3;
   }
-  // Resume if suspended (browser autoplay policy)
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  // Encode as 16-bit PCM WAV
+  const wavBuffer = new ArrayBuffer(44 + samples * 2);
+  const view = new DataView(wavBuffer);
+  const writeStr = (off: number, str: string) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + samples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, samples * 2, true);
+  for (let i = 0; i < samples; i++) {
+    const s = Math.max(-1, Math.min(1, buffer[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
   }
-  return audioCtx;
+  const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+  audio.src = URL.createObjectURL(blob);
+  audio.volume = 0.6;
+  return audio;
 }
 
 function playNotificationSound() {
   try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    // Two-tone chime: C5 then E5
-    [523.25, 659.25].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.2, now + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + i * 0.12);
-      osc.stop(now + i * 0.12 + 0.4);
-    });
+    if (!notifAudio) notifAudio = createNotifAudio();
+    if (!audioUnlocked) return; // Can't play until user has tapped
+    notifAudio.currentTime = 0;
+    notifAudio.play().catch(() => {});
   } catch (e) {
     console.log('[Notification] Sound failed:', e);
   }
 }
 
-// Pre-warm AudioContext on first user interaction
+// Unlock audio on first user interaction (required for iOS)
 if (typeof window !== 'undefined') {
-  const warmUp = () => {
-    getAudioContext();
-    window.removeEventListener('click', warmUp);
-    window.removeEventListener('touchstart', warmUp);
+  const unlock = () => {
+    if (!notifAudio) notifAudio = createNotifAudio();
+    // Play silent then immediately pause — this "unlocks" the Audio element on iOS
+    notifAudio.volume = 0;
+    notifAudio.play().then(() => {
+      notifAudio!.pause();
+      notifAudio!.currentTime = 0;
+      notifAudio!.volume = 0.6;
+      audioUnlocked = true;
+    }).catch(() => {});
+    window.removeEventListener('click', unlock);
+    window.removeEventListener('touchstart', unlock);
   };
-  window.addEventListener('click', warmUp, { once: true });
-  window.addEventListener('touchstart', warmUp, { once: true });
+  window.addEventListener('click', unlock, { once: true });
+  window.addEventListener('touchstart', unlock, { once: true });
 }
 
 function timeAgo(date: string): string {
