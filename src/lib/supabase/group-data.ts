@@ -252,25 +252,36 @@ export async function deleteSharedItem(supabase: SupabaseClient, itemId: number)
 // ── Load group trips the user is a member of (not owner) ──
 
 export async function loadGroupMemberships(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
+  // Step 1: Get trip IDs where user is an accepted member
+  const { data: memberships, error } = await supabase
     .from('trip_members')
-    .select('trip_id, role, status, trips!trip_members_trip_id_fkey(id, name, code, emoji, start_date, end_date, days, cities, continent, user_id)')
+    .select('trip_id')
     .eq('user_id', userId)
     .eq('status', 'accepted')
     .eq('role', 'member');
   if (error) { console.error('[Group] loadMemberships error:', error); return []; }
-  return (data || []).map((m: any) => ({
-    tripId: m.trip_id,
-    trip: m.trips ? {
-      id: m.trips.id,
-      name: m.trips.name,
-      code: m.trips.code,
-      emoji: m.trips.emoji || '✈️',
-      start: m.trips.start_date,
-      end: m.trips.end_date,
-      days: m.trips.days || 1,
-      cities: m.trips.cities || '',
-      continent: m.trips.continent || '',
-    } : null,
+  if (!memberships || memberships.length === 0) return [];
+
+  // Step 2: Load the actual trip data
+  const tripIds = memberships.map(m => m.trip_id);
+  const { data: trips, error: tripErr } = await supabase
+    .from('trips')
+    .select('id, name, code, emoji, start_date, end_date, days, cities, continent, user_id')
+    .in('id', tripIds);
+  if (tripErr) { console.error('[Group] loadMembership trips error:', tripErr); return []; }
+
+  return (trips || []).map(t => ({
+    tripId: t.id,
+    trip: {
+      id: t.id,
+      name: t.name,
+      code: t.code,
+      emoji: t.emoji || '✈️',
+      start: t.start_date,
+      end: t.end_date,
+      days: t.days || 1,
+      cities: t.cities || '',
+      continent: t.continent || '',
+    },
   }));
 }
