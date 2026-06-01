@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { useToast } from '@/components/ui/toast';
 import { createClient } from '@/lib/supabase/client';
@@ -9,6 +9,8 @@ import {
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
   removeMember, disbandGroup, makeGroupTrip,
+  loadTripMessages, sendTripMessage, deleteTripMessage,
+  type TripMessage,
 } from '@/lib/supabase/group-data';
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
@@ -26,7 +28,7 @@ const EXPENSE_CATEGORIES = [
 
 const ITEM_CATEGORIES = ['Essentials', 'Shared gear', 'Food & drinks', 'Activities', 'Other'];
 
-type Tab = 'budget' | 'items' | 'members';
+type Tab = 'budget' | 'items' | 'chat' | 'members';
 
 export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => void }) {
   const { user, updateTrip } = useStore();
@@ -57,6 +59,13 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
   const [itemCategory, setItemCategory] = useState('Essentials');
   const [addingItem, setAddingItem] = useState(false);
 
+  // Chat
+  const [messages, setMessages] = useState<TripMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const loadData = useCallback(async () => {
     const supabase = createClient();
 
@@ -70,18 +79,42 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
       .then(r => r.ok ? r.json() : [])
       .catch(() => []);
 
-    const [m, e, i] = await Promise.all([
+    const [m, e, i, msgs] = await Promise.all([
       membersPromise,
       loadTripExpenses(supabase, trip.id),
       loadSharedItems(supabase, trip.id),
+      loadTripMessages(supabase, trip.id),
     ]);
     setMembers(m);
     setExpenses(e);
     setItems(i);
+    setMessages(msgs);
     setLoading(false);
   }, [trip.id, user]);
 
+  // Load messages separately for polling
+  const loadMessages = useCallback(async () => {
+    const supabase = createClient();
+    const msgs = await loadTripMessages(supabase, trip.id);
+    setMessages(msgs);
+  }, [trip.id]);
+
   useEffect(() => { loadData(); trackView('group_trips'); }, [loadData]);
+
+  // Auto-refresh chat every 5s when on chat tab
+  useEffect(() => {
+    if (tab === 'chat') {
+      chatIntervalRef.current = setInterval(loadMessages, 5000);
+      return () => { if (chatIntervalRef.current) clearInterval(chatIntervalRef.current); };
+    } else {
+      if (chatIntervalRef.current) clearInterval(chatIntervalRef.current);
+    }
+  }, [tab, loadMessages]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (tab === 'chat') chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, tab]);
 
   // ─── Budget calculations ───
   const totalSpent = expenses.reduce((a, e) => a + e.amount, 0);
@@ -202,6 +235,30 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, checked } : i));
   }
 
+  async function handleSendMessage() {
+    if (!user || !chatInput.trim()) return;
+    setSendingMsg(true);
+    try {
+      const supabase = createClient();
+      await sendTripMessage(supabase, trip.id, user.id, chatInput.trim());
+      setChatInput('');
+      await loadMessages();
+    } catch {
+      toast('Failed to send message', 'error');
+    }
+    setSendingMsg(false);
+  }
+
+  async function handleDeleteMessage(msgId: number) {
+    try {
+      const supabase = createClient();
+      await deleteTripMessage(supabase, msgId);
+      setMessages(prev => prev.filter(m => m.id !== msgId));
+    } catch {
+      toast('Failed to delete message', 'error');
+    }
+  }
+
   async function handleDeleteItem(itemId: number) {
     const supabase = createClient();
     await deleteSharedItem(supabase, itemId);
@@ -243,6 +300,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
             {([
               { key: 'budget' as Tab, label: '💰 Budget', count: expenses.length },
               { key: 'items' as Tab, label: '📦 Items', count: items.length },
+              { key: 'chat' as Tab, label: '💬 Chat', count: messages.length },
               { key: 'members' as Tab, label: '👥 Members', count: acceptedMembers.length },
             ]).map(t => (
               <button
@@ -633,6 +691,101 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                   <div className="text-[11px] mt-1">Add items that the group needs to bring</div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ─── Chat Tab ─── */}
+          {tab === 'chat' && (
+            <div className="flex flex-col h-full min-h-[300px]">
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto space-y-3 mb-3">
+                {messages.length === 0 && (
+                  <div className="text-center py-12 text-text-muted">
+                    <div className="text-3xl mb-2">💬</div>
+                    <div className="text-sm">No messages yet</div>
+                    <div className="text-[11px] mt-1">Start the conversation!</div>
+                  </div>
+                )}
+                {messages.map((msg, i) => {
+                  const isMe = msg.userId === user?.id;
+                  const prevMsg = messages[i - 1];
+                  const showAvatar = !prevMsg || prevMsg.userId !== msg.userId ||
+                    (new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() > 300000);
+                  const time = new Date(msg.createdAt);
+                  const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const dateStr = time.toLocaleDateString();
+                  const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : '';
+                  const showDate = dateStr !== prevDate;
+
+                  return (
+                    <div key={msg.id}>
+                      {showDate && (
+                        <div className="text-center my-3">
+                          <span className="text-[10px] text-text-muted bg-bg3 px-3 py-1 rounded-full">{dateStr}</span>
+                        </div>
+                      )}
+                      <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                        {showAvatar ? (
+                          msg.avatarUrl ? (
+                            <img src={msg.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-bg4 flex items-center justify-center text-[11px] font-semibold shrink-0 mt-0.5">
+                              {msg.displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-7 shrink-0" />
+                        )}
+                        <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                          {showAvatar && !isMe && (
+                            <span className="text-[10px] text-text-muted mb-0.5 ml-1">{msg.displayName.split(' ')[0]}</span>
+                          )}
+                          <div
+                            className={`group relative px-3 py-2 rounded-2xl text-[13px] leading-relaxed ${
+                              isMe
+                                ? 'bg-gold/15 text-text rounded-br-md'
+                                : 'bg-bg3 text-text rounded-bl-md'
+                            }`}
+                          >
+                            {msg.message}
+                            <span className={`block text-[9px] mt-0.5 ${isMe ? 'text-gold/50 text-right' : 'text-text-muted/50'}`}>
+                              {timeStr}
+                            </span>
+                            {isMe && (
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="absolute -left-6 top-1/2 -translate-y-1/2 text-text-muted/0 group-hover:text-text-muted hover:!text-stamp-red text-[11px] cursor-pointer transition-colors"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="flex gap-2 mt-auto pt-2 border-t border-white/[0.06]">
+                <input
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                  placeholder="Type a message..."
+                  maxLength={2000}
+                  className="flex-1 bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-text outline-none focus:border-gold/30 placeholder:text-text-muted"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={sendingMsg || !chatInput.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85 disabled:opacity-40 shrink-0"
+                >
+                  Send
+                </button>
+              </div>
             </div>
           )}
 

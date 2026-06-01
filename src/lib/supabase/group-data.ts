@@ -249,6 +249,51 @@ export async function deleteSharedItem(supabase: SupabaseClient, itemId: number)
   await supabase.from('shared_items').delete().eq('id', itemId);
 }
 
+// ── Chat Messages ──
+
+export interface TripMessage {
+  id: number;
+  tripId: number;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  message: string;
+  createdAt: string;
+}
+
+export async function loadTripMessages(supabase: SupabaseClient, tripId: number, limit = 50): Promise<TripMessage[]> {
+  const { data, error } = await supabase
+    .from('trip_messages')
+    .select('*, user_profiles!trip_messages_user_id_profiles_fkey(display_name, avatar_url)')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: true })
+    .limit(limit);
+  if (error) { console.error('[Group] loadMessages error:', error); return []; }
+  return (data || []).map((m: any) => ({
+    id: m.id,
+    tripId: m.trip_id,
+    userId: m.user_id,
+    displayName: m.user_profiles?.display_name || 'Unknown',
+    avatarUrl: m.user_profiles?.avatar_url || null,
+    message: m.message,
+    createdAt: m.created_at,
+  }));
+}
+
+export async function sendTripMessage(supabase: SupabaseClient, tripId: number, userId: string, message: string) {
+  const { error } = await supabase.from('trip_messages').insert({
+    trip_id: tripId,
+    user_id: userId,
+    message: message.trim().slice(0, 2000),
+  });
+  if (error) throw error;
+}
+
+export async function deleteTripMessage(supabase: SupabaseClient, messageId: number) {
+  const { error } = await supabase.from('trip_messages').delete().eq('id', messageId);
+  if (error) throw error;
+}
+
 // ── Load group trips the user is a member of (not owner) ──
 
 export async function loadGroupMemberships(supabase: SupabaseClient, userId: string) {
