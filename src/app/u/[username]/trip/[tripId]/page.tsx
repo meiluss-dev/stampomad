@@ -23,8 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const trip = trips.find(t => t.id === Number(tripId));
   if (!trip) return { title: 'Not Found — Stampomad' };
 
-  const routes = await loadPublicRoutes(supabase, profile.userId, [trip.id]);
+  const [routes, photos] = await Promise.all([
+    loadPublicRoutes(supabase, profile.userId, [trip.id]),
+    loadPublicPhotos(supabase, profile.userId, [trip.id]),
+  ]);
   const route = routes[trip.id];
+  const tripPhotos = photos[trip.id] || [];
   const wpCount = route?.waypoints?.filter((w: { type: string }) => w.type === 'waypoint').length || 0;
   const displayName = profile.displayName || profile.username;
   const desc = `${trip.emoji} ${trip.name} · ${fmtDate(trip.start)} – ${trip.end ? fmtDate(trip.end) : 'Ongoing'} · ${trip.days} days`;
@@ -38,6 +42,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     cities: trip.cities || '',
     author: displayName,
     waypoints: String(wpCount),
+    rating: String(trip.rating || 0),
+    journals: String(trip.journal?.length || 0),
+    dates: `${fmtDate(trip.start)} – ${trip.end ? fmtDate(trip.end) : 'Ongoing'}`,
+    ...(tripPhotos[0] ? { photo: tripPhotos[0] } : {}),
+    ...(profile.avatarUrl ? { avatar: profile.avatarUrl } : {}),
   });
 
   const ogImage = `/api/og?${ogParams.toString()}`;
