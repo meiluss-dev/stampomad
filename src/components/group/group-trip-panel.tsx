@@ -5,7 +5,7 @@ import { useStore } from '@/lib/store';
 import { useToast } from '@/components/ui/toast';
 import { createClient } from '@/lib/supabase/client';
 import {
-  loadTripMembers, loadTripExpenses, loadSharedItems,
+  loadTripExpenses, loadSharedItems,
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
   removeMember, disbandGroup, makeGroupTrip,
@@ -60,8 +60,13 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
       await makeGroupTrip(supabase, trip.id, user.id);
     }
 
+    // Load members via API (bypasses RLS so all members are visible)
+    const membersPromise = fetch(`/api/group-members?tripId=${trip.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []);
+
     const [m, e, i] = await Promise.all([
-      loadTripMembers(supabase, trip.id),
+      membersPromise,
       loadTripExpenses(supabase, trip.id),
       loadSharedItems(supabase, trip.id),
     ]);
