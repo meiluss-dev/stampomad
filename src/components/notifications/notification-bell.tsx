@@ -17,23 +17,50 @@ const TYPE_ICONS: Record<string, string> = {
   chat_message: '💬',
 };
 
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  // Resume if suspended (browser autoplay policy)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
     // Two-tone chime: C5 then E5
     [523.25, 659.25].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
+      gain.gain.setValueAtTime(0.2, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + i * 0.12);
-      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.4);
     });
-  } catch {}
+  } catch (e) {
+    console.log('[Notification] Sound failed:', e);
+  }
+}
+
+// Pre-warm AudioContext on first user interaction
+if (typeof window !== 'undefined') {
+  const warmUp = () => {
+    getAudioContext();
+    window.removeEventListener('click', warmUp);
+    window.removeEventListener('touchstart', warmUp);
+  };
+  window.addEventListener('click', warmUp, { once: true });
+  window.addEventListener('touchstart', warmUp, { once: true });
 }
 
 function timeAgo(date: string): string {
@@ -73,10 +100,10 @@ export function NotificationBell() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Poll every 30s for new notifications
+  // Poll every 10s for new notifications
   useEffect(() => {
     if (!user) return;
-    const id = setInterval(load, 30000);
+    const id = setInterval(load, 10000);
     return () => clearInterval(id);
   }, [user, load]);
 
