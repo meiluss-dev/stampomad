@@ -8,6 +8,7 @@ import {
   loadTripMembers, loadTripExpenses, loadSharedItems,
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
+  removeMember,
 } from '@/lib/supabase/group-data';
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
@@ -27,7 +28,7 @@ const ITEM_CATEGORIES = ['Essentials', 'Shared gear', 'Food & drinks', 'Activiti
 type Tab = 'budget' | 'items' | 'members';
 
 export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => void }) {
-  const { user } = useStore();
+  const { user, deleteTrip } = useStore();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('budget');
   const [members, setMembers] = useState<TripMember[]>([]);
@@ -463,34 +464,79 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
           {/* ─── Members Tab ─── */}
           {tab === 'members' && (
             <div className="space-y-2">
-              {members.map(m => (
-                <div key={m.id} className="flex items-center gap-3 bg-bg3 rounded-xl px-4 py-3">
-                  {m.avatarUrl ? (
-                    <img src={m.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-bg4 flex items-center justify-center text-lg font-semibold">
-                      {m.displayName.charAt(0).toUpperCase()}
+              {members.map(m => {
+                const isOwner = members.find(x => x.userId === user?.id)?.role === 'owner';
+                const isSelf = m.userId === user?.id;
+                return (
+                  <div key={m.id} className="flex items-center gap-3 bg-bg3 rounded-xl px-4 py-3">
+                    {m.avatarUrl ? (
+                      <img src={m.avatarUrl} alt="" referrerPolicy="no-referrer" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-bg4 flex items-center justify-center text-lg font-semibold">
+                        {m.displayName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="text-[14px] font-medium">{m.displayName}</div>
+                      <div className="text-[11px] text-text-muted">@{m.username}</div>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <div className="text-[14px] font-medium">{m.displayName}</div>
-                    <div className="text-[11px] text-text-muted">@{m.username}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1">
+                        {m.role === 'owner' && (
+                          <span className="text-[10px] text-gold bg-gold/10 border border-gold/20 rounded-md px-2 py-0.5">Owner</span>
+                        )}
+                        {m.status === 'pending' && (
+                          <span className="text-[10px] text-text-muted bg-bg4 border border-white/[0.08] rounded-md px-2 py-0.5">Pending</span>
+                        )}
+                        {balances[m.userId] !== undefined && expenses.length > 0 && (
+                          <span className={`text-[11px] ${balances[m.userId] > 0.01 ? 'text-teal' : balances[m.userId] < -0.01 ? 'text-stamp-red' : 'text-text-muted'}`}>
+                            {balances[m.userId] > 0.01 ? `+${balances[m.userId].toFixed(2)}` : balances[m.userId] < -0.01 ? balances[m.userId].toFixed(2) : 'settled'}
+                          </span>
+                        )}
+                      </div>
+                      {isOwner && !isSelf && m.role !== 'owner' && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`Remove ${m.displayName} from this trip?`)) return;
+                            try {
+                              const supabase = createClient();
+                              await removeMember(supabase, m.id);
+                              setMembers(prev => prev.filter(x => x.id !== m.id));
+                              toast(`Removed ${m.displayName}`);
+                            } catch {
+                              toast('Failed to remove member', 'error');
+                            }
+                          }}
+                          className="text-[11px] text-stamp-red hover:bg-stamp-red/10 rounded-md px-2 py-1 transition-colors cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    {m.role === 'owner' && (
-                      <span className="text-[10px] text-gold bg-gold/10 border border-gold/20 rounded-md px-2 py-0.5">Owner</span>
-                    )}
-                    {m.status === 'pending' && (
-                      <span className="text-[10px] text-text-muted bg-bg4 border border-white/[0.08] rounded-md px-2 py-0.5">Pending</span>
-                    )}
-                    {balances[m.userId] !== undefined && expenses.length > 0 && (
-                      <span className={`text-[11px] ${balances[m.userId] > 0.01 ? 'text-teal' : balances[m.userId] < -0.01 ? 'text-stamp-red' : 'text-text-muted'}`}>
-                        {balances[m.userId] > 0.01 ? `+${balances[m.userId].toFixed(2)}` : balances[m.userId] < -0.01 ? balances[m.userId].toFixed(2) : 'settled'}
-                      </span>
-                    )}
-                  </div>
+                );
+              })}
+
+              {/* Delete trip — owner only */}
+              {members.find(m => m.userId === user?.id)?.role === 'owner' && (
+                <div className="mt-6 pt-4 border-t border-white/[0.06]">
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Delete "${trip.name}" and remove all members? This cannot be undone.`)) return;
+                      try {
+                        await deleteTrip(trip.id);
+                        toast('Trip deleted');
+                        onClose();
+                      } catch {
+                        toast('Failed to delete trip', 'error');
+                      }
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-stamp-red/30 text-stamp-red text-sm hover:bg-stamp-red/10 transition-colors cursor-pointer"
+                  >
+                    🗑️ Delete trip
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
