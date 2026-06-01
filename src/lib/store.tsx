@@ -17,7 +17,6 @@ import type { User } from '@supabase/supabase-js';
 import { trackFeatureUsage, trackCreate } from '@/lib/tracking';
 import { clearTierCache } from '@/hooks/use-feature';
 import { enqueueOp, getPendingCount, isOnline } from '@/lib/offline-queue';
-import { loadGroupMemberships } from '@/lib/supabase/group-data';
 import { flushOfflineQueue } from '@/lib/offline-sync';
 
 interface StoreContextType {
@@ -122,31 +121,37 @@ export function StoreProvider({ children, initialUser }: { children: React.React
 
       if (cancelled) return;
 
-      // Load group trips the user is a member of (not owner)
-      const groupMemberships = await loadGroupMemberships(sb, userId);
-      const ownTripIds = new Set(tripsData.map(t => t.id));
-      const memberTrips: Trip[] = groupMemberships
-        .filter(m => m.trip && !ownTripIds.has(m.trip.id))
-        .map(m => ({
-          id: m.trip!.id,
-          name: m.trip!.name,
-          code: m.trip!.code,
-          continent: m.trip!.continent,
-          emoji: m.trip!.emoji,
-          start: m.trip!.start,
-          end: m.trip!.end || '',
-          days: m.trip!.days,
-          cities: m.trip!.cities,
-          notes: '',
-          quickPin: false,
-          isGroup: true,
-          journal: [],
-        }));
-      if (memberTrips.length > 0) {
-        console.log('[Stampomad] Also loaded', memberTrips.length, 'group trips as member');
+      // Load group trips the user is a member of (via API to bypass RLS)
+      try {
+        const res = await fetch('/api/group-trips');
+        if (res.ok) {
+          const groupTrips = await res.json();
+          const ownTripIds = new Set(tripsData.map(t => t.id));
+          const memberTrips: Trip[] = groupTrips
+            .filter((g: any) => !ownTripIds.has(g.id))
+            .map((g: any) => ({
+              id: g.id,
+              name: g.name,
+              code: g.code,
+              continent: g.continent,
+              emoji: g.emoji,
+              start: g.start,
+              end: g.end || '',
+              days: g.days,
+              cities: g.cities,
+              notes: '',
+              quickPin: false,
+              isGroup: true,
+              journal: [],
+            }));
+          if (memberTrips.length > 0) {
+            console.log('[Stampomad] Also loaded', memberTrips.length, 'group trips as member');
+          }
+          tripsData = [...tripsData, ...memberTrips];
+        }
+      } catch (e) {
+        console.error('[Stampomad] Failed to load group trips:', e);
       }
-
-      tripsData = [...tripsData, ...memberTrips];
 
       console.log('[Stampomad] Loaded:', tripsData.length, 'trips,', Object.keys(routesData).length, 'routes, settings:', !!settings);
 
