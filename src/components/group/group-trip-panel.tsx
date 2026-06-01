@@ -29,7 +29,7 @@ const ITEM_CATEGORIES = ['Essentials', 'Shared gear', 'Food & drinks', 'Activiti
 type Tab = 'budget' | 'items' | 'members';
 
 export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => void }) {
-  const { user } = useStore();
+  const { user, updateTrip } = useStore();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('budget');
   const [members, setMembers] = useState<TripMember[]>([]);
@@ -543,6 +543,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                       try {
                         const supabase = createClient();
                         await disbandGroup(supabase, trip.id);
+                        await updateTrip({ ...trip, isGroup: false });
                         toast('Group disbanded — trip is now private');
                         onClose();
                       } catch {
