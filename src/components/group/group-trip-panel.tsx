@@ -44,7 +44,12 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
   const [expCurrency, setExpCurrency] = useState('EUR');
   const [expCategory, setExpCategory] = useState('food');
   const [expDesc, setExpDesc] = useState('');
+  const [expPaidBy, setExpPaidBy] = useState('');
+  const [expSplitType, setExpSplitType] = useState<'equal' | 'custom'>('equal');
+  const [expExcluded, setExpExcluded] = useState<Set<string>>(new Set());
+  const [expCustomAmounts, setExpCustomAmounts] = useState<Record<string, string>>({});
   const [addingExp, setAddingExp] = useState(false);
+  const [showSettleUp, setShowSettleUp] = useState(false);
 
   // Add item form
   const [showAddItem, setShowAddItem] = useState(false);
@@ -82,13 +87,11 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
   const totalSpent = expenses.reduce((a, e) => a + e.amount, 0);
   const mainCurrency = expenses[0]?.currency || 'EUR';
 
-  // Calculate balances: who owes whom
+  // Calculate net balances: positive = owed money, negative = owes money
   const balances: Record<string, number> = {};
   members.filter(m => m.status === 'accepted').forEach(m => { balances[m.userId] = 0; });
   expenses.forEach(exp => {
-    // Payer gets credited
     balances[exp.paidBy] = (balances[exp.paidBy] || 0) + exp.amount;
-    // Each split person gets debited
     exp.splits.forEach(s => {
       balances[s.userId] = (balances[s.userId] || 0) - s.amount;
     });
@@ -96,23 +99,62 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
 
   const getMemberName = (uid: string) => members.find(m => m.userId === uid)?.displayName || 'Unknown';
 
+  // Simplify debts: minimum transactions to settle up (greedy algorithm)
+  const debts: { from: string; to: string; amount: number }[] = [];
+  if (expenses.length > 0) {
+    const debtors = Object.entries(balances).filter(([, v]) => v < -0.01).map(([k, v]) => ({ id: k, amount: -v })).sort((a, b) => b.amount - a.amount);
+    const creditors = Object.entries(balances).filter(([, v]) => v > 0.01).map(([k, v]) => ({ id: k, amount: v })).sort((a, b) => b.amount - a.amount);
+    let di = 0, ci = 0;
+    while (di < debtors.length && ci < creditors.length) {
+      const payment = Math.min(debtors[di].amount, creditors[ci].amount);
+      if (payment > 0.01) {
+        debts.push({ from: debtors[di].id, to: creditors[ci].id, amount: Math.round(payment * 100) / 100 });
+      }
+      debtors[di].amount -= payment;
+      creditors[ci].amount -= payment;
+      if (debtors[di].amount < 0.01) di++;
+      if (creditors[ci].amount < 0.01) ci++;
+    }
+  }
+
   async function handleAddExpense() {
     if (!user || !expAmount || !expDesc) return;
+    const paidBy = expPaidBy || user.id;
+    const amount = parseFloat(expAmount);
     setAddingExp(true);
     try {
       const supabase = createClient();
-      const memberIds = members.filter(m => m.status === 'accepted').map(m => m.userId);
-      await addExpense(supabase, trip.id, user.id, parseFloat(expAmount), expCurrency, expCategory, expDesc, 'equal', memberIds);
-      notifyExpenseAdded(supabase, trip.id, user.id, parseFloat(expAmount), expCurrency, expDesc).catch(() => {});
+      const allAccepted = members.filter(m => m.status === 'accepted').map(m => m.userId);
+      const splitMembers = expSplitType === 'equal'
+        ? allAccepted.filter(id => !expExcluded.has(id))
+        : allAccepted;
+      const customAmounts = expSplitType === 'custom'
+        ? Object.fromEntries(Object.entries(expCustomAmounts).map(([k, v]) => [k, parseFloat(v) || 0]))
+        : undefined;
+      await addExpense(supabase, trip.id, paidBy, amount, expCurrency, expCategory, expDesc, expSplitType, splitMembers, customAmounts);
+      notifyExpenseAdded(supabase, trip.id, user.id, amount, expCurrency, expDesc).catch(() => {});
       toast('Expense added!');
       setShowAddExpense(false);
-      setExpAmount('');
-      setExpDesc('');
+      setExpAmount(''); setExpDesc(''); setExpPaidBy('');
+      setExpSplitType('equal'); setExpExcluded(new Set()); setExpCustomAmounts({});
       await loadData();
     } catch {
       toast('Failed to add expense', 'error');
     }
     setAddingExp(false);
+  }
+
+  async function handleSettleUp(fromId: string, toId: string, amount: number) {
+    if (!user) return;
+    try {
+      const supabase = createClient();
+      await addExpense(supabase, trip.id, fromId, amount, mainCurrency, 'other', `Settlement: ${getMemberName(fromId)} → ${getMemberName(toId)}`, 'custom', [toId], { [toId]: amount });
+      toast('Settlement recorded!');
+      setShowSettleUp(false);
+      await loadData();
+    } catch {
+      toast('Failed to record settlement', 'error');
+    }
   }
 
   async function handleDeleteExpense(id: number) {
@@ -222,43 +264,83 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
           {/* ─── Budget Tab ─── */}
           {tab === 'budget' && (
             <div>
-              {/* Summary */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="bg-bg3 border border-white/[0.08] rounded-xl p-3 text-center">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider">Total spent</div>
-                  <div className="font-[family-name:var(--font-playfair)] text-2xl text-gold mt-1">
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider">Total</div>
+                  <div className="font-[family-name:var(--font-playfair)] text-xl text-gold mt-1">
                     {mainCurrency} {totalSpent.toFixed(2)}
                   </div>
                 </div>
                 <div className="bg-bg3 border border-white/[0.08] rounded-xl p-3 text-center">
                   <div className="text-[10px] text-text-muted uppercase tracking-wider">Per person</div>
-                  <div className="font-[family-name:var(--font-playfair)] text-2xl text-teal mt-1">
+                  <div className="font-[family-name:var(--font-playfair)] text-xl text-teal mt-1">
                     {mainCurrency} {acceptedMembers.length > 0 ? (totalSpent / acceptedMembers.length).toFixed(2) : '0.00'}
                   </div>
                 </div>
+                <div className="bg-bg3 border border-white/[0.08] rounded-xl p-3 text-center">
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider">Expenses</div>
+                  <div className="font-[family-name:var(--font-playfair)] text-xl text-text mt-1">{expenses.length}</div>
+                </div>
               </div>
 
-              {/* Balances */}
-              {Object.keys(balances).length > 0 && expenses.length > 0 && (
+              {/* Who owes whom — simplified debts */}
+              {debts.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">Balances</div>
-                  <div className="space-y-1.5">
-                    {Object.entries(balances).map(([uid, bal]) => (
-                      <div key={uid} className="flex items-center justify-between bg-bg3 rounded-lg px-3 py-2">
-                        <span className="text-[13px]">{getMemberName(uid)}</span>
-                        <span className={`text-[13px] font-medium ${bal > 0.01 ? 'text-teal' : bal < -0.01 ? 'text-stamp-red' : 'text-text-muted'}`}>
-                          {bal > 0.01 ? `+${bal.toFixed(2)}` : bal < -0.01 ? bal.toFixed(2) : 'settled'}
-                        </span>
+                  <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">Settle up</div>
+                  <div className="space-y-2">
+                    {debts.map((d, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2.5">
+                        <div className="w-7 h-7 rounded-full bg-stamp-red/15 text-stamp-red flex items-center justify-center text-[11px] font-semibold shrink-0">
+                          {getMemberName(d.from).charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12px]">
+                            <span className="font-medium">{getMemberName(d.from)}</span>
+                            <span className="text-text-muted"> owes </span>
+                            <span className="font-medium">{getMemberName(d.to)}</span>
+                          </div>
+                          <div className="text-[14px] font-[family-name:var(--font-playfair)] text-gold">{mainCurrency} {d.amount.toFixed(2)}</div>
+                        </div>
+                        <button
+                          onClick={() => handleSettleUp(d.from, d.to, d.amount)}
+                          className="px-3 py-1.5 rounded-lg bg-teal/15 text-teal text-[11px] font-medium cursor-pointer hover:bg-teal/25 transition-all border border-teal/20"
+                        >
+                          Settle
+                        </button>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
+              {/* Balances per person */}
+              {expenses.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">Balances</div>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    {Object.entries(balances).map(([uid, bal]) => (
+                      <div key={uid} className="bg-bg3 border border-white/[0.08] rounded-xl px-3 py-2 text-center min-w-[90px] shrink-0">
+                        <div className="text-[11px] text-text-muted truncate">{getMemberName(uid).split(' ')[0]}</div>
+                        <div className={`text-[13px] font-medium mt-0.5 ${bal > 0.01 ? 'text-teal' : bal < -0.01 ? 'text-stamp-red' : 'text-text-muted'}`}>
+                          {bal > 0.01 ? `+${bal.toFixed(2)}` : bal < -0.01 ? bal.toFixed(2) : '✓'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {debts.length === 0 && expenses.length > 0 && (
+                <div className="bg-teal/8 border border-teal/20 rounded-xl px-4 py-3 mb-4 text-center">
+                  <span className="text-teal text-sm">✓ All settled up!</span>
+                </div>
+              )}
+
               {/* Add expense */}
               {!showAddExpense ? (
                 <button
-                  onClick={() => setShowAddExpense(true)}
+                  onClick={() => { setShowAddExpense(true); setExpPaidBy(user?.id || ''); }}
                   className="w-full py-2.5 rounded-xl border border-dashed border-gold/30 text-gold text-sm cursor-pointer hover:bg-gold/5 transition-all mb-4"
                 >
                   + Add expense
@@ -266,30 +348,36 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
               ) : (
                 <div className="bg-bg3 border border-white/[0.08] rounded-xl p-4 mb-4">
                   <div className="text-[11px] text-text-muted uppercase tracking-wider mb-3">New expense</div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
+
+                  {/* Amount + Currency */}
+                  <div className="grid grid-cols-[1fr_80px] gap-2 mb-2">
                     <input
                       type="number"
                       value={expAmount}
                       onChange={e => setExpAmount(e.target.value)}
-                      placeholder="Amount"
-                      className="bg-bg4 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text outline-none"
+                      placeholder="0.00"
+                      className="bg-bg4 border border-white/[0.08] rounded-lg px-3 py-2.5 text-lg text-text outline-none font-[family-name:var(--font-playfair)]"
                     />
                     <select
                       value={expCurrency}
                       onChange={e => setExpCurrency(e.target.value)}
-                      className="bg-bg4 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text outline-none"
+                      className="bg-bg4 border border-white/[0.08] rounded-lg px-2 py-2.5 text-sm text-text outline-none"
                     >
-                      {['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'THB', 'BRL', 'MXN'].map(c => (
+                      {['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'THB', 'BRL', 'MXN', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'TRY', 'INR', 'KRW', 'NZD'].map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   </div>
+
+                  {/* Description */}
                   <input
                     value={expDesc}
                     onChange={e => setExpDesc(e.target.value)}
                     placeholder="What was it for?"
                     className="w-full bg-bg4 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-text outline-none mb-2"
                   />
+
+                  {/* Category */}
                   <div className="flex gap-1.5 flex-wrap mb-3">
                     {EXPENSE_CATEGORIES.map(c => (
                       <button
@@ -303,17 +391,105 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                       </button>
                     ))}
                   </div>
-                  <div className="text-[11px] text-text-muted mb-3">Split equally among {acceptedMembers.length} members</div>
+
+                  {/* Paid by */}
+                  <div className="mb-3">
+                    <div className="text-[11px] text-text-muted mb-1.5">Paid by</div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {acceptedMembers.map(m => (
+                        <button
+                          key={m.userId}
+                          onClick={() => setExpPaidBy(m.userId)}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] cursor-pointer transition-all ${
+                            expPaidBy === m.userId ? 'bg-gold/15 border border-gold/30 text-gold' : 'bg-bg4 border border-white/[0.06] text-text-muted'
+                          }`}
+                        >
+                          {m.displayName.split(' ')[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Split type */}
+                  <div className="mb-3">
+                    <div className="text-[11px] text-text-muted mb-1.5">Split</div>
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={() => setExpSplitType('equal')}
+                        className={`flex-1 py-1.5 rounded-lg text-[12px] cursor-pointer transition-all ${
+                          expSplitType === 'equal' ? 'bg-teal/15 border border-teal/30 text-teal' : 'bg-bg4 border border-white/[0.06] text-text-muted'
+                        }`}
+                      >
+                        Equal
+                      </button>
+                      <button
+                        onClick={() => setExpSplitType('custom')}
+                        className={`flex-1 py-1.5 rounded-lg text-[12px] cursor-pointer transition-all ${
+                          expSplitType === 'custom' ? 'bg-teal/15 border border-teal/30 text-teal' : 'bg-bg4 border border-white/[0.06] text-text-muted'
+                        }`}
+                      >
+                        Custom amounts
+                      </button>
+                    </div>
+
+                    {expSplitType === 'equal' && (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {acceptedMembers.map(m => {
+                          const excluded = expExcluded.has(m.userId);
+                          return (
+                            <button
+                              key={m.userId}
+                              onClick={() => {
+                                const next = new Set(expExcluded);
+                                excluded ? next.delete(m.userId) : next.add(m.userId);
+                                setExpExcluded(next);
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] cursor-pointer transition-all ${
+                                excluded ? 'bg-bg4 border border-white/[0.06] text-text-muted line-through opacity-50' : 'bg-teal/10 border border-teal/20 text-teal'
+                              }`}
+                            >
+                              {m.displayName.split(' ')[0]}
+                            </button>
+                          );
+                        })}
+                        <span className="text-[10px] text-text-muted self-center ml-1">
+                          {expAmount ? `${mainCurrency} ${(parseFloat(expAmount) / Math.max(acceptedMembers.length - expExcluded.size, 1)).toFixed(2)}/pp` : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {expSplitType === 'custom' && (
+                      <div className="space-y-1.5">
+                        {acceptedMembers.map(m => (
+                          <div key={m.userId} className="flex items-center gap-2">
+                            <span className="text-[12px] text-text-muted w-24 truncate">{m.displayName.split(' ')[0]}</span>
+                            <input
+                              type="number"
+                              placeholder="0.00"
+                              value={expCustomAmounts[m.userId] || ''}
+                              onChange={e => setExpCustomAmounts(prev => ({ ...prev, [m.userId]: e.target.value }))}
+                              className="flex-1 bg-bg4 border border-white/[0.08] rounded-lg px-2 py-1.5 text-sm text-text outline-none"
+                            />
+                          </div>
+                        ))}
+                        <div className="text-[10px] text-text-muted">
+                          Total: {mainCurrency} {Object.values(expCustomAmounts).reduce((a, v) => a + (parseFloat(v) || 0), 0).toFixed(2)}
+                          {expAmount && ` / ${parseFloat(expAmount).toFixed(2)}`}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-2">
                     <button
                       onClick={handleAddExpense}
                       disabled={addingExp || !expAmount || !expDesc}
                       className="flex-1 py-2 rounded-lg bg-gold text-bg text-sm font-medium cursor-pointer hover:opacity-85 disabled:opacity-40"
                     >
-                      {addingExp ? 'Adding...' : 'Add'}
+                      {addingExp ? 'Adding...' : 'Add expense'}
                     </button>
                     <button
-                      onClick={() => setShowAddExpense(false)}
+                      onClick={() => { setShowAddExpense(false); setExpSplitType('equal'); setExpExcluded(new Set()); setExpCustomAmounts({}); }}
                       className="px-4 py-2 rounded-lg bg-bg4 border border-white/[0.08] text-text-muted text-sm cursor-pointer"
                     >
                       Cancel
@@ -328,18 +504,18 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                   <div key={exp.id} className="bg-bg3 border border-white/[0.08] rounded-xl p-3 group">
                     <div className="flex items-center gap-2.5">
                       <span className="text-xl">{catIcon(exp.category)}</span>
-                      <div className="flex-1">
-                        <div className="text-[13px] font-medium">{exp.description}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-medium truncate">{exp.description}</div>
                         <div className="text-[11px] text-text-muted">
-                          Paid by {exp.paidByName} · {new Date(exp.createdAt).toLocaleDateString()}
+                          {exp.paidByName} paid · {new Date(exp.createdAt).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <div className="text-[15px] font-[family-name:var(--font-playfair)] text-gold">
                           {exp.currency} {exp.amount.toFixed(2)}
                         </div>
                         <div className="text-[10px] text-text-muted">
-                          {exp.currency} {(exp.amount / Math.max(exp.splits.length, 1)).toFixed(2)}/pp
+                          {exp.splits.length > 0 ? `${exp.currency} ${(exp.amount / exp.splits.length).toFixed(2)}/pp` : ''}
                         </div>
                       </div>
                       {(exp.paidBy === user?.id) && (
@@ -350,20 +526,6 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                           ×
                         </button>
                       )}
-                    </div>
-                    {/* Splits */}
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {exp.splits.map(s => (
-                        <button
-                          key={s.userId}
-                          onClick={() => handleSettle(exp.id, s.userId, !s.settled)}
-                          className={`text-[10px] px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                            s.settled ? 'bg-teal/10 text-teal border border-teal/20' : 'bg-bg4 text-text-muted border border-white/[0.06]'
-                          }`}
-                        >
-                          {s.displayName}: {exp.currency}{s.amount.toFixed(2)} {s.settled ? '✓' : ''}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 ))}
