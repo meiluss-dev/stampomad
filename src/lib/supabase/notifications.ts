@@ -16,7 +16,7 @@ export interface Notification {
 export async function loadNotifications(supabase: SupabaseClient, userId: string, limit = 30): Promise<Notification[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('*, actor:user_profiles!notifications_actor_id_fkey(display_name, avatar_url)')
+    .select('*, actor:user_profiles!notifications_actor_id_profiles_fkey(display_name, avatar_url)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);

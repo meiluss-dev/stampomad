@@ -6,7 +6,7 @@ import type { TripMember, TripExpense, ExpenseSplit, SharedItem, GroupInvite } f
 export async function loadTripMembers(supabase: SupabaseClient, tripId: number): Promise<TripMember[]> {
   const { data, error } = await supabase
     .from('trip_members')
-    .select('*, user_profiles!trip_members_user_id_fkey(username, display_name, avatar_url)')
+    .select('*, user_profiles!trip_members_user_id_profiles_fkey(username, display_name, avatar_url)')
     .eq('trip_id', tripId);
   if (error) { console.error('[Group] loadMembers error:', error); return []; }
   return (data || []).map((m: any) => ({
@@ -88,7 +88,7 @@ export async function makeGroupTrip(supabase: SupabaseClient, tripId: number, us
 export async function loadPendingInvites(supabase: SupabaseClient, userId: string): Promise<GroupInvite[]> {
   const { data, error } = await supabase
     .from('trip_members')
-    .select('*, trips!trip_members_trip_id_fkey(name, emoji, code), inviter:user_profiles!trip_members_invited_by_fkey(display_name, avatar_url)')
+    .select('*, trips!trip_members_trip_id_fkey(name, emoji, code), inviter:user_profiles!trip_members_invited_by_profiles_fkey(display_name, avatar_url)')
     .eq('user_id', userId)
     .eq('status', 'pending');
   if (error) { console.error('[Group] loadInvites error:', error); return []; }
