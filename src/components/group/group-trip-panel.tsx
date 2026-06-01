@@ -8,7 +8,7 @@ import {
   loadTripMembers, loadTripExpenses, loadSharedItems,
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
-  removeMember, disbandGroup,
+  removeMember, disbandGroup, makeGroupTrip,
 } from '@/lib/supabase/group-data';
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
@@ -54,6 +54,12 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
+
+    // Ensure owner is always a member
+    if (user) {
+      await makeGroupTrip(supabase, trip.id, user.id);
+    }
+
     const [m, e, i] = await Promise.all([
       loadTripMembers(supabase, trip.id),
       loadTripExpenses(supabase, trip.id),
@@ -63,7 +69,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
     setExpenses(e);
     setItems(i);
     setLoading(false);
-  }, [trip.id]);
+  }, [trip.id, user]);
 
   useEffect(() => { loadData(); trackView('group_trips'); }, [loadData]);
 
