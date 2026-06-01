@@ -167,14 +167,11 @@ export function NotificationBell() {
         : n.type === 'member_joined' ? 'members'
         : 'budget';
 
-      // Dispatch event for trips page to open the group panel
-      window.dispatchEvent(new CustomEvent('openGroupTrip', { detail: { tripId: n.tripId, tab } }));
       setOpen(false);
 
-      // Navigate to trips page if not already there
-      if (!window.location.pathname.includes('/trips')) {
-        window.location.href = `/trips?openGroup=${n.tripId}&tab=${tab}`;
-      }
+      // Always navigate to trips page with openGroup param
+      // This works whether already on /trips or not
+      window.location.href = `/trips?openGroup=${n.tripId}&tab=${tab}`;
     }
   }
 
