@@ -121,7 +121,7 @@ export async function loadPendingInvites(supabase: SupabaseClient, userId: strin
 export async function loadTripExpenses(supabase: SupabaseClient, tripId: number): Promise<TripExpense[]> {
   const { data: expenses, error } = await supabase
     .from('trip_expenses')
-    .select('*, user_profiles!trip_expenses_paid_by_fkey(display_name)')
+    .select('*, user_profiles!trip_expenses_paid_by_profiles_fkey(display_name)')
     .eq('trip_id', tripId)
     .order('created_at', { ascending: false });
   if (error) { console.error('[Group] loadExpenses error:', error); return []; }
@@ -131,7 +131,7 @@ export async function loadTripExpenses(supabase: SupabaseClient, tripId: number)
   if (expenseIds.length > 0) {
     const { data: splitsData } = await supabase
       .from('expense_splits')
-      .select('*, user_profiles!expense_splits_user_id_fkey(display_name)')
+      .select('*, user_profiles!expense_splits_user_id_profiles_fkey(display_name)')
       .in('expense_id', expenseIds);
     splits = splitsData || [];
   }
@@ -210,7 +210,7 @@ export async function settleExpenseSplit(supabase: SupabaseClient, expenseId: nu
 export async function loadSharedItems(supabase: SupabaseClient, tripId: number): Promise<SharedItem[]> {
   const { data, error } = await supabase
     .from('shared_items')
-    .select('*, assigned:user_profiles!shared_items_assigned_to_fkey(display_name), claimer:user_profiles!shared_items_claimed_by_fkey(display_name)')
+    .select('*, assigned:user_profiles!shared_items_assigned_to_profiles_fkey(display_name), claimer:user_profiles!shared_items_claimed_by_profiles_fkey(display_name)')
     .eq('trip_id', tripId)
     .order('created_at');
   if (error) { console.error('[Group] loadItems error:', error); return []; }
