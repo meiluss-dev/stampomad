@@ -27,6 +27,10 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
     const m = await loadTripMembers(supabase, trip.id);
     setMembers(m);
     setLoaded(true);
+    // Auto-fix: if trip has members but isn't marked as group, fix it
+    if (m.length > 0 && !trip.isGroup) {
+      await makeGroupTrip(supabase, trip.id, user!.id);
+    }
   }
 
   // Load members when modal opens
