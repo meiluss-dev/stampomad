@@ -122,3 +122,11 @@ export async function notifyItemClaimed(supabase: SupabaseClient, tripId: number
     { itemText }
   );
 }
+
+export async function notifyMessage(supabase: SupabaseClient, tripId: number, actorId: string, message: string, tripName: string) {
+  const preview = message.length > 60 ? message.slice(0, 60) + '…' : message;
+  await notifyTripMembers(supabase, tripId, actorId, 'chat_message',
+    `sent a message in ${tripName}: "${preview}"`,
+    { tripName, message: preview }
+  );
+}

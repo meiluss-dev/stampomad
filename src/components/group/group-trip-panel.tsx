@@ -12,7 +12,7 @@ import {
   loadTripMessages, sendTripMessage, deleteTripMessage,
   type TripMessage,
 } from '@/lib/supabase/group-data';
-import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
+import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed, notifyMessage } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
 import { trackView } from '@/lib/tracking';
 import { InviteModal } from '@/components/group/invite-modal';
@@ -237,12 +237,15 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
 
   async function handleSendMessage() {
     if (!user || !chatInput.trim()) return;
+    const msg = chatInput.trim();
     setSendingMsg(true);
     try {
       const supabase = createClient();
-      await sendTripMessage(supabase, trip.id, user.id, chatInput.trim());
+      await sendTripMessage(supabase, trip.id, user.id, msg);
       setChatInput('');
       await loadMessages();
+      // Notify other members (fire and forget)
+      notifyMessage(supabase, trip.id, user.id, msg, trip.name).catch(() => {});
     } catch {
       toast('Failed to send message', 'error');
     }

@@ -14,7 +14,27 @@ const TYPE_ICONS: Record<string, string> = {
   invite_declined: '❌',
   item_added: '📦',
   item_claimed: '🙋',
+  chat_message: '💬',
 };
+
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Two-tone chime: C5 then E5
+    [523.25, 659.25].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+    });
+  } catch {}
+}
 
 function timeAgo(date: string): string {
   const now = Date.now();
@@ -32,6 +52,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
+  const prevUnreadRef = useRef(-1);
   const ref = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -42,6 +63,11 @@ export function NotificationBell() {
       countUnread(supabase, user.id),
     ]);
     setNotifications(notifs);
+    // Play sound when new notifications arrive
+    if (count > prevUnreadRef.current && prevUnreadRef.current >= 0) {
+      playNotificationSound();
+    }
+    prevUnreadRef.current = count;
     setUnread(count);
   }, [user]);
 
