@@ -49,6 +49,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   const [showManage, setShowManage] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
+  const [groupTab, setGroupTab] = useState<'budget' | 'items' | 'chat' | 'members'>('budget');
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [offlineStatus, setOfflineStatus] = useState<'none' | 'downloading' | 'downloaded'>('none');
@@ -59,6 +60,31 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   // Check if trip is downloaded for offline
   useEffect(() => {
     checkDownloaded(t.id).then(yes => { if (yes) setOfflineStatus('downloaded'); });
+  }, [t.id]);
+
+  // Listen for openGroupTrip event from notification bell
+  useEffect(() => {
+    function handleOpenGroup(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (detail.tripId === t.id) {
+        setGroupTab(detail.tab || 'budget');
+        setGroupOpen(true);
+      }
+    }
+    window.addEventListener('openGroupTrip', handleOpenGroup);
+    return () => window.removeEventListener('openGroupTrip', handleOpenGroup);
+  }, [t.id]);
+
+  // Check URL params for openGroup (when navigating from another page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const openGroupId = params.get('openGroup');
+    if (openGroupId && Number(openGroupId) === t.id) {
+      setGroupTab((params.get('tab') as any) || 'budget');
+      setGroupOpen(true);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [t.id]);
 
   // Auto-rotate photos
@@ -336,7 +362,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
 
       <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} trip={t} />
       <BudgetModal open={budgetOpen} onOpenChange={setBudgetOpen} trip={t} />
-      {groupOpen && <GroupTripPanel trip={t} onClose={() => setGroupOpen(false)} />}
+      {groupOpen && <GroupTripPanel trip={t} onClose={() => setGroupOpen(false)} initialTab={groupTab} />}
       {lightboxIdx !== null && hasPhotos && (
         <PhotoLightbox photos={photos} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
       )}

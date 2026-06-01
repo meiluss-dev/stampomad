@@ -150,12 +150,32 @@ export function NotificationBell() {
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
-  async function handleMarkRead(n: Notification) {
-    if (n.read) return;
-    const supabase = createClient();
-    await markRead(supabase, n.id);
-    setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-    setUnread(prev => Math.max(0, prev - 1));
+  async function handleNotificationClick(n: Notification) {
+    // Mark as read
+    if (!n.read) {
+      const supabase = createClient();
+      await markRead(supabase, n.id);
+      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+      setUnread(prev => Math.max(0, prev - 1));
+    }
+
+    // Navigate based on type
+    if (n.tripId) {
+      const tab = n.type === 'chat_message' ? 'chat'
+        : n.type === 'expense_added' ? 'budget'
+        : n.type === 'item_added' || n.type === 'item_claimed' ? 'items'
+        : n.type === 'member_joined' ? 'members'
+        : 'budget';
+
+      // Dispatch event for trips page to open the group panel
+      window.dispatchEvent(new CustomEvent('openGroupTrip', { detail: { tripId: n.tripId, tab } }));
+      setOpen(false);
+
+      // Navigate to trips page if not already there
+      if (!window.location.pathname.includes('/trips')) {
+        window.location.href = `/trips?openGroup=${n.tripId}&tab=${tab}`;
+      }
+    }
   }
 
   async function handleMarkAllRead() {
@@ -206,7 +226,7 @@ export function NotificationBell() {
               notifications.map(n => (
                 <button
                   key={n.id}
-                  onClick={() => handleMarkRead(n)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`w-full flex items-start gap-3 px-4 py-3 text-left cursor-pointer transition-colors border-b border-white/[0.04] last:border-b-0 ${
                     n.read ? 'opacity-60 hover:opacity-80' : 'bg-gold/[0.03] hover:bg-gold/[0.06]'
                   }`}

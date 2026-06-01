@@ -30,10 +30,10 @@ const ITEM_CATEGORIES = ['Essentials', 'Shared gear', 'Food & drinks', 'Activiti
 
 type Tab = 'budget' | 'items' | 'chat' | 'members';
 
-export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => void }) {
+export function GroupTripPanel({ trip, onClose, initialTab }: { trip: Trip; onClose: () => void; initialTab?: 'budget' | 'items' | 'chat' | 'members' }) {
   const { user, updateTrip } = useStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<Tab>('budget');
+  const [tab, setTab] = useState<Tab>(initialTab || 'budget');
   const [members, setMembers] = useState<TripMember[]>([]);
   const [expenses, setExpenses] = useState<TripExpense[]>([]);
   const [items, setItems] = useState<SharedItem[]>([]);
