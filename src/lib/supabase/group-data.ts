@@ -66,13 +66,21 @@ export async function lookupUserByUsername(supabase: SupabaseClient, search: str
 
 export async function makeGroupTrip(supabase: SupabaseClient, tripId: number, userId: string) {
   // Mark trip as group + add owner as first member
-  await supabase.from('trips').update({ is_group: true }).eq('id', tripId);
-  await supabase.from('trip_members').upsert({
+  const { error: tripErr } = await supabase.from('trips').update({ is_group: true }).eq('id', tripId);
+  if (tripErr) {
+    console.error('[Group] makeGroupTrip update error:', tripErr);
+    throw new Error(`Failed to mark trip as group: ${tripErr.message}`);
+  }
+  const { error: memberErr } = await supabase.from('trip_members').upsert({
     trip_id: tripId,
     user_id: userId,
     role: 'owner',
     status: 'accepted',
-  });
+  }, { onConflict: 'trip_id,user_id' });
+  if (memberErr) {
+    console.error('[Group] makeGroupTrip upsert error:', memberErr);
+    throw new Error(`Failed to add owner as member: ${memberErr.message}`);
+  }
 }
 
 // ── Pending Invites for current user ──

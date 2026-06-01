@@ -83,6 +83,7 @@ export function InviteModal({ open, onOpenChange, trip }: { open: boolean; onOpe
       setFound(null);
       setUsername('');
     } catch (err: unknown) {
+      console.error('[Invite] Error:', err);
       const msg = err instanceof Error ? err.message : 'Failed to invite';
       toast(msg, 'error');
     }
