@@ -8,7 +8,7 @@ import {
   loadTripMembers, loadTripExpenses, loadSharedItems,
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
-  removeMember,
+  removeMember, disbandGroup,
 } from '@/lib/supabase/group-data';
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
@@ -28,7 +28,7 @@ const ITEM_CATEGORIES = ['Essentials', 'Shared gear', 'Food & drinks', 'Activiti
 type Tab = 'budget' | 'items' | 'members';
 
 export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => void }) {
-  const { user, deleteTrip } = useStore();
+  const { user } = useStore();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('budget');
   const [members, setMembers] = useState<TripMember[]>([]);
@@ -517,24 +517,26 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                 );
               })}
 
-              {/* Delete trip — owner only */}
+              {/* Disband group — owner only */}
               {members.find(m => m.userId === user?.id)?.role === 'owner' && (
                 <div className="mt-6 pt-4 border-t border-white/[0.06]">
                   <button
                     onClick={async () => {
-                      if (!confirm(`Delete "${trip.name}" and remove all members? This cannot be undone.`)) return;
+                      if (!confirm(`Disband this group? All members will be removed and "${trip.name}" becomes a regular trip.`)) return;
                       try {
-                        await deleteTrip(trip.id);
-                        toast('Trip deleted');
+                        const supabase = createClient();
+                        await disbandGroup(supabase, trip.id);
+                        toast('Group disbanded — trip is now private');
                         onClose();
                       } catch {
-                        toast('Failed to delete trip', 'error');
+                        toast('Failed to disband group', 'error');
                       }
                     }}
                     className="w-full py-2.5 rounded-xl border border-stamp-red/30 text-stamp-red text-sm hover:bg-stamp-red/10 transition-colors cursor-pointer"
                   >
-                    🗑️ Delete trip
+                    👥 Disband group
                   </button>
+                  <p className="text-[11px] text-text-muted text-center mt-2">Removes all members. Your trip stays.</p>
                 </div>
               )}
             </div>

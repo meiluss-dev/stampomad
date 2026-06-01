@@ -85,6 +85,15 @@ export async function makeGroupTrip(supabase: SupabaseClient, tripId: number, us
   }
 }
 
+export async function disbandGroup(supabase: SupabaseClient, tripId: number) {
+  // Remove all members
+  const { error: delErr } = await supabase.from('trip_members').delete().eq('trip_id', tripId);
+  if (delErr) throw delErr;
+  // Mark trip as non-group
+  const { error: updErr } = await supabase.from('trips').update({ is_group: false }).eq('id', tripId);
+  if (updErr) throw updErr;
+}
+
 // ── Pending Invites for current user ──
 
 export async function loadPendingInvites(supabase: SupabaseClient, userId: string): Promise<GroupInvite[]> {
