@@ -13,6 +13,7 @@ import {
 import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
 import { trackView } from '@/lib/tracking';
+import { InviteModal } from '@/components/group/invite-modal';
 
 const EXPENSE_CATEGORIES = [
   { key: 'food', label: '🍽️ Food', color: 'gold' },
@@ -35,6 +36,7 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
   const [expenses, setExpenses] = useState<TripExpense[]>([]);
   const [items, setItems] = useState<SharedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   // Add expense form
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -464,6 +466,21 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
           {/* ─── Members Tab ─── */}
           {tab === 'members' && (
             <div className="space-y-2">
+              {/* Invite button */}
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="w-full py-2.5 rounded-xl border border-dashed border-gold/30 text-gold text-sm hover:bg-gold/5 transition-colors cursor-pointer"
+              >
+                + Invite member
+              </button>
+
+              {members.length === 0 && (
+                <div className="text-center py-6 text-text-muted">
+                  <div className="text-2xl mb-2">👥</div>
+                  <p className="text-sm">No members yet. Invite someone to get started!</p>
+                </div>
+              )}
+
               {members.map(m => {
                 const isOwner = members.find(x => x.userId === user?.id)?.role === 'owner';
                 const isSelf = m.userId === user?.id;
@@ -517,8 +534,8 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
                 );
               })}
 
-              {/* Disband group — owner only */}
-              {members.find(m => m.userId === user?.id)?.role === 'owner' && (
+              {/* Disband group — owner only (show even with 0 members so they can un-group) */}
+              {(members.find(m => m.userId === user?.id)?.role === 'owner' || members.length === 0) && (
                 <div className="mt-6 pt-4 border-t border-white/[0.06]">
                   <button
                     onClick={async () => {
@@ -543,6 +560,10 @@ export function GroupTripPanel({ trip, onClose }: { trip: Trip; onClose: () => v
           )}
         </div>
       </div>
+
+      {inviteOpen && (
+        <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} trip={trip} />
+      )}
     </div>
   );
 }
