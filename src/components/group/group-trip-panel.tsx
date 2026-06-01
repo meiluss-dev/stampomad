@@ -9,10 +9,10 @@ import {
   addExpense, deleteExpense, settleExpenseSplit,
   addSharedItem, claimSharedItem, toggleSharedItem, deleteSharedItem,
   removeMember, disbandGroup, makeGroupTrip,
-  loadTripMessages, sendTripMessage, deleteTripMessage,
+  loadTripMessages, deleteTripMessage,
   type TripMessage,
 } from '@/lib/supabase/group-data';
-import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed, notifyMessage } from '@/lib/supabase/notifications';
+import { notifyExpenseAdded, notifyItemAdded, notifyItemClaimed } from '@/lib/supabase/notifications';
 import type { Trip, TripMember, TripExpense, SharedItem } from '@/types';
 import { trackView } from '@/lib/tracking';
 import { InviteModal } from '@/components/group/invite-modal';
@@ -240,12 +240,15 @@ export function GroupTripPanel({ trip, onClose, initialTab }: { trip: Trip; onCl
     const msg = chatInput.trim();
     setSendingMsg(true);
     try {
-      const supabase = createClient();
-      await sendTripMessage(supabase, trip.id, user.id, msg);
+      // Send message + notifications via API (bypasses RLS for notifications)
+      const res = await fetch('/api/chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId: trip.id, message: msg }),
+      });
+      if (!res.ok) throw new Error('Failed to send');
       setChatInput('');
       await loadMessages();
-      // Notify other members (fire and forget)
-      notifyMessage(supabase, trip.id, user.id, msg, trip.name).catch(() => {});
     } catch {
       toast('Failed to send message', 'error');
     }
