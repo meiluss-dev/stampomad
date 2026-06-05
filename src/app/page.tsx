@@ -132,7 +132,7 @@ export default async function LandingPage() {
             {
               icon: '👥',
               title: 'Group Trips',
-              desc: 'Invite friends to join your trips. Split expenses, track shared budgets, and manage a group packing list together.',
+              desc: 'Invite friends to join your trips. Split expenses Splitwise-style, chat in real time, and manage a shared packing list together.',
             },
             {
               icon: '📔',
@@ -194,6 +194,31 @@ export default async function LandingPage() {
               title: 'Map Search',
               desc: 'Search for any country or city and zoom right to it. Quickly find and pin places you\'ve visited.',
             },
+            {
+              icon: '💬',
+              title: 'Group Chat',
+              desc: 'Chat with your travel group right inside the trip. Get notifications with sound when new messages arrive.',
+            },
+            {
+              icon: '💰',
+              title: 'Splitwise-Style Budget',
+              desc: 'Track group expenses, choose who paid, split equally or custom. See who owes whom and settle up with one tap.',
+            },
+            {
+              icon: '⭐',
+              title: 'Trip Reviews',
+              desc: 'Rate and review trips you\'ve visited. See what other travelers think before planning your next adventure.',
+            },
+            {
+              icon: '📱',
+              title: 'Offline Mode',
+              desc: 'Download trips for offline access — photos, journals, and map tiles. Write entries offline and auto-sync when back online.',
+            },
+            {
+              icon: '🔔',
+              title: 'Smart Notifications',
+              desc: 'Get notified when friends join your trip, add expenses, send messages, or claim shared items. With sound alerts.',
+            },
           ].map(f => (
             <div key={f.title} className="bg-bg2 border border-white/[0.06] rounded-2xl p-6 hover:border-white/[0.12] transition-all group">
               <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">{f.icon}</div>
@@ -219,7 +244,7 @@ export default async function LandingPage() {
               {
                 step: '1',
                 title: 'Sign up for free',
-                desc: 'Create your account with Google or email. No credit card needed, ever.',
+                desc: 'Create your account with Google or email. No credit card needed.',
               },
               {
                 step: '2',
