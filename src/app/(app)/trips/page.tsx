@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { TripCard } from '@/components/trips/trip-card';
 import { TripModal } from '@/components/trips/trip-modal';
+import { TripGeneratorModal } from '@/components/trips/trip-generator';
 import { PackingListModal } from '@/components/trips/packing-list';
 import { RouteMapOverlay } from '@/components/map/route-map-overlay';
 import { useToast } from '@/components/ui/toast';
@@ -30,6 +31,7 @@ export default function TripsPage() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const [modalOpen, setModalOpen] = useState(false);
+  const [generatorOpen, setGeneratorOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [routeTrip, setRouteTrip] = useState<Trip | null>(null);
   const [packingTrip, setPackingTrip] = useState<Trip | null>(null);
@@ -103,9 +105,14 @@ export default function TripsPage() {
           <div className="text-xs text-text-muted uppercase tracking-[2px] mb-1">{t('trips_sub')}</div>
           <h1 className="text-[26px] sm:text-[32px]">{t('trips_title')}</h1>
         </div>
-        <button onClick={openNew} className="bg-gold text-bg px-4 sm:px-5 py-2 sm:py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 hover:-translate-y-px transition-all shrink-0">
-          {t('btn_add_trip')}
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button onClick={() => setGeneratorOpen(true)} className="bg-white/[0.06] border border-white/[0.1] text-text px-3 sm:px-4 py-2 sm:py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:bg-white/[0.1] hover:-translate-y-px transition-all" title="Generate trip from travel documents">
+            📄 Scan Docs
+          </button>
+          <button onClick={openNew} className="bg-gold text-bg px-4 sm:px-5 py-2 sm:py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:opacity-85 hover:-translate-y-px transition-all">
+            {t('btn_add_trip')}
+          </button>
+        </div>
       </div>
 
       {totalReal === 0 ? (
@@ -113,9 +120,14 @@ export default function TripsPage() {
           <div className="text-5xl mb-4">🗺️</div>
           <div className="font-[family-name:var(--font-playfair)] text-[22px] text-text mb-2">No trips yet</div>
           <div className="text-sm mb-5">Start logging your adventures — dates, photos, routes & journal entries</div>
-          <button onClick={openNew} className="bg-gold text-bg px-5 py-2.5 rounded-[20px] font-medium text-sm cursor-pointer">
-            + Add your first trip
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => setGeneratorOpen(true)} className="bg-white/[0.06] border border-white/[0.1] text-text px-5 py-2.5 rounded-[20px] font-medium text-sm cursor-pointer hover:bg-white/[0.1] transition-all">
+              📄 Scan Travel Docs
+            </button>
+            <button onClick={openNew} className="bg-gold text-bg px-5 py-2.5 rounded-[20px] font-medium text-sm cursor-pointer">
+              + Add your first trip
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -175,6 +187,7 @@ export default function TripsPage() {
       )}
 
       <TripModal open={modalOpen} onOpenChange={setModalOpen} trip={editTrip} />
+      <TripGeneratorModal open={generatorOpen} onOpenChange={setGeneratorOpen} />
       {packingTrip && <PackingListModal open={!!packingTrip} onOpenChange={() => setPackingTrip(null)} tripId={packingTrip.id} tripName={`${packingTrip.emoji} ${packingTrip.name}`} />}
       {routeTrip && <RouteMapOverlay trip={routeTrip} open={!!routeTrip} onClose={() => setRouteTrip(null)} />}
     </div>
