@@ -62,6 +62,23 @@ export async function GET(req: NextRequest) {
 
   const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
+  // Fetch first photo URL for each published trip
+  const tripIds = (publishedTrips || []).map(t => t.id);
+  const { data: photoRows } = tripIds.length > 0
+    ? await supabase
+        .from('trip_photos')
+        .select('trip_id, photo_url')
+        .in('trip_id', tripIds)
+        .not('photo_url', 'is', null)
+    : { data: [] };
+
+  const photoMap = new Map<number, string>();
+  for (const p of (photoRows || [])) {
+    if (p.photo_url && !photoMap.has(p.trip_id)) {
+      photoMap.set(p.trip_id, p.photo_url);
+    }
+  }
+
   const trips = (publishedTrips || []).map(t => {
     const profile = profileMap.get(t.user_id);
     return {
@@ -77,6 +94,7 @@ export async function GET(req: NextRequest) {
       username: profile?.username || null,
       displayName: profile?.display_name || null,
       avatarUrl: profile?.avatar_url || null,
+      coverPhoto: photoMap.get(t.id) || null,
     };
   });
 

@@ -19,6 +19,7 @@ interface Trip {
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  coverPhoto: string | null;
 }
 
 interface LeaderboardEntry {
@@ -78,16 +79,24 @@ function TripCard({ trip }: { trip: Trip }) {
       href={href}
       className="group bg-bg2 border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/30 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
     >
-      {/* Gradient header */}
+      {/* Cover image or gradient fallback */}
       <div className="h-[140px] relative overflow-hidden">
-        <div
-          className="w-full h-full flex items-center justify-center"
-          style={{
-            background: `linear-gradient(135deg, ${CONTINENT_GRADIENTS[trip.continent] || '#3a3a1e, #87872d'})`,
-          }}
-        >
-          <span className="text-5xl opacity-80 group-hover:scale-110 transition-transform">{trip.emoji}</span>
-        </div>
+        {trip.coverPhoto ? (
+          <img
+            src={trip.coverPhoto}
+            alt={trip.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${CONTINENT_GRADIENTS[trip.continent] || '#3a3a1e, #87872d'})`,
+            }}
+          >
+            <span className="text-5xl opacity-80 group-hover:scale-110 transition-transform">{trip.emoji}</span>
+          </div>
+        )}
         <div className="absolute top-3 left-3 bg-bg/80 backdrop-blur-sm border border-white/[0.1] rounded-lg px-2.5 py-1 text-[11px] font-medium">
           {trip.emoji} {country}
         </div>
