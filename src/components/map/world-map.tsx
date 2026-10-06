@@ -8,6 +8,12 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import type { Topology } from 'topojson-specification';
 
+function isFutureTrip(t: { start?: string }) {
+  if (!t.start) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return t.start > today;
+}
+
 interface ContextMenu {
   x: number;
   y: number;
@@ -37,7 +43,11 @@ export function WorldMap() {
 
   const updateColors = useCallback(() => {
     if (!mapLoadedRef.current) return;
-    const vc = new Set([...visitedCountries, ...trips.filter(t => !t.quickPin).map(t => t.code)]);
+    const pastTrips = trips.filter(t => !t.quickPin && !isFutureTrip(t));
+    const futureTrips = trips.filter(t => !t.quickPin && isFutureTrip(t));
+    const vc = new Set([...visitedCountries, ...pastTrips.map(t => t.code)]);
+    const futureCodes = new Set(futureTrips.map(t => t.code));
+    const wl = new Set([...wishlist, ...futureCodes]);
     const lc = new Set(livedPlaces.map(l => l.code));
     const hc = homebase?.code || null;
 
@@ -48,7 +58,7 @@ export function WorldMap() {
         el.classed('homebase', !!(a && a === hc));
         el.classed('lived-in', !!(a && a !== hc && lc.has(a)));
         el.classed('visited', !!(a && a !== hc && !lc.has(a) && vc.has(a)));
-        el.classed('wishlist', !!(a && a !== hc && !lc.has(a) && !vc.has(a) && wishlist.has(a)));
+        el.classed('wishlist', !!(a && a !== hc && !lc.has(a) && !vc.has(a) && wl.has(a)));
       });
   }, [trips, visitedCountries, homebase, livedPlaces, wishlist]);
 
@@ -256,17 +266,19 @@ export function WorldMap() {
   function getStatus(code: string) {
     if (homebase?.code === code) return { label: '🏠 Home', cls: 'text-stamp-red' };
     if (livedPlaces.some(l => l.code === code)) return { label: 'Lived', cls: 'text-teal' };
-    if (trips.some(t => t.code === code)) return { label: 'Visited', cls: 'text-gold' };
+    if (trips.some(t => t.code === code && !isFutureTrip(t))) return { label: 'Visited', cls: 'text-gold' };
+    if (trips.some(t => t.code === code && isFutureTrip(t))) return { label: 'Upcoming', cls: 'text-stamp-blue' };
     return { label: 'Not visited', cls: 'text-text-muted' };
   }
 
   const allCodes = new Set([
     ...visitedCountries,
-    ...trips.filter(t => !t.quickPin).map(t => t.code),
+    ...trips.filter(t => !t.quickPin && !isFutureTrip(t)).map(t => t.code),
     ...livedPlaces.map(l => l.code),
     ...(homebase ? [homebase.code] : []),
   ]);
-  const wishlistCount = [...wishlist].filter(c => !allCodes.has(c)).length;
+  const upcomingCodes = new Set(trips.filter(t => !t.quickPin && isFutureTrip(t)).map(t => t.code));
+  const wishlistCount = [...new Set([...wishlist, ...upcomingCodes])].filter(c => !allCodes.has(c)).length;
 
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl sm:rounded-[20px] p-3 sm:p-6 mb-7">
@@ -389,8 +401,9 @@ export function WorldMap() {
       {/* Context menu (mobile long-press + desktop right-click) */}
       {contextMenu && (() => {
         const code = contextMenu.code;
-        const isVisited = visitedCountries.has(code) || trips.some(t => t.code === code);
-        const isWish = wishlist.has(code);
+        const isVisited = visitedCountries.has(code) || trips.some(t => t.code === code && !isFutureTrip(t));
+        const isUpcoming = trips.some(t => t.code === code && isFutureTrip(t));
+        const isWish = wishlist.has(code) || isUpcoming;
         const isHome = homebase?.code === code;
         const isLived = livedPlaces.some(l => l.code === code);
 
@@ -413,7 +426,7 @@ export function WorldMap() {
               <div className="px-4 py-3 border-b border-white/[0.06]">
                 <div className="font-medium text-sm">{countryFlag(code)} {contextMenu.name}</div>
                 <div className="text-[11px] text-text-muted mt-0.5">
-                  {isHome ? '🏠 Home base' : isLived ? '🏡 Lived here' : isVisited ? '📍 Visited' : isWish ? '⭐ Wish list' : 'Not explored'}
+                  {isHome ? '🏠 Home base' : isLived ? '🏡 Lived here' : isVisited ? '📍 Visited' : isUpcoming ? '✈️ Upcoming trip' : isWish ? '⭐ Wish list' : 'Not explored'}
                 </div>
               </div>
 
