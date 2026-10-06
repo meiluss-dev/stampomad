@@ -17,6 +17,7 @@ export interface Trip {
   rating?: number;
   published?: boolean;
   isGroup?: boolean;
+  transitCountries?: string[];
   journal: JournalEntry[];
 }
 

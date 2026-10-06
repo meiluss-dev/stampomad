@@ -28,7 +28,7 @@ export function WorldMap() {
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
 
-  const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry, wishlist, toggleWishlist } = useStore();
+  const { trips, visitedCountries, homebase, livedPlaces, toggleVisitedCountry, wishlist, toggleWishlist, countTransitAsVisited, setCountTransitAsVisited } = useStore();
   const { t } = useLang();
   const toggleRef = useRef(toggleVisitedCountry);
   toggleRef.current = toggleVisitedCountry;
@@ -45,7 +45,10 @@ export function WorldMap() {
     if (!mapLoadedRef.current) return;
     const pastTrips = trips.filter(t => !t.quickPin && !isFutureTrip(t));
     const futureTrips = trips.filter(t => !t.quickPin && isFutureTrip(t));
+    const transitCodes = new Set<string>();
+    trips.filter(t => !t.quickPin).forEach(t => t.transitCountries?.forEach(c => transitCodes.add(c)));
     const vc = new Set([...visitedCountries, ...pastTrips.map(t => t.code)]);
+    if (countTransitAsVisited) transitCodes.forEach(c => vc.add(c));
     const futureCodes = new Set(futureTrips.map(t => t.code));
     const wl = new Set([...wishlist, ...futureCodes]);
     const lc = new Set(livedPlaces.map(l => l.code));
@@ -58,9 +61,10 @@ export function WorldMap() {
         el.classed('homebase', !!(a && a === hc));
         el.classed('lived-in', !!(a && a !== hc && lc.has(a)));
         el.classed('visited', !!(a && a !== hc && !lc.has(a) && vc.has(a)));
-        el.classed('wishlist', !!(a && a !== hc && !lc.has(a) && !vc.has(a) && wl.has(a)));
+        el.classed('transit', !!(a && !vc.has(a) && !lc.has(a) && a !== hc && transitCodes.has(a) && !countTransitAsVisited));
+        el.classed('wishlist', !!(a && a !== hc && !lc.has(a) && !vc.has(a) && !transitCodes.has(a) && wl.has(a)));
       });
-  }, [trips, visitedCountries, homebase, livedPlaces, wishlist]);
+  }, [trips, visitedCountries, homebase, livedPlaces, wishlist, countTransitAsVisited]);
 
   useEffect(() => {
     if (mapLoadedRef.current) {
@@ -263,10 +267,15 @@ export function WorldMap() {
     return <>{text.slice(0, idx)}<mark className="bg-gold/30 text-text rounded-sm">{text.slice(idx, idx + q.length)}</mark>{text.slice(idx + q.length)}</>;
   }
 
+  const allTransitCodes = new Set<string>();
+  trips.filter(t => !t.quickPin).forEach(t => t.transitCountries?.forEach(c => allTransitCodes.add(c)));
+
   function getStatus(code: string) {
     if (homebase?.code === code) return { label: '🏠 Home', cls: 'text-stamp-red' };
     if (livedPlaces.some(l => l.code === code)) return { label: 'Lived', cls: 'text-teal' };
     if (trips.some(t => t.code === code && !isFutureTrip(t))) return { label: 'Visited', cls: 'text-gold' };
+    if (countTransitAsVisited && allTransitCodes.has(code)) return { label: 'Visited', cls: 'text-gold' };
+    if (allTransitCodes.has(code)) return { label: 'Transit', cls: 'text-gold/60' };
     if (trips.some(t => t.code === code && isFutureTrip(t))) return { label: 'Upcoming', cls: 'text-stamp-blue' };
     return { label: 'Not visited', cls: 'text-text-muted' };
   }
@@ -274,10 +283,12 @@ export function WorldMap() {
   const allCodes = new Set([
     ...visitedCountries,
     ...trips.filter(t => !t.quickPin && !isFutureTrip(t)).map(t => t.code),
+    ...(countTransitAsVisited ? allTransitCodes : []),
     ...livedPlaces.map(l => l.code),
     ...(homebase ? [homebase.code] : []),
   ]);
   const upcomingCodes = new Set(trips.filter(t => !t.quickPin && isFutureTrip(t)).map(t => t.code));
+  const transitCount = countTransitAsVisited ? 0 : [...allTransitCodes].filter(c => !allCodes.has(c)).length;
   const wishlistCount = [...new Set([...wishlist, ...upcomingCodes])].filter(c => !allCodes.has(c)).length;
 
   return (
@@ -289,7 +300,7 @@ export function WorldMap() {
         </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-text-muted italic hidden sm:inline">
-            {allCodes.size === 0 ? 'Right-click to pin, double-click to wish list' : `${allCodes.size} visited${wishlistCount > 0 ? ` · ${wishlistCount} on wish list` : ''}`}
+            {allCodes.size === 0 ? 'Right-click to pin, double-click to wish list' : `${allCodes.size} visited${transitCount > 0 ? ` · ${transitCount} transit` : ''}${wishlistCount > 0 ? ` · ${wishlistCount} on wish list` : ''}`}
           </span>
           <div className="flex gap-1.5 items-center">
             <button onClick={() => handleZoom(1.5)} className="w-[30px] h-[30px] rounded-lg bg-bg4 border border-white/[0.08] text-text flex items-center justify-center cursor-pointer hover:bg-gold hover:text-bg hover:border-gold transition-all text-base">+</button>
@@ -381,6 +392,13 @@ export function WorldMap() {
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <div className="w-3 h-3 rounded-sm bg-gold" /> {t('map_legend_visited')}
         </div>
+        <button
+          onClick={() => setCountTransitAsVisited(!countTransitAsVisited)}
+          className="flex items-center gap-1.5 text-[11px] text-text-muted cursor-pointer hover:text-text transition-colors bg-transparent border-none p-0"
+          title={countTransitAsVisited ? 'Transit countries count as visited — click to change' : 'Transit countries shown separately — click to count as visited'}
+        >
+          <div className={`w-3 h-3 rounded-sm ${countTransitAsVisited ? 'bg-gold' : 'bg-gold opacity-35'}`} style={countTransitAsVisited ? {} : { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px)' }} /> Transit {countTransitAsVisited ? '= visited' : ''}
+        </button>
         <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <div className="w-3 h-3 rounded-sm bg-stamp-blue opacity-55" /> {t('map_legend_wishlist')}
         </div>
@@ -401,7 +419,8 @@ export function WorldMap() {
       {/* Context menu (mobile long-press + desktop right-click) */}
       {contextMenu && (() => {
         const code = contextMenu.code;
-        const isVisited = visitedCountries.has(code) || trips.some(t => t.code === code && !isFutureTrip(t));
+        const isVisited = visitedCountries.has(code) || trips.some(t => t.code === code && !isFutureTrip(t)) || (countTransitAsVisited && allTransitCodes.has(code));
+        const isTransit = allTransitCodes.has(code) && !isVisited;
         const isUpcoming = trips.some(t => t.code === code && isFutureTrip(t));
         const isWish = wishlist.has(code) || isUpcoming;
         const isHome = homebase?.code === code;
@@ -426,7 +445,7 @@ export function WorldMap() {
               <div className="px-4 py-3 border-b border-white/[0.06]">
                 <div className="font-medium text-sm">{countryFlag(code)} {contextMenu.name}</div>
                 <div className="text-[11px] text-text-muted mt-0.5">
-                  {isHome ? '🏠 Home base' : isLived ? '🏡 Lived here' : isVisited ? '📍 Visited' : isUpcoming ? '✈️ Upcoming trip' : isWish ? '⭐ Wish list' : 'Not explored'}
+                  {isHome ? '🏠 Home base' : isLived ? '🏡 Lived here' : isVisited ? '📍 Visited' : isTransit ? '🔄 Transit' : isUpcoming ? '✈️ Upcoming trip' : isWish ? '⭐ Wish list' : 'Not explored'}
                 </div>
               </div>
 

@@ -36,6 +36,7 @@ interface StoreContextType {
   profile: UserProfile | null;
   packingLists: Record<number, PackingList>;
   wishlist: Set<string>;
+  countTransitAsVisited: boolean;
 
   addTrip: (trip: Omit<Trip, 'id' | 'journal'>) => Promise<Trip>;
   updateTrip: (trip: Trip) => Promise<void>;
@@ -62,6 +63,7 @@ interface StoreContextType {
   toggleTripPublished: (tripId: number, published: boolean) => Promise<void>;
   savePackingList: (tripId: number, list: PackingList) => Promise<void>;
   toggleWishlist: (code: string) => Promise<void>;
+  setCountTransitAsVisited: (val: boolean) => Promise<void>;
 
   pendingOps: number;
   isOffline: boolean;
@@ -92,6 +94,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [packingLists, setPackingLists] = useState<Record<number, PackingList>>({});
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [countTransitAsVisited, setCountTransitState] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pendingOps, setPendingOps] = useState(0);
   const [offline, setOffline] = useState(false);
@@ -195,6 +198,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         else if (process.env.NEXT_PUBLIC_MAPBOX_TOKEN) setMapboxTokenState(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
         if (settings.anthropicKey) setAnthropicKeyState(settings.anthropicKey);
         if (settings.wishlist?.length) setWishlist(new Set(settings.wishlist));
+        if (settings.countTransitAsVisited) setCountTransitState(true);
       } else {
         setClocksState(defaultClocks);
       }
@@ -261,12 +265,12 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     };
   }, [user]);
 
-  const settingsRef = useRef({ homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist });
-  settingsRef.current = { homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist };
+  const settingsRef = useRef({ homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist, countTransitAsVisited });
+  settingsRef.current = { homebase, livedPlaces, clocks, mapboxToken, anthropicKey, wishlist, countTransitAsVisited };
 
   const persistSettings = useCallback(async (overrides: Partial<{
     homebase: Homebase | null; livedPlaces: LivedPlace[]; clocks: ClockEntry[];
-    mapboxToken: string; anthropicKey: string; wishlist: Set<string>;
+    mapboxToken: string; anthropicKey: string; wishlist: Set<string>; countTransitAsVisited: boolean;
   }> = {}) => {
     if (!user) return;
     const s = settingsRef.current;
@@ -280,6 +284,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         mapboxToken: overrides.mapboxToken !== undefined ? overrides.mapboxToken : s.mapboxToken,
         anthropicKey: overrides.anthropicKey !== undefined ? overrides.anthropicKey : s.anthropicKey,
         wishlist: [...(overrides.wishlist !== undefined ? overrides.wishlist : s.wishlist)],
+        countTransitAsVisited: overrides.countTransitAsVisited !== undefined ? overrides.countTransitAsVisited : s.countTransitAsVisited,
       });
     } catch (err) {
       setSaveError('Failed to save settings. Your changes may be lost on reload.');
@@ -489,6 +494,11 @@ export function StoreProvider({ children, initialUser }: { children: React.React
     await persistSettings({ wishlist: next });
   }, [wishlist, persistSettings]);
 
+  const setCountTransitAsVisitedAction = useCallback(async (val: boolean) => {
+    setCountTransitState(val);
+    await persistSettings({ countTransitAsVisited: val });
+  }, [persistSettings]);
+
   const savePackingListAction = useCallback(async (tripId: number, list: PackingList) => {
     setPackingLists(prev => ({ ...prev, [tripId]: list }));
     if (user) await savePackingListsToSupabase(supabase.current, user.id, tripId, list);
@@ -516,7 +526,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
   return (
     <StoreContext.Provider value={{
       user, loading, saveError, clearSaveError, trips, visitedCountries, homebase, livedPlaces,
-      routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile, packingLists, wishlist,
+      routes, tripPhotos, clocks, mapboxToken, anthropicKey, profile, packingLists, wishlist, countTransitAsVisited,
       addTrip, updateTrip, deleteTrip, toggleVisitedCountry,
       addJournalEntry, updateJournalEntry, deleteJournalEntry: deleteJournalEntryAction,
       setHomebase, setLivedPlaces: setLivedPlacesAction,
@@ -529,6 +539,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
       toggleTripPublished: toggleTripPublishedAction,
       savePackingList: savePackingListAction,
       toggleWishlist: toggleWishlistAction,
+      setCountTransitAsVisited: setCountTransitAsVisitedAction,
       pendingOps,
       isOffline: offline,
       signOut: signOutAction,

@@ -52,6 +52,8 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
   const [travelStyle, setTravelStyle] = useState('');
   const [rating, setRating] = useState(0);
   const [published, setPublished] = useState(false);
+  const [transitCountries, setTransitCountries] = useState<string[]>([]);
+  const [transitInput, setTransitInput] = useState('');
 
   // Scanner state
   const [scanStep, setScanStep] = useState<ScanStep>('idle');
@@ -78,12 +80,15 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       setTravelStyle(trip.travelStyle || '');
       setRating(trip.rating || 0);
       setPublished(trip.published || false);
+      setTransitCountries(trip.transitCountries || []);
+      setTransitInput('');
       setScanStep('idle');
     } else if (open) {
       setName(''); setEmoji('✈️'); setCountry(''); setFromCountry('');
       setFromCity(''); setToCity('');
       setStart(''); setEnd(''); setCities(''); setNotes('');
       setTravelStyle(''); setRating(0); setPublished(false);
+      setTransitCountries([]); setTransitInput('');
       setScanStep('idle'); setScanImages([]); setScanPreviews([]); setScanResults([]);
       if (homebase) {
         setFromCountry(`${homebase.code}|${homebase.continent}`);
@@ -211,13 +216,13 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       : Math.max(1, Math.round((Date.now() - new Date(start).getTime()) / 864e5) + 1);
 
     if (trip) {
-      await updateTrip({ ...trip, name, code, continent, emoji, start, end: endDate, days, cities, notes, fromCode, fromCity, toCity, travelStyle, rating });
+      await updateTrip({ ...trip, name, code, continent, emoji, start, end: endDate, days, cities, notes, fromCode, fromCity, toCity, travelStyle, rating, transitCountries });
       if (published !== (trip.published || false)) {
         await toggleTripPublished(trip.id, published);
       }
       toast(published ? 'Trip updated & published to Explore!' : 'Trip updated!');
     } else {
-      const newTrip = await addTrip({ name, code, continent, emoji, start, end: endDate, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, rating });
+      const newTrip = await addTrip({ name, code, continent, emoji, start, end: endDate, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, rating, transitCountries });
       if (published && newTrip?.id) {
         await toggleTripPublished(newTrip.id, true);
         toast('Trip added & published to Explore! 🌍');
@@ -412,6 +417,37 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
                   <CountrySelect value={country} onChange={setCountry} placeholder="Country..." />
                   <Input value={toCity} onChange={e => setToCity(e.target.value)} placeholder="City (e.g. Catania)" className="bg-bg3 border-white/[0.08] text-text" />
                 </div>
+              </div>
+
+              {/* Transit countries */}
+              <div className="space-y-2">
+                <label className="text-[11px] text-text-muted uppercase tracking-wider block">Transit / layover countries <span className="normal-case tracking-normal opacity-60">(optional)</span></label>
+                {transitCountries.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {transitCountries.map(code => (
+                      <span key={code} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-bg3 border border-white/[0.08] text-[12px]">
+                        {countryFlag(code)} {countryNames[code] || code}
+                        <button
+                          type="button"
+                          onClick={() => setTransitCountries(prev => prev.filter(c => c !== code))}
+                          className="text-text-muted hover:text-text text-[10px] cursor-pointer ml-0.5"
+                        >✕</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <CountrySelect
+                  value={transitInput}
+                  onChange={(val) => {
+                    if (!val) return;
+                    const code = val.split('|')[0];
+                    if (code && !transitCountries.includes(code)) {
+                      setTransitCountries(prev => [...prev, code]);
+                    }
+                    setTransitInput('');
+                  }}
+                  placeholder="Add transit country..."
+                />
               </div>
 
               {/* Dates */}

@@ -282,6 +282,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       <div className="p-4">
         <div className="text-[11px] text-gold uppercase tracking-wider mb-1">
           {t.fromCode ? `${countryFlag(t.fromCode)} → ` : ''}
+          {t.transitCountries?.length ? t.transitCountries.map(c => `${countryFlag(c)} →`).join(' ') + ' ' : ''}
           {countryFlag(t.code)} {t.code}
           {t.continent ? ` · ${t.continent}` : ''}
         </div>

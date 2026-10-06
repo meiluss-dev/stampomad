@@ -30,6 +30,7 @@ export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: st
     rating: t.rating || 0,
     published: t.published || false,
     isGroup: t.is_group || false,
+    transitCountries: t.transit_countries || [],
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
       .map(j => ({ id: j.id, date: j.date, time: j.time, title: j.title, text: j.body }))
@@ -50,6 +51,7 @@ export async function loadSettingsFromSupabase(supabase: SupabaseClient, userId:
     mapboxToken: data.mapbox_token || '',
     anthropicKey: data.anthropic_key || '',
     wishlist: (data.wishlist || []) as string[],
+    countTransitAsVisited: data.count_transit_as_visited || false,
   };
 }
 
@@ -110,6 +112,7 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
     from_city: trip.fromCity || '', to_city: trip.toCity || '',
     travel_style: trip.travelStyle || '', rating: trip.rating || 0,
     published: trip.published || false,
+    transit_countries: trip.transitCountries || [],
   });
   if (error) {
     console.error('[Stampomad] saveTrip error:', error);
@@ -146,6 +149,7 @@ export async function saveSettingsToSupabase(
     mapboxToken: string;
     anthropicKey: string;
     wishlist?: string[];
+    countTransitAsVisited?: boolean;
   }
 ) {
   const { error } = await supabase.from('user_settings').upsert({
@@ -158,6 +162,7 @@ export async function saveSettingsToSupabase(
     mapbox_token: settings.mapboxToken || null,
     anthropic_key: settings.anthropicKey || null,
     wishlist: settings.wishlist || [],
+    count_transit_as_visited: settings.countTransitAsVisited ?? false,
     updated_at: new Date().toISOString(),
   });
   if (error) {
@@ -365,6 +370,7 @@ export async function loadPublicTrips(supabase: SupabaseClient, userId: string):
     travelStyle: t.travel_style || '',
     rating: t.rating || 0,
     published: true,
+    transitCountries: t.transit_countries || [],
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
       .map(j => ({ id: j.id, date: j.date, time: j.time, title: j.title, text: j.body })),
