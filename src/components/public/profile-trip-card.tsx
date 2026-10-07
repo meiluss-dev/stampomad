@@ -16,6 +16,7 @@ interface Props {
     end: string;
     days: number;
     cities: string;
+    coverUrl?: string;
     journal: { id: number }[];
   };
   photos: string[];
@@ -23,13 +24,14 @@ interface Props {
 }
 
 export function ProfileTripCard({ username, trip, photos, waypointCount }: Props) {
+  const images = photos.length > 0 ? photos : trip.coverUrl ? [trip.coverUrl] : [];
   const [photoIdx, setPhotoIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startCycle = useCallback(() => {
-    if (photos.length <= 1) return;
-    intervalRef.current = setInterval(() => setPhotoIdx(p => (p + 1) % photos.length), 600);
-  }, [photos.length]);
+    if (images.length <= 1) return;
+    intervalRef.current = setInterval(() => setPhotoIdx(p => (p + 1) % images.length), 600);
+  }, [images.length]);
 
   const stopCycle = useCallback(() => {
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
@@ -44,9 +46,9 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
       onMouseLeave={stopCycle}
     >
       <div className="w-full aspect-[4/3] flex items-center justify-center text-[48px] bg-bg4 relative overflow-hidden">
-        {photos.length > 0 ? (
+        {images.length > 0 ? (
           <>
-            {photos.map((src, i) => (
+            {images.map((src, i) => (
               <img
                 key={src}
                 src={src}
@@ -54,12 +56,12 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
                 className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${i === photoIdx ? 'opacity-100' : 'opacity-0'}`}
               />
             ))}
-            {photos.length > 1 && (
+            {images.length > 1 && (
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-[2]">
-                {photos.slice(0, 6).map((_, i) => (
-                  <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIdx % photos.length ? 'bg-white' : 'bg-white/40'}`} />
+                {images.slice(0, 6).map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIdx % images.length ? 'bg-white' : 'bg-white/40'}`} />
                 ))}
-                {photos.length > 6 && <div className="text-white/50 text-[9px] ml-0.5">+{photos.length - 6}</div>}
+                {images.length > 6 && <div className="text-white/50 text-[9px] ml-0.5">+{images.length - 6}</div>}
               </div>
             )}
           </>
