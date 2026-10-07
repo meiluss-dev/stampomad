@@ -144,6 +144,18 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
     if (updated.length === 0) setShowManage(false);
   }
 
+  const dragIdx = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  async function handleReorder(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const updated = [...photos];
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
+    await saveTripPhotos(t.id, updated);
+    setPhotoIdx(0);
+  }
+
   async function handleDelete() {
     if (!confirm('Delete this trip and all its journal entries?')) return;
     await deleteTrip(t.id);
@@ -272,12 +284,37 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
       {showManage && hasPhotos && (
         <div className="bg-bg4 border-b border-white/[0.06] p-2.5 flex gap-2 overflow-x-auto">
           {photos.map((photo, i) => (
-            <div key={i} className="relative shrink-0">
-              <img src={photo} alt="" className="w-14 h-14 object-cover rounded-lg border border-white/[0.08]" />
+            <div
+              key={photo}
+              draggable
+              onDragStart={() => { dragIdx.current = i; }}
+              onDragOver={e => { e.preventDefault(); setDragOverIdx(i); }}
+              onDragLeave={() => setDragOverIdx(null)}
+              onDrop={e => { e.preventDefault(); setDragOverIdx(null); if (dragIdx.current !== null) handleReorder(dragIdx.current, i); dragIdx.current = null; }}
+              onDragEnd={() => { dragIdx.current = null; setDragOverIdx(null); }}
+              className={`relative shrink-0 cursor-grab active:cursor-grabbing transition-transform ${dragOverIdx === i ? 'scale-110 ring-2 ring-gold/50 rounded-lg' : ''}`}
+            >
+              <img src={photo} alt="" className="w-14 h-14 object-cover rounded-lg border border-white/[0.08] pointer-events-none" />
               <button
                 onClick={() => removePhoto(i)}
-                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-stamp-red text-white text-[11px] flex items-center justify-center cursor-pointer border-2 border-bg4"
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-stamp-red text-white text-[11px] flex items-center justify-center cursor-pointer border-2 border-bg4 z-10"
               >×</button>
+              {/* Reorder arrows */}
+              <div className="absolute bottom-0 left-0 right-0 flex justify-between px-0.5">
+                {i > 0 && (
+                  <button
+                    onClick={e => { e.stopPropagation(); handleReorder(i, i - 1); }}
+                    className="w-5 h-5 rounded-full bg-black/60 text-white text-[10px] flex items-center justify-center cursor-pointer border-none hover:bg-gold/80 transition-colors"
+                  >‹</button>
+                )}
+                {i === 0 && <span />}
+                {i < photos.length - 1 && (
+                  <button
+                    onClick={e => { e.stopPropagation(); handleReorder(i, i + 1); }}
+                    className="w-5 h-5 rounded-full bg-black/60 text-white text-[10px] flex items-center justify-center cursor-pointer border-none hover:bg-gold/80 transition-colors"
+                  >›</button>
+                )}
+              </div>
             </div>
           ))}
           {photos.length < MAX_PHOTOS && (
