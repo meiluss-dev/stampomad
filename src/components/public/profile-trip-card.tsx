@@ -17,6 +17,7 @@ interface Props {
     days: number;
     cities: string;
     coverUrl?: string;
+    rating?: number;
     journal: { id: number }[];
   };
   photos: string[];
@@ -37,6 +38,13 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     setPhotoIdx(0);
   }, []);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const isUpcoming = trip.start && trip.start > today;
+  const isActive = trip.start && trip.end && trip.start <= today && trip.end >= today;
+  const isPast = trip.end && trip.end < today;
+  const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && (trip.rating || 0) > 0) ? '★'.repeat(trip.rating || 0) : null;
+  const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
 
   return (
     <Link
@@ -67,6 +75,11 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
           </>
         ) : (
           <span>{trip.emoji}</span>
+        )}
+        {stampLabel && (
+          <div className={`absolute bottom-3 left-3 -rotate-12 border-2 border-${stampColor} text-${stampColor} rounded-sm px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider opacity-80 z-[3]`}>
+            {stampLabel}
+          </div>
         )}
       </div>
       <div className="p-4">
