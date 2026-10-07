@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { countryFlag, fmtDate } from '@/lib/countries';
 
@@ -39,10 +39,11 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
     setPhotoIdx(0);
   }, []);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const isUpcoming = trip.start && trip.start > today;
-  const isActive = trip.start && trip.start <= today && (!trip.end || trip.end >= today);
-  const isPast = trip.end && trip.end < today;
+  const [today, setToday] = useState('');
+  useEffect(() => { setToday(new Date().toISOString().slice(0, 10)); }, []);
+  const isUpcoming = today && trip.start && trip.start > today;
+  const isActive = today && trip.start && trip.start <= today && (!trip.end || trip.end >= today);
+  const isPast = today && trip.end && trip.end < today;
   const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && (trip.rating || 0) > 0) ? '★'.repeat(trip.rating || 0) : null;
   const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
 

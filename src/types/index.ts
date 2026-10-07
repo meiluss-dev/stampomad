@@ -56,6 +56,14 @@ export interface JournalEntry {
   text: string;
 }
 
+export interface DailyEntry {
+  id: number;
+  date: string;
+  title: string;
+  text: string;
+  mood?: string;
+}
+
 export interface Homebase {
   city: string;
   code: string;

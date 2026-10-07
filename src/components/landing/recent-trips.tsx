@@ -34,7 +34,7 @@ function TripCard({ trip }: { trip: PublicTrip }) {
   const cities = trip.cities ? trip.cities.split(',').map(c => c.trim()).filter(Boolean).slice(0, 3) : [];
   const [photoIdx, setPhotoIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const images = trip.photos.length > 0 ? trip.photos : trip.coverPhoto ? [trip.coverPhoto] : [];
+  const images = (trip.photos?.length || 0) > 0 ? trip.photos : trip.coverPhoto ? [trip.coverPhoto] : [];
 
   const startCycle = useCallback(() => {
     if (images.length <= 1) return;

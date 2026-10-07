@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList, TripRatings } from '@/types';
+import type { Trip, JournalEntry, DailyEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList, TripRatings } from '@/types';
 import { averageRating } from '@/types';
 
 export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: string): Promise<Trip[]> {
@@ -237,6 +237,37 @@ export async function savePhotosToSupabase(supabase: SupabaseClient, userId: str
 
 export async function deleteJournalEntryFromSupabase(supabase: SupabaseClient, userId: string, entryId: number) {
   await supabase.from('journal_entries').delete().eq('user_id', userId).eq('id', entryId);
+}
+
+// ── Daily Journal ──
+
+export async function loadDailyEntries(supabase: SupabaseClient, userId: string): Promise<DailyEntry[]> {
+  const { data, error } = await supabase
+    .from('daily_entries').select('*').eq('user_id', userId).order('date', { ascending: false });
+  if (error || !data) return [];
+  return data.map((e: Record<string, unknown>) => ({
+    id: e.id as number,
+    date: e.date as string,
+    title: (e.title as string) || '',
+    text: (e.text as string) || '',
+    mood: (e.mood as string) || undefined,
+  }));
+}
+
+export async function saveDailyEntry(supabase: SupabaseClient, userId: string, entry: DailyEntry) {
+  await supabase.from('daily_entries').upsert({
+    id: entry.id,
+    user_id: userId,
+    date: entry.date,
+    title: entry.title || null,
+    text: entry.text,
+    mood: entry.mood || null,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+export async function deleteDailyEntry(supabase: SupabaseClient, userId: string, entryId: number) {
+  await supabase.from('daily_entries').delete().eq('user_id', userId).eq('id', entryId);
 }
 
 // ── Profile management ──
