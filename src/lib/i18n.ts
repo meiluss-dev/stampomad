@@ -218,6 +218,22 @@ export const UI_STRINGS: Record<string, string> = {
   profile_entries: 'entries',
   profile_waypoints: 'waypoints',
 
+  // Public Trip Detail
+  trip_back_to: 'Back to',
+  trip_photos: 'Photos',
+  trip_route: 'Route',
+  trip_journal: 'Journal',
+  trip_notes: 'Notes',
+  trip_waypoints: 'Waypoints',
+  trip_highlights: 'Highlights',
+  trip_distance: 'Distance',
+  trip_entries: 'Entries',
+  trip_ongoing: 'Ongoing',
+  trip_traveled_by: 'Traveled by',
+  trip_highlight: 'Highlight',
+  trip_waypoint: 'Waypoint',
+  trip_powered_by: 'Powered by',
+
   // Landing – Footer
   landing_footer_desc: 'Free travel tracker to log countries, map trips, and journal your adventures.',
   landing_footer_product: 'Product',
