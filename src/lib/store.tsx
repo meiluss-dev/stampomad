@@ -318,7 +318,29 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         console.error('[Stampomad] addTrip save failed:', err);
       }
     }
-    if (!tripData.quickPin) trackCreate('unlimited_trips', { country: tripData.code });
+    if (!tripData.quickPin) {
+      trackCreate('unlimited_trips', { country: tripData.code });
+      // Auto-fetch cover photo if no photos exist
+      if (user) {
+        fetch('/api/cover-photo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tripId: trip.id,
+            userId: user.id,
+            city: tripData.cities?.split(',')[0]?.trim() || tripData.name,
+            country: countryNames[tripData.code] || tripData.code,
+          }),
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.coverUrl) {
+              setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, coverUrl: data.coverUrl } : t));
+            }
+          })
+          .catch(() => {});
+      }
+    }
     return trip;
   }, [user]);
 

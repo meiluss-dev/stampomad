@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/lib/store';
-import { haversine, getCountryCenter } from '@/lib/countries';
+import { haversine, getCountryCenter, countryNames, countryFlag, getContinent } from '@/lib/countries';
 import { useLang } from '@/components/language-provider';
 
 function calcTotalDistance(trips: ReturnType<typeof useStore>['trips'], routes: ReturnType<typeof useStore>['routes'], homebase: ReturnType<typeof useStore>['homebase']) {
@@ -26,9 +26,62 @@ function calcTotalDistance(trips: ReturnType<typeof useStore>['trips'], routes: 
   return totalKm;
 }
 
+function CountryPopup({ codes, onClose }: { codes: Set<string>; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey); };
+  }, [onClose]);
+
+  const grouped: Record<string, { code: string; name: string; flag: string }[]> = {};
+  for (const code of codes) {
+    const continent = getContinent(code);
+    if (!grouped[continent]) grouped[continent] = [];
+    grouped[continent].push({ code, name: countryNames[code] || code, flag: countryFlag(code) });
+  }
+  for (const g of Object.values(grouped)) g.sort((a, b) => a.name.localeCompare(b.name));
+
+  const order = ['Europe', 'Asia', 'Americas', 'Africa', 'Oceania', 'Other'];
+  const sorted = order.filter(c => grouped[c]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div ref={ref} className="bg-bg2 border border-white/[0.1] rounded-2xl shadow-2xl w-full max-w-lg max-h-[70vh] overflow-y-auto">
+        <div className="sticky top-0 bg-bg2 border-b border-white/[0.08] px-5 py-4 flex items-center justify-between z-10">
+          <h3 className="font-[family-name:var(--font-playfair)] text-lg">Countries Visited ({codes.size})</h3>
+          <button onClick={onClose} className="text-text-muted hover:text-text transition-colors text-xl cursor-pointer bg-transparent border-none">&times;</button>
+        </div>
+        <div className="p-5 space-y-5">
+          {sorted.map(continent => (
+            <div key={continent}>
+              <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">{continent} ({grouped[continent].length})</div>
+              <div className="flex flex-wrap gap-1.5">
+                {grouped[continent].map(c => (
+                  <span key={c.code} className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[13px] hover:border-gold/30 transition-colors">
+                    {c.flag} {c.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function StatsGrid() {
   const { trips, visitedCountries, routes, homebase } = useStore();
   const [unit, setUnit] = useState<'km' | 'mi'>('km');
+  const [showCountries, setShowCountries] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('stampomad-distance-unit');
@@ -52,7 +105,14 @@ export function StatsGrid() {
   const { t } = useLang();
 
   const stats = [
-    { label: t('stat_countries'), value: codes.size, sub: t('stat_sub_countries'), icon: '🌍', color: 'gold' },
+    {
+      label: t('stat_countries'),
+      value: codes.size,
+      sub: <span onClick={() => setShowCountries(true)} className="cursor-pointer hover:text-gold transition-colors">{t('stat_sub_countries')} · click to see</span>,
+      icon: '🌍',
+      color: 'gold',
+      onClick: () => setShowCountries(true),
+    },
     {
       label: t('stat_distance'),
       value: displayDist.toLocaleString(),
@@ -65,17 +125,24 @@ export function StatsGrid() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      {stats.map(s => (
-        <div key={s.label} className="bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-          <div className={`absolute top-0 left-0 right-0 h-[3px]`}
-               style={{ background: `linear-gradient(90deg, var(--color-${s.color}), var(--color-${s.color}-light, var(--color-${s.color})))` }} />
-          <div className="absolute right-3 sm:right-5 top-3 sm:top-5 text-[24px] sm:text-[28px] opacity-30">{s.icon}</div>
-          <div className="text-[11px] sm:text-[12px] text-text-muted uppercase tracking-wider mb-1.5 sm:mb-2">{s.label}</div>
-          <div className="font-[family-name:var(--font-playfair)] text-2xl sm:text-4xl text-text">{s.value}</div>
-          <div className="text-[11px] sm:text-[12px] text-text-muted mt-1">{s.sub}</div>
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {stats.map(s => (
+          <div
+            key={s.label}
+            className={`bg-bg3 border border-white/[0.08] rounded-2xl p-4 sm:p-6 relative overflow-hidden${s.onClick ? ' cursor-pointer hover:border-gold/30 transition-colors' : ''}`}
+            onClick={s.onClick}
+          >
+            <div className={`absolute top-0 left-0 right-0 h-[3px]`}
+                 style={{ background: `linear-gradient(90deg, var(--color-${s.color}), var(--color-${s.color}-light, var(--color-${s.color})))` }} />
+            <div className="absolute right-3 sm:right-5 top-3 sm:top-5 text-[24px] sm:text-[28px] opacity-30">{s.icon}</div>
+            <div className="text-[11px] sm:text-[12px] text-text-muted uppercase tracking-wider mb-1.5 sm:mb-2">{s.label}</div>
+            <div className="font-[family-name:var(--font-playfair)] text-2xl sm:text-4xl text-text">{s.value}</div>
+            <div className="text-[11px] sm:text-[12px] text-text-muted mt-1">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+      {showCountries && <CountryPopup codes={codes} onClose={() => setShowCountries(false)} />}
+    </>
   );
 }

@@ -43,7 +43,7 @@ export async function GET() {
   // Get recent published trips with user profile info
   const { data: publishedTrips } = await supabase
     .from('trips')
-    .select('id, name, code, continent, emoji, start_date, end_date, days, cities, user_id')
+    .select('id, name, code, continent, emoji, start_date, end_date, days, cities, user_id, cover_url')
     .eq('published', true)
     .eq('quick_pin', false)
     .order('created_at', { ascending: false })
@@ -92,7 +92,7 @@ export async function GET() {
       username: profile?.username || null,
       displayName: profile?.display_name || null,
       avatarUrl: profile?.avatar_url || null,
-      coverPhoto: photoMap.get(t.id) || null,
+      coverPhoto: photoMap.get(t.id) || t.cover_url || null,
     };
   });
 

@@ -18,6 +18,7 @@ export interface Trip {
   published?: boolean;
   isGroup?: boolean;
   transitCountries?: string[];
+  coverUrl?: string;
   journal: JournalEntry[];
 }
 

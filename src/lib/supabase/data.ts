@@ -31,6 +31,7 @@ export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: st
     published: t.published || false,
     isGroup: t.is_group || false,
     transitCountries: t.transit_countries || [],
+    coverUrl: t.cover_url || '',
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
       .map(j => ({ id: j.id, date: j.date, time: j.time, title: j.title, text: j.body }))
@@ -113,6 +114,7 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
     travel_style: trip.travelStyle || '', rating: trip.rating || 0,
     published: trip.published || false,
     transit_countries: trip.transitCountries || [],
+    cover_url: trip.coverUrl || null,
   });
   if (error) {
     console.error('[Stampomad] saveTrip error:', error);
@@ -371,6 +373,7 @@ export async function loadPublicTrips(supabase: SupabaseClient, userId: string):
     rating: t.rating || 0,
     published: true,
     transitCountries: t.transit_countries || [],
+    coverUrl: t.cover_url || '',
     journal: (journalData || [])
       .filter(j => j.trip_id === t.id)
       .map(j => ({ id: j.id, date: j.date, time: j.time, title: j.title, text: j.body })),

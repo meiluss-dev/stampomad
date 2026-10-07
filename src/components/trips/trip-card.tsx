@@ -226,6 +226,17 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
               >&#9881;</button>
             </div>
           </>
+        ) : t.coverUrl ? (
+          /* Auto-fetched cover photo */
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute inset-0 cursor-pointer bg-transparent border-none group/upload"
+          >
+            <img src={t.coverUrl} alt="" className="w-full h-full object-cover" />
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[11px] text-text-muted opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 px-2.5 py-1 rounded-lg">
+              {uploading ? 'Uploading...' : '📷 Add your own photos'}
+            </span>
+          </button>
         ) : (
           /* Empty state — upload prompt */
           <button
