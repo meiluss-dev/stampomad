@@ -67,9 +67,9 @@ function TripCard({ trip }: { trip: PublicTrip }) {
         <div className="absolute top-3 left-3 bg-bg/80 backdrop-blur-sm border border-white/[0.1] rounded-lg px-2.5 py-1 text-[11px] font-medium">
           {trip.emoji} {country}
         </div>
-        {/* Upcoming badge */}
+        {/* Upcoming stamp */}
         {isUpcoming && (
-          <div className="absolute bottom-3 left-3 bg-teal/90 text-white rounded-lg px-2.5 py-1 text-[11px] font-semibold">
+          <div className="absolute bottom-3 left-3 -rotate-12 border-2 border-teal text-teal rounded-sm px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
             Upcoming
           </div>
         )}
