@@ -72,7 +72,7 @@ function fmtShortDate(d: string | null): string {
 /* ── Trip Card ── */
 function TripCard({ trip }: { trip: Trip }) {
   const country = countryNames[trip.code] || trip.code;
-  const dateStr = trip.start ? fmtShortDate(trip.start) + (trip.end ? ' – ' + fmtShortDate(trip.end) : '') : '';
+  const dateStr = trip.start ? fmtShortDate(trip.start) + (trip.end ? ' – ' + fmtShortDate(trip.end) : ' – Open end') : '';
   const cities = trip.cities ? trip.cities.split(',').map(c => c.trim()).filter(Boolean).slice(0, 3) : [];
   const [photoIdx, setPhotoIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -91,7 +91,7 @@ function TripCard({ trip }: { trip: Trip }) {
   const href = trip.username ? `/u/${trip.username}` : '#';
   const today = new Date().toISOString().slice(0, 10);
   const isUpcoming = trip.start && trip.start > today;
-  const isActive = trip.start && trip.end && trip.start <= today && trip.end >= today;
+  const isActive = trip.start && trip.start <= today && (!trip.end || trip.end >= today);
   const isPast = trip.end && trip.end < today;
   const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && trip.rating > 0) ? '★'.repeat(trip.rating) : null;
   const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
@@ -142,7 +142,7 @@ function TripCard({ trip }: { trip: Trip }) {
             {stampLabel}
           </div>
         )}
-        {trip.days > 0 && (
+        {trip.days > 0 && trip.end && (
           <div className="absolute top-3 right-3 bg-gold/90 text-bg rounded-lg px-2 py-1 text-[11px] font-semibold">
             {trip.days}d
           </div>

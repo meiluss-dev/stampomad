@@ -84,6 +84,17 @@ export default async function PublicProfilePage({ params }: Props) {
         { name: 'Explore', url: 'https://www.stampomad.com/explore' },
         { name: profile.displayName || profile.username, url: `https://www.stampomad.com/u/${username}` },
       ]} />
+      {/* Nav */}
+      <nav className="border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px]">
+        <div className="max-w-[900px] mx-auto px-6 py-3 flex items-center gap-4">
+          <Link href="/" className="font-[family-name:var(--font-playfair)] text-lg text-gold hover:text-text transition-colors">
+            Stampo<span className="text-text">mad</span>
+          </Link>
+          <Link href="/explore" className="text-sm text-text-muted hover:text-gold transition-colors">
+            Explore
+          </Link>
+        </div>
+      </nav>
       {/* Header */}
       <header className="border-b border-white/[0.08] bg-bg/95 backdrop-blur-[10px]">
         <div className="max-w-[900px] mx-auto px-6 py-8">

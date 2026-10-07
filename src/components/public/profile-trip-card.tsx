@@ -41,7 +41,7 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
 
   const today = new Date().toISOString().slice(0, 10);
   const isUpcoming = trip.start && trip.start > today;
-  const isActive = trip.start && trip.end && trip.start <= today && trip.end >= today;
+  const isActive = trip.start && trip.start <= today && (!trip.end || trip.end >= today);
   const isPast = trip.end && trip.end < today;
   const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && (trip.rating || 0) > 0) ? '★'.repeat(trip.rating || 0) : null;
   const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
