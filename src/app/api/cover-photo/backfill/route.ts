@@ -6,25 +6,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function fetchWikimediaImage(query: string): Promise<string | null> {
-  const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`;
+async function fetchWikipediaImage(query: string): Promise<string | null> {
+  const directUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(query)}&prop=pageimages&pithumbsize=800&format=json&origin=*`;
+  try {
+    const res = await fetch(directUrl);
+    if (res.ok) {
+      const data = await res.json();
+      for (const page of Object.values(data.query?.pages || {}) as any[]) {
+        if (page.thumbnail?.source) return page.thumbnail.source;
+      }
+    }
+  } catch { /* fall through to search */ }
 
-  const res = await fetch(searchUrl);
-  if (!res.ok) return null;
+  const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=3&prop=pageimages&pithumbsize=800&format=json&origin=*`;
+  try {
+    const res = await fetch(searchUrl);
+    if (!res.ok) return null;
+    const data = await res.json();
+    for (const page of Object.values(data.query?.pages || {}) as any[]) {
+      if (page.thumbnail?.source) return page.thumbnail.source;
+    }
+  } catch { /* ignore */ }
 
-  const data = await res.json();
-  const pages = data.query?.pages;
-  if (!pages) return null;
-
-  for (const page of Object.values(pages) as any[]) {
-    const info = page.imageinfo?.[0];
-    if (!info?.thumburl) continue;
-    const mime = info.extmetadata?.MIMEType?.value || '';
-    if (mime && !mime.startsWith('image/')) continue;
-    const url = info.thumburl as string;
-    if (url.endsWith('.svg') || url.includes('.ogg') || url.includes('.ogv')) continue;
-    return url;
-  }
   return null;
 }
 
@@ -51,11 +54,11 @@ export async function POST(req: NextRequest) {
 
   let filled = 0;
   for (const t of needsCover) {
-    const query = t.cities?.split(',')[0]?.trim() || t.name;
+    const city = t.cities?.split(',')[0]?.trim();
 
     try {
-      let coverUrl = await fetchWikimediaImage(`${query} landmark`);
-      if (!coverUrl) coverUrl = await fetchWikimediaImage(`${t.name} landmark`);
+      let coverUrl = await fetchWikipediaImage(city || t.name);
+      if (!coverUrl && city) coverUrl = await fetchWikipediaImage(t.name);
       if (!coverUrl) continue;
 
       await supabase
@@ -64,9 +67,6 @@ export async function POST(req: NextRequest) {
         .eq('id', t.id)
         .eq('user_id', userId);
       filled++;
-
-      // Small delay to be polite to Wikimedia
-      await new Promise(r => setTimeout(r, 500));
     } catch {
       continue;
     }
