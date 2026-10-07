@@ -191,7 +191,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   return (
     <div className="bg-bg3 border border-white/[0.08] rounded-2xl overflow-hidden transition-[border-color,box-shadow] duration-300 hover:border-gold hover:shadow-[0_8px_32px_rgba(201,169,110,0.15)]">
       {/* Photo area */}
-      <div className="w-full h-40 flex items-center justify-center text-[52px] bg-bg4 relative overflow-hidden group">
+      <div className="w-full aspect-[4/3] flex items-center justify-center text-[52px] bg-bg4 relative overflow-hidden group">
         {hasPhotos ? (
           <>
             {/* Stack all photos — only active one is visible (no flash on swap) */}
