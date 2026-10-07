@@ -196,6 +196,28 @@ export const UI_STRINGS: Record<string, string> = {
   landing_back_dashboard: 'Back to Dashboard',
   landing_cta_btn: "Get started — it's free",
 
+  // Public Profile
+  profile_explore: 'Explore',
+  profile_countries: 'Countries',
+  profile_public_trips: 'Public Trips',
+  profile_days_abroad: 'Days abroad',
+  profile_journal_entries: 'Journal entries',
+  profile_trips: 'Trips',
+  profile_no_trips: 'No published trips yet',
+  profile_powered_by: 'Powered by',
+  profile_share: 'Share profile',
+  profile_share_this: 'Share this profile',
+  profile_copy_link: 'Copy link',
+  profile_copied: 'Copied!',
+  profile_traveling_now: 'Traveling Now',
+  profile_upcoming: 'Upcoming',
+  profile_ongoing: 'Ongoing',
+  profile_open_end: 'Open end',
+  profile_day: 'day',
+  profile_days: 'days',
+  profile_entries: 'entries',
+  profile_waypoints: 'waypoints',
+
   // Landing – Footer
   landing_footer_desc: 'Free travel tracker to log countries, map trips, and journal your adventures.',
   landing_footer_product: 'Product',

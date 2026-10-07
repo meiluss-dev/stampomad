@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { countryFlag, fmtDate } from '@/lib/countries';
+import { useLang } from '@/components/language-provider';
 
 interface Props {
   username: string;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function ProfileTripCard({ username, trip, photos, waypointCount }: Props) {
+  const { t } = useLang();
   const images = photos.length > 0 ? photos : trip.coverUrl ? [trip.coverUrl] : [];
   const [photoIdx, setPhotoIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -44,7 +46,7 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
   const isUpcoming = today && trip.start && trip.start > today;
   const isActive = today && trip.start && trip.start <= today && (!trip.end || trip.end >= today);
   const isPast = today && trip.end && trip.end < today;
-  const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && (trip.rating || 0) > 0) ? '★'.repeat(trip.rating || 0) : null;
+  const stampLabel = isActive ? t('profile_traveling_now') : isUpcoming ? t('profile_upcoming') : (isPast && (trip.rating || 0) > 0) ? '★'.repeat(trip.rating || 0) : null;
   const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
 
   return (
@@ -90,17 +92,17 @@ export function ProfileTripCard({ username, trip, photos, waypointCount }: Props
         </div>
         <div className="font-[family-name:var(--font-playfair)] text-lg mb-1.5">{trip.name}</div>
         <div className="flex gap-2 text-xs text-text-muted flex-wrap">
-          <span>{fmtDate(trip.start)} → {trip.end ? fmtDate(trip.end) : isActive ? <em className="text-gold">Ongoing</em> : <em className="text-text-muted">Open end</em>}</span>
+          <span>{fmtDate(trip.start)} → {trip.end ? fmtDate(trip.end) : isActive ? <em className="text-gold">{t('profile_ongoing')}</em> : <em className="text-text-muted">{t('profile_open_end')}</em>}</span>
           {trip.end && (
             <span className="bg-teal/10 text-teal px-2 py-0.5 rounded-[10px] text-[11px]">
-              {trip.days} day{trip.days !== 1 ? 's' : ''}
+              {trip.days} {trip.days !== 1 ? t('profile_days') : t('profile_day')}
             </span>
           )}
           {trip.journal.length > 0 && (
-            <span className="text-text-muted">{trip.journal.length} entries</span>
+            <span className="text-text-muted">{trip.journal.length} {t('profile_entries')}</span>
           )}
           {waypointCount > 0 && (
-            <span className="text-text-muted">{waypointCount} waypoints</span>
+            <span className="text-text-muted">{waypointCount} {t('profile_waypoints')}</span>
           )}
         </div>
         {trip.cities && <div className="text-[13px] text-text-muted mt-2">📍 {trip.cities}</div>}

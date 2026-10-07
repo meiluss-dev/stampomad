@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useLang } from '@/components/language-provider';
 
 interface Props {
   username: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ShareProfileButton({ username, displayName, countries, trips }: Props) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -41,12 +43,12 @@ export function ShareProfileButton({ username, displayName, countries, trips }: 
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 border border-gold/20 text-gold text-sm cursor-pointer hover:bg-gold/15 transition-all"
       >
-        📤 Share profile
+        📤 {t('profile_share')}
       </button>
 
       {open && (
         <div className="absolute left-0 top-full mt-2 bg-bg2 border border-white/[0.08] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-50 w-64 p-3">
-          <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">Share this profile</div>
+          <div className="text-[11px] text-text-muted uppercase tracking-wider mb-2">{t('profile_share_this')}</div>
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`, '_blank')}
@@ -65,7 +67,7 @@ export function ShareProfileButton({ username, displayName, countries, trips }: 
             onClick={copyLink}
             className="w-full py-2 rounded-lg bg-bg4 border border-white/[0.08] text-[12px] text-text-muted cursor-pointer hover:border-white/20 transition-all"
           >
-            {copied ? '✓ Copied!' : '🔗 Copy link'}
+            {copied ? `✓ ${t('profile_copied')}` : `🔗 ${t('profile_copy_link')}`}
           </button>
         </div>
       )}
