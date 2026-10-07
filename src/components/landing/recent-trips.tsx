@@ -57,7 +57,7 @@ function TripCard({ trip }: { trip: PublicTrip }) {
   return (
     <a
       href={href}
-      className="group flex-shrink-0 w-[280px] md:w-auto bg-bg2 border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/30 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+      className="group bg-bg2 border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/30 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
       onMouseEnter={startCycle}
       onMouseLeave={stopCycle}
     >
@@ -99,31 +99,31 @@ function TripCard({ trip }: { trip: PublicTrip }) {
           </div>
         )}
         {/* Country badge */}
-        <div className="absolute top-3 left-3 bg-bg/80 backdrop-blur-sm border border-white/[0.1] rounded-lg px-2.5 py-1 text-[11px] font-medium">
+        <div className="absolute top-2 left-2 md:top-3 md:left-3 bg-bg/80 backdrop-blur-sm border border-white/[0.1] rounded-lg px-1.5 py-0.5 md:px-2.5 md:py-1 text-[9px] md:text-[11px] font-medium">
           {trip.emoji} {country}
         </div>
         {/* Trip status stamp */}
         {stampLabel && (
-          <div className={`absolute bottom-3 left-3 -rotate-12 border-2 border-${stampColor} text-${stampColor} rounded-sm px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider opacity-80`}>
+          <div className={`absolute bottom-2 left-2 md:bottom-3 md:left-3 -rotate-12 border-2 border-${stampColor} text-${stampColor} rounded-sm px-1.5 py-0.5 md:px-2.5 text-[9px] md:text-[11px] font-bold uppercase tracking-wider opacity-80`}>
             {stampLabel}
           </div>
         )}
         {/* Days badge */}
         {trip.days > 0 && trip.end && (
-          <div className="absolute top-3 right-3 bg-gold/90 text-bg rounded-lg px-2 py-1 text-[11px] font-semibold">
+          <div className="absolute top-2 right-2 md:top-3 md:right-3 bg-gold/90 text-bg rounded-lg px-1.5 py-0.5 md:px-2 md:py-1 text-[9px] md:text-[11px] font-semibold">
             {trip.days}d
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-medium text-[15px] mb-1 truncate group-hover:text-gold transition-colors">{trip.name}</h3>
+      <div className="p-2.5 md:p-4">
+        <h3 className="font-medium text-[13px] md:text-[15px] mb-0.5 md:mb-1 truncate group-hover:text-gold transition-colors">{trip.name}</h3>
         {dateStr && (
-          <div className="text-[12px] text-text-muted mb-2">{dateStr}</div>
+          <div className="text-[10px] md:text-[12px] text-text-muted mb-1.5 md:mb-2">{dateStr}</div>
         )}
         {cities.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="hidden md:flex flex-wrap gap-1 mb-3">
             {cities.map(city => (
               <span key={city} className="bg-white/[0.04] border border-white/[0.06] rounded-md px-2 py-0.5 text-[11px] text-text-muted">
                 {city}
@@ -180,21 +180,13 @@ export function RecentTrips() {
         {/* Scrollable on mobile, grid on desktop */}
         <div
           ref={scrollRef}
-          className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-hide"
+          className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5"
         >
           {trips.map(trip => (
-            <div key={trip.id} className="snap-start">
-              <TripCard trip={trip} />
-            </div>
+            <TripCard key={trip.id} trip={trip} />
           ))}
         </div>
 
-        {/* Scroll hint on mobile */}
-        <div className="flex md:hidden justify-center mt-4 gap-1.5">
-          {trips.map((_, i) => (
-            <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/[0.15]" />
-          ))}
-        </div>
       </div>
     </section>
   );
