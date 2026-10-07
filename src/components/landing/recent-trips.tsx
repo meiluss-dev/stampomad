@@ -32,7 +32,11 @@ function TripCard({ trip }: { trip: PublicTrip }) {
   const cities = trip.cities ? trip.cities.split(',').map(c => c.trim()).filter(Boolean).slice(0, 3) : [];
 
   const href = trip.username ? `/u/${trip.username}` : '#';
-  const isUpcoming = trip.start && trip.start > new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const isUpcoming = trip.start && trip.start > today;
+  const isActive = trip.start && trip.end && trip.start <= today && trip.end >= today;
+  const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : null;
+  const stampColor = isActive ? 'stamp-green' : 'teal';
 
   return (
     <a
@@ -67,10 +71,10 @@ function TripCard({ trip }: { trip: PublicTrip }) {
         <div className="absolute top-3 left-3 bg-bg/80 backdrop-blur-sm border border-white/[0.1] rounded-lg px-2.5 py-1 text-[11px] font-medium">
           {trip.emoji} {country}
         </div>
-        {/* Upcoming stamp */}
-        {isUpcoming && (
-          <div className="absolute bottom-3 left-3 -rotate-12 border-2 border-teal text-teal rounded-sm px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
-            Upcoming
+        {/* Trip status stamp */}
+        {stampLabel && (
+          <div className={`absolute bottom-3 left-3 -rotate-12 border-2 border-${stampColor} text-${stampColor} rounded-sm px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider opacity-80`}>
+            {stampLabel}
           </div>
         )}
         {/* Days badge */}
