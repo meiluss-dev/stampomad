@@ -160,7 +160,7 @@ export default async function PublicProfilePage({ params }: Props) {
                     href={`/u/${username}/trip/${trip.id}`}
                     className="bg-bg3 border border-white/[0.08] rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:border-gold hover:shadow-[0_8px_32px_rgba(201,169,110,0.15)] block"
                   >
-                    <div className="w-full h-36 flex items-center justify-center text-[48px] bg-bg4 relative overflow-hidden">
+                    <div className="w-full aspect-[4/3] flex items-center justify-center text-[48px] bg-bg4 relative overflow-hidden">
                       {tripPhotos.length > 0 ? (
                         <img src={tripPhotos[0]} alt="" className="w-full h-full object-cover absolute inset-0" />
                       ) : (
