@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { countryNames } from '@/lib/countries';
 
 interface PublicTrip {
@@ -16,6 +16,7 @@ interface PublicTrip {
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  photos: string[];
   coverPhoto: string | null;
   rating: number;
 }
@@ -31,6 +32,19 @@ function TripCard({ trip }: { trip: PublicTrip }) {
   const country = countryNames[trip.code] || trip.code;
   const dateStr = trip.start ? fmtShortDate(trip.start) + (trip.end ? ' – ' + fmtShortDate(trip.end) : '') : '';
   const cities = trip.cities ? trip.cities.split(',').map(c => c.trim()).filter(Boolean).slice(0, 3) : [];
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const images = trip.photos.length > 0 ? trip.photos : trip.coverPhoto ? [trip.coverPhoto] : [];
+
+  const startCycle = useCallback(() => {
+    if (images.length <= 1) return;
+    intervalRef.current = setInterval(() => setPhotoIdx(p => (p + 1) % images.length), 600);
+  }, [images.length]);
+
+  const stopCycle = useCallback(() => {
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    setPhotoIdx(0);
+  }, []);
 
   const href = trip.username ? `/u/${trip.username}` : '#';
   const today = new Date().toISOString().slice(0, 10);
@@ -44,15 +58,30 @@ function TripCard({ trip }: { trip: PublicTrip }) {
     <a
       href={href}
       className="group flex-shrink-0 w-[280px] md:w-auto bg-bg2 border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/30 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+      onMouseEnter={startCycle}
+      onMouseLeave={stopCycle}
     >
       {/* Cover image or gradient fallback */}
       <div className="aspect-[4/3] relative overflow-hidden">
-        {trip.coverPhoto ? (
-          <img
-            src={trip.coverPhoto}
-            alt={trip.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+        {images.length > 0 ? (
+          <>
+            {images.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt={i === 0 ? trip.name : ''}
+                className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${i === photoIdx ? 'opacity-100' : 'opacity-0'}`}
+              />
+            ))}
+            {images.length > 1 && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1 z-[2]">
+                {images.slice(0, 6).map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIdx % images.length ? 'bg-white' : 'bg-white/40'}`} />
+                ))}
+                {images.length > 6 && <div className="text-white/50 text-[9px] ml-0.5">+{images.length - 6}</div>}
+              </div>
+            )}
+          </>
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"

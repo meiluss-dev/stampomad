@@ -72,10 +72,12 @@ export async function GET(req: NextRequest) {
         .not('photo_url', 'is', null)
     : { data: [] };
 
-  const photoMap = new Map<number, string>();
+  const photoMap = new Map<number, string[]>();
   for (const p of (photoRows || [])) {
-    if (p.photo_url && !photoMap.has(p.trip_id)) {
-      photoMap.set(p.trip_id, p.photo_url);
+    if (p.photo_url) {
+      const arr = photoMap.get(p.trip_id) || [];
+      arr.push(p.photo_url);
+      photoMap.set(p.trip_id, arr);
     }
   }
 
@@ -94,7 +96,8 @@ export async function GET(req: NextRequest) {
       username: profile?.username || null,
       displayName: profile?.display_name || null,
       avatarUrl: profile?.avatar_url || null,
-      coverPhoto: photoMap.get(t.id) || t.cover_url || null,
+      photos: photoMap.get(t.id) || [],
+      coverPhoto: (photoMap.get(t.id) || [])[0] || t.cover_url || null,
       rating: t.rating || 0,
     };
   });
