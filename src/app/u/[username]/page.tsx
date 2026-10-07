@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { loadPublicProfile, loadPublicTrips, loadPublicRoutes, loadPublicPhotos, loadPublicStats } from '@/lib/supabase/data';
-import { countryFlag, fmtDate } from '@/lib/countries';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ShareProfileButton } from '@/components/public/share-profile-button';
+import { ProfileTripCard } from '@/components/public/profile-trip-card';
 import { PersonJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
 interface Props {
@@ -155,39 +155,13 @@ export default async function PublicProfilePage({ params }: Props) {
                 const route = routes[trip.id];
                 const wpCount = route?.waypoints?.filter(w => w.type === 'waypoint').length || 0;
                 return (
-                  <Link
+                  <ProfileTripCard
                     key={trip.id}
-                    href={`/u/${username}/trip/${trip.id}`}
-                    className="bg-bg3 border border-white/[0.08] rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:border-gold hover:shadow-[0_8px_32px_rgba(201,169,110,0.15)] block"
-                  >
-                    <div className="w-full aspect-[4/3] flex items-center justify-center text-[48px] bg-bg4 relative overflow-hidden">
-                      {tripPhotos.length > 0 ? (
-                        <img src={tripPhotos[0]} alt="" className="w-full h-full object-cover absolute inset-0" />
-                      ) : (
-                        <span>{trip.emoji}</span>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="text-[11px] text-gold uppercase tracking-wider mb-1">
-                        {countryFlag(trip.code)} {trip.code}
-                        {trip.continent ? ` · ${trip.continent}` : ''}
-                      </div>
-                      <div className="font-[family-name:var(--font-playfair)] text-lg mb-1.5">{trip.name}</div>
-                      <div className="flex gap-2 text-xs text-text-muted flex-wrap">
-                        <span>{fmtDate(trip.start)} → {trip.end ? fmtDate(trip.end) : <em className="text-gold">Ongoing</em>}</span>
-                        <span className="bg-teal/10 text-teal px-2 py-0.5 rounded-[10px] text-[11px]">
-                          {trip.days} day{trip.days !== 1 ? 's' : ''}
-                        </span>
-                        {trip.journal.length > 0 && (
-                          <span className="text-text-muted">{trip.journal.length} entries</span>
-                        )}
-                        {wpCount > 0 && (
-                          <span className="text-text-muted">{wpCount} waypoints</span>
-                        )}
-                      </div>
-                      {trip.cities && <div className="text-[13px] text-text-muted mt-2">📍 {trip.cities}</div>}
-                    </div>
-                  </Link>
+                    username={username}
+                    trip={trip}
+                    photos={tripPhotos}
+                    waypointCount={wpCount}
+                  />
                 );
               })}
             </div>
