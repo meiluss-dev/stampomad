@@ -175,7 +175,7 @@ export function StoreProvider({ children, initialUser }: { children: React.React
         const offlineCache = tripsData.filter(t => !t.quickPin).map(t => ({
           id: t.id, name: t.name, code: t.code, continent: t.continent,
           emoji: t.emoji, start: t.start, end: t.end, days: t.days,
-          cities: t.cities, travelStyle: t.travelStyle, rating: t.rating,
+          cities: t.cities, travelStyle: t.travelStyle, rating: t.rating, ratings: t.ratings,
         }));
         localStorage.setItem('stampomad_offline_trips', JSON.stringify(offlineCache));
         localStorage.setItem('stampomad_offline_stats', JSON.stringify({

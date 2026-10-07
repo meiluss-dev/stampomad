@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList } from '@/types';
+import type { Trip, JournalEntry, Homebase, LivedPlace, RouteData, ClockEntry, PackingList, TripRatings } from '@/types';
+import { averageRating } from '@/types';
 
 export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: string): Promise<Trip[]> {
   const { data: tripsData, error: tripsError } = await supabase
@@ -27,7 +28,8 @@ export async function loadTripsFromSupabase(supabase: SupabaseClient, userId: st
     fromCity: t.from_city || '',
     toCity: t.to_city || '',
     travelStyle: t.travel_style || '',
-    rating: t.rating || 0,
+    ratings: (t.ratings as TripRatings) || {},
+    rating: t.ratings ? averageRating(t.ratings as TripRatings) : (t.rating || 0),
     published: t.published || false,
     isGroup: t.is_group || false,
     transitCountries: t.transit_countries || [],
@@ -111,7 +113,9 @@ export async function saveTripToSupabase(supabase: SupabaseClient, userId: strin
     days: trip.days, cities: trip.cities, notes: trip.notes,
     quick_pin: trip.quickPin, from_code: trip.fromCode || '',
     from_city: trip.fromCity || '', to_city: trip.toCity || '',
-    travel_style: trip.travelStyle || '', rating: trip.rating || 0,
+    travel_style: trip.travelStyle || '',
+    ratings: trip.ratings || {},
+    rating: trip.ratings ? averageRating(trip.ratings) : (trip.rating || 0),
     published: trip.published || false,
     transit_countries: trip.transitCountries || [],
     cover_url: trip.coverUrl || null,
@@ -370,7 +374,8 @@ export async function loadPublicTrips(supabase: SupabaseClient, userId: string):
     fromCity: t.from_city || '',
     toCity: t.to_city || '',
     travelStyle: t.travel_style || '',
-    rating: t.rating || 0,
+    ratings: (t.ratings as TripRatings) || {},
+    rating: t.ratings ? averageRating(t.ratings as TripRatings) : (t.rating || 0),
     published: true,
     transitCountries: t.transit_countries || [],
     coverUrl: t.cover_url || '',

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { CountrySelect } from '@/components/settings/country-select';
 import { getContinent, countryFlag, countryNames } from '@/lib/countries';
+import { averageRating, type TripRatings } from '@/types';
 import type { Trip } from '@/types';
 
 const TRAVEL_STYLES = [
@@ -50,7 +51,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
   const [cities, setCities] = useState('');
   const [notes, setNotes] = useState('');
   const [travelStyle, setTravelStyle] = useState('');
-  const [rating, setRating] = useState(0);
+  const [ratings, setRatings] = useState<TripRatings>({});
   const [published, setPublished] = useState(false);
   const [transitCountries, setTransitCountries] = useState<string[]>([]);
   const [transitInput, setTransitInput] = useState('');
@@ -78,7 +79,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       setCities(trip.cities);
       setNotes(trip.notes);
       setTravelStyle(trip.travelStyle || '');
-      setRating(trip.rating || 0);
+      setRatings(trip.ratings || {});
       setPublished(trip.published || false);
       setTransitCountries(trip.transitCountries || []);
       setTransitInput('');
@@ -87,7 +88,7 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       setName(''); setEmoji('✈️'); setCountry(''); setFromCountry('');
       setFromCity(''); setToCity('');
       setStart(''); setEnd(''); setCities(''); setNotes('');
-      setTravelStyle(''); setRating(0); setPublished(false);
+      setTravelStyle(''); setRatings({}); setPublished(false);
       setTransitCountries([]); setTransitInput('');
       setScanStep('idle'); setScanImages([]); setScanPreviews([]); setScanResults([]);
       if (homebase) {
@@ -216,13 +217,13 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
       : Math.max(1, Math.round((Date.now() - new Date(start).getTime()) / 864e5) + 1);
 
     if (trip) {
-      await updateTrip({ ...trip, name, code, continent, emoji, start, end: endDate, days, cities, notes, fromCode, fromCity, toCity, travelStyle, rating, transitCountries });
+      await updateTrip({ ...trip, name, code, continent, emoji, start, end: endDate, days, cities, notes, fromCode, fromCity, toCity, travelStyle, ratings, rating: averageRating(ratings), transitCountries });
       if (published !== (trip.published || false)) {
         await toggleTripPublished(trip.id, published);
       }
       toast(published ? 'Trip updated & published to Explore!' : 'Trip updated!');
     } else {
-      const newTrip = await addTrip({ name, code, continent, emoji, start, end: endDate, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, rating, transitCountries });
+      const newTrip = await addTrip({ name, code, continent, emoji, start, end: endDate, days, cities, notes, quickPin: false, fromCode, fromCity, toCity, travelStyle, ratings, rating: averageRating(ratings), transitCountries });
       if (published && newTrip?.id) {
         await toggleTripPublished(newTrip.id, true);
         toast('Trip added & published to Explore! 🌍');
@@ -468,45 +469,27 @@ export function TripModal({ open, onOpenChange, trip }: { open: boolean; onOpenC
                 <Input value={cities} onChange={e => setCities(e.target.value)} placeholder="Catania, Taormina, Siracusa..." className="bg-bg3 border-white/[0.08] text-text" />
               </div>
 
-              {/* Travel style + rating */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5 block">Travel style</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {TRAVEL_STYLES.filter(s => s.value).map(s => (
-                      <button
-                        key={s.value}
-                        type="button"
-                        onClick={() => setTravelStyle(travelStyle === s.value ? '' : s.value)}
-                        className={`px-2.5 py-1.5 rounded-lg text-[12px] cursor-pointer transition-all border ${
-                          travelStyle === s.value
-                            ? 'bg-gold/10 border-gold/30 text-gold'
-                            : 'bg-bg3 border-white/[0.06] text-text-muted hover:border-white/15'
-                        }`}
-                      >
-                        {s.icon} {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5 block">Rating</label>
-                  <div className="flex gap-1 mt-1">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(rating === star ? 0 : star)}
-                        className={`text-xl cursor-pointer transition-transform hover:scale-110 ${
-                          star <= rating ? 'opacity-100' : 'opacity-25'
-                        }`}
-                      >
-                        ⭐
-                      </button>
-                    ))}
-                  </div>
+              {/* Travel style */}
+              <div>
+                <label className="text-[11px] text-text-muted uppercase tracking-wider mb-1.5 block">Travel style</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRAVEL_STYLES.filter(s => s.value).map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setTravelStyle(travelStyle === s.value ? '' : s.value)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[12px] cursor-pointer transition-all border ${
+                        travelStyle === s.value
+                          ? 'bg-gold/10 border-gold/30 text-gold'
+                          : 'bg-bg3 border-white/[0.06] text-text-muted hover:border-white/15'
+                      }`}
+                    >
+                      {s.icon} {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
+
 
               {/* Notes */}
               <div>

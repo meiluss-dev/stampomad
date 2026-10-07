@@ -15,11 +15,37 @@ export interface Trip {
   toCity?: string;
   travelStyle?: string;
   rating?: number;
+  ratings?: TripRatings;
   published?: boolean;
   isGroup?: boolean;
   transitCountries?: string[];
   coverUrl?: string;
   journal: JournalEntry[];
+}
+
+export const RATING_CATEGORIES = [
+  { key: 'entry', label: 'Entry Process', icon: '🛂' },
+  { key: 'transport', label: 'Transportation', icon: '🚌' },
+  { key: 'food', label: 'Food', icon: '🍽️' },
+  { key: 'carRental', label: 'Car Rental', icon: '🚗' },
+  { key: 'accommodation', label: 'Accommodations', icon: '🏨' },
+  { key: 'people', label: 'People', icon: '👥' },
+  { key: 'cleanliness', label: 'Cleanliness', icon: '✨' },
+  { key: 'security', label: 'Security', icon: '🔒' },
+  { key: 'nightlife', label: 'Nightlife', icon: '🌃' },
+  { key: 'nature', label: 'Nature', icon: '🏞️' },
+  { key: 'culture', label: 'Culture', icon: '🏛️' },
+  { key: 'value', label: 'Value for Money', icon: '💰' },
+] as const;
+
+export type RatingCategory = typeof RATING_CATEGORIES[number]['key'];
+export type TripRatings = Partial<Record<RatingCategory, number>>;
+
+export function averageRating(ratings?: TripRatings): number {
+  if (!ratings) return 0;
+  const vals = Object.values(ratings).filter((v): v is number => v != null && v > 0);
+  if (vals.length === 0) return 0;
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
 }
 
 export interface JournalEntry {

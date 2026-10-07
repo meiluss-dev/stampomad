@@ -9,6 +9,7 @@ import { InviteModal } from '@/components/group/invite-modal';
 import { GroupTripPanel } from '@/components/group/group-trip-panel';
 import { BudgetModal } from '@/components/trips/budget-modal';
 import { PhotoLightbox } from '@/components/trips/photo-lightbox';
+import { RatingModal } from '@/components/trips/rating-modal';
 import { downloadTripForOffline, isDownloaded as checkDownloaded, removeOfflineTripPack } from '@/lib/offline-trips';
 import type { Trip } from '@/types';
 
@@ -51,6 +52,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
   const [groupOpen, setGroupOpen] = useState(false);
   const [groupTab, setGroupTab] = useState<'budget' | 'items' | 'chat' | 'members'>('budget');
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [ratingOpen, setRatingOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [offlineStatus, setOfflineStatus] = useState<'none' | 'downloading' | 'downloaded'>('none');
   const [downloadProgress, setDownloadProgress] = useState('');
@@ -367,6 +369,9 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
           <button onClick={() => setBudgetOpen(true)} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             💰 Budget
           </button>
+          <button onClick={() => setRatingOpen(true)} className={`py-[5px] px-3 rounded-lg text-xs cursor-pointer ${t.rating ? 'bg-gold/10 text-gold' : 'bg-teal/10 text-teal'}`}>
+            ⭐ Rate{t.rating ? ` (${t.rating}★)` : ''}
+          </button>
           <button onClick={() => setInviteOpen(true)} className="py-[5px] px-3 rounded-lg bg-teal/10 text-teal text-xs cursor-pointer">
             👥 Invite
           </button>
@@ -411,6 +416,7 @@ export function TripCard({ trip: t, onEdit, onRoute, onPacking }: { trip: Trip; 
 
       <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} trip={t} />
       <BudgetModal open={budgetOpen} onOpenChange={setBudgetOpen} trip={t} />
+      <RatingModal open={ratingOpen} onOpenChange={setRatingOpen} trip={t} />
       {groupOpen && <GroupTripPanel trip={t} onClose={() => setGroupOpen(false)} initialTab={groupTab} />}
       {lightboxIdx !== null && hasPhotos && (
         <PhotoLightbox photos={photos} initialIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
