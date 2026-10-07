@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LangProvider } from "@/components/language-provider";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -60,7 +61,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}` }} />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><LangProvider>{children}</LangProvider></ThemeProvider>
       </body>
     </html>
   );

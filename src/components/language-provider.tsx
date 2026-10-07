@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { UI_STRINGS, PRESET_LANGS } from '@/lib/i18n';
-import { useStore } from '@/lib/store';
 
 interface LangContextType {
   lang: string;
@@ -64,9 +63,8 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
 
 // ── Language Picker Modal ──
 
-export function LanguageModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function LanguageModal({ open, onOpenChange, apiKey }: { open: boolean; onOpenChange: (open: boolean) => void; apiKey?: string }) {
   const { lang, setLang, translations, setTranslations, translating, setTranslating } = useLang();
-  const { anthropicKey } = useStore();
   const [customLang, setCustomLang] = useState('');
   const [error, setError] = useState('');
 
@@ -96,7 +94,7 @@ export function LanguageModal({ open, onOpenChange }: { open: boolean; onOpenCha
         .map(([k, v]) => `${k}: ${v}`).join('\n');
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (anthropicKey) headers['x-api-key'] = anthropicKey;
+      if (apiKey) headers['x-api-key'] = apiKey;
 
       const response = await fetch('/api/claude', {
         method: 'POST',

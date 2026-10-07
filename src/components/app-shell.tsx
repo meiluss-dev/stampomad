@@ -5,14 +5,13 @@ import { Navbar } from '@/components/navbar';
 import { ToastProvider } from '@/components/ui/toast';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
 import { SaveErrorToast } from '@/components/save-error-toast';
-import { LangProvider } from '@/components/language-provider';
+
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
 import type { User } from '@supabase/supabase-js';
 
 export function AppShell({ children, initialUser }: { children: React.ReactNode; initialUser: User }) {
   return (
     <StoreProvider initialUser={initialUser}>
-      <LangProvider>
         <ToastProvider>
           <Navbar />
           <main className="max-w-[1200px] mx-auto px-4 sm:px-8 py-6 sm:py-8">
@@ -22,7 +21,6 @@ export function AppShell({ children, initialUser }: { children: React.ReactNode;
           <SaveErrorToast />
           <PWAInstallPrompt />
         </ToastProvider>
-      </LangProvider>
     </StoreProvider>
   );
 }

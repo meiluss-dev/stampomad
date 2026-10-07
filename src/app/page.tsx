@@ -5,6 +5,7 @@ import { RecentTrips } from '@/components/landing/recent-trips';
 import { Testimonials } from '@/components/landing/testimonials';
 import { WebAppJsonLd } from '@/components/seo/json-ld';
 import { StampLogo } from '@/components/stamp-logo';
+import { LandingNav } from '@/components/landing/landing-nav';
 
 export const revalidate = 3600; // Revalidate every hour (ISR)
 
@@ -23,41 +24,7 @@ export default async function LandingPage() {
         operatingSystem: 'Web, Android, iOS',
         offers: { price: '0', priceCurrency: 'USD' },
       }} />
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.08] bg-bg/80 backdrop-blur-md sticky top-0 z-50">
-        <StampLogo size="md" />
-        <div className="flex items-center gap-3">
-          <Link
-            href="/explore"
-            className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
-          >
-            Explore
-          </Link>
-          {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/auth"
-                className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/auth"
-                className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
-              >
-                Get started
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <LandingNav isLoggedIn={isLoggedIn} />
 
       {/* Hero with Globe */}
       <section className="relative overflow-hidden">

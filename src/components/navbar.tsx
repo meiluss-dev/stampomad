@@ -25,7 +25,7 @@ const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || '';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, trips, visitedCountries, profile, pendingOps, isOffline, signOut } = useStore();
+  const { user, trips, visitedCountries, profile, pendingOps, isOffline, signOut, anthropicKey } = useStore();
   const isAdmin = user?.id === ADMIN_ID;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -229,7 +229,7 @@ export function Navbar() {
 
       <ApiKeysModal open={apiKeysOpen} onOpenChange={setApiKeysOpen} />
       <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
-      <LanguageModal open={langOpen} onOpenChange={setLangOpen} />
+      <LanguageModal open={langOpen} onOpenChange={setLangOpen} apiKey={anthropicKey} />
       <AppReviewModal open={reviewOpen} onClose={() => setReviewOpen(false)} displayName={profile?.displayName || profile?.username || ''} />
     </>
   );
