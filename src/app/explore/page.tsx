@@ -80,7 +80,7 @@ function TripCard({ trip }: { trip: Trip }) {
       className="group bg-bg2 border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/30 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
     >
       {/* Cover image or gradient fallback */}
-      <div className="h-[140px] relative overflow-hidden">
+      <div className="aspect-[4/3] relative overflow-hidden">
         {trip.coverPhoto ? (
           <img
             src={trip.coverPhoto}
