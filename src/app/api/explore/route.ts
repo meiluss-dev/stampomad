@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   // --- Published trips with filters ---
   let query = supabase
     .from('trips')
-    .select('id, name, code, continent, emoji, start_date, end_date, days, cities, user_id, created_at, cover_url', { count: 'exact' })
+    .select('id, name, code, continent, emoji, start_date, end_date, days, cities, user_id, created_at, cover_url, rating', { count: 'exact' })
     .eq('published', true)
     .eq('quick_pin', false);
 
@@ -95,6 +95,7 @@ export async function GET(req: NextRequest) {
       displayName: profile?.display_name || null,
       avatarUrl: profile?.avatar_url || null,
       coverPhoto: photoMap.get(t.id) || t.cover_url || null,
+      rating: t.rating || 0,
     };
   });
 

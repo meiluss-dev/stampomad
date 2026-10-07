@@ -20,6 +20,7 @@ interface Trip {
   displayName: string | null;
   avatarUrl: string | null;
   coverPhoto: string | null;
+  rating: number;
 }
 
 interface LeaderboardEntry {
@@ -76,8 +77,9 @@ function TripCard({ trip }: { trip: Trip }) {
   const today = new Date().toISOString().slice(0, 10);
   const isUpcoming = trip.start && trip.start > today;
   const isActive = trip.start && trip.end && trip.start <= today && trip.end >= today;
-  const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : null;
-  const stampColor = isActive ? 'stamp-green' : 'teal';
+  const isPast = trip.end && trip.end < today;
+  const stampLabel = isActive ? 'Traveling Now' : isUpcoming ? 'Upcoming' : (isPast && trip.rating > 0) ? '★'.repeat(trip.rating) : null;
+  const stampColor = isActive ? 'stamp-green' : isUpcoming ? 'teal' : 'gold';
 
   return (
     <Link
