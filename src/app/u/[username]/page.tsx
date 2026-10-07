@@ -126,7 +126,7 @@ export default async function PublicProfilePage({ params }: Props) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
             {[
               { label: 'Countries', value: globalStats.countries, icon: '🌍' },
-              { label: 'Trips', value: realTrips.length, icon: '✈️' },
+              { label: 'Public Trips', value: realTrips.length, icon: '✈️' },
               { label: 'Days abroad', value: realTrips.reduce((a, t) => a + t.days, 0), icon: '📅' },
               { label: 'Journal entries', value: realTrips.reduce((a, t) => a + (t.journal?.length || 0), 0), icon: '📝' },
             ].map(s => (
