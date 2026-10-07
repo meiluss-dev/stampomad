@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { countryNames } from '@/lib/countries';
+import { useLang } from '@/components/language-provider';
 
 interface PublicTrip {
   id: number;
@@ -153,6 +154,7 @@ function TripCard({ trip }: { trip: PublicTrip }) {
 }
 
 export function RecentTrips() {
+  const { t } = useLang();
   const [trips, setTrips] = useState<PublicTrip[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -171,9 +173,9 @@ export function RecentTrips() {
     <section className="py-16 md:py-24 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10">
-          <div className="text-xs text-text-muted uppercase tracking-[3px] mb-3">From our travelers</div>
+          <div className="text-xs text-text-muted uppercase tracking-[3px] mb-3">{t('landing_from_travelers')}</div>
           <h2 className="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl">
-            Recent <span className="text-gold">adventures</span>
+            {t('landing_recent_adventures')}
           </h2>
         </div>
 

@@ -8,7 +8,7 @@ import { useLang, LanguageModal } from '@/components/language-provider';
 export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const { lang } = useLang();
+  const { lang, t } = useLang();
 
   return (
     <>
@@ -30,14 +30,14 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             href="/explore"
             className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
           >
-            Explore
+            {t('landing_explore')}
           </Link>
           {isLoggedIn ? (
             <Link
               href="/dashboard"
               className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
             >
-              Go to Dashboard
+              {t('landing_go_dashboard')}
             </Link>
           ) : (
             <>
@@ -45,13 +45,13 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 href="/auth"
                 className="px-5 py-2 text-sm text-text-muted hover:text-text transition-colors"
               >
-                Sign in
+                {t('landing_sign_in')}
               </Link>
               <Link
                 href="/auth"
                 className="px-5 py-2.5 bg-gold text-bg rounded-xl text-sm font-medium hover:opacity-90 transition-all"
               >
-                Get started
+                {t('landing_get_started')}
               </Link>
             </>
           )}
@@ -64,14 +64,14 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
               href="/dashboard"
               className="px-3.5 py-2 bg-gold text-bg rounded-xl text-xs font-medium hover:opacity-90 transition-all"
             >
-              Dashboard
+              {t('landing_dashboard')}
             </Link>
           ) : (
             <Link
               href="/auth"
               className="px-3.5 py-2 bg-gold text-bg rounded-xl text-xs font-medium hover:opacity-90 transition-all"
             >
-              Get started
+              {t('landing_get_started')}
             </Link>
           )}
           <button
@@ -93,7 +93,7 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             onClick={() => setMenuOpen(false)}
             className="p-3.5 px-4 rounded-xl text-base font-medium text-text hover:bg-bg3"
           >
-            🌍 Explore
+            🌍 {t('landing_explore')}
           </Link>
           {isLoggedIn ? (
             <Link
@@ -101,7 +101,7 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
               onClick={() => setMenuOpen(false)}
               className="p-3.5 px-4 rounded-xl text-base font-medium text-gold hover:bg-bg3"
             >
-              📊 Dashboard
+              📊 {t('landing_dashboard')}
             </Link>
           ) : (
             <>
@@ -110,31 +110,31 @@ export function LandingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 onClick={() => setMenuOpen(false)}
                 className="p-3.5 px-4 rounded-xl text-base font-medium text-text hover:bg-bg3"
               >
-                🔑 Sign in
+                🔑 {t('landing_sign_in')}
               </Link>
               <Link
                 href="/auth"
                 onClick={() => setMenuOpen(false)}
                 className="p-3.5 px-4 rounded-xl text-base font-medium bg-gold text-bg rounded-xl text-center"
               >
-                Get started free
+                {t('landing_get_started_free')}
               </Link>
             </>
           )}
           <div className="border-t border-white/[0.08] mt-3 pt-3">
-            <div className="text-[11px] text-text-muted uppercase tracking-wider px-4 mb-2">More</div>
+            <div className="text-[11px] text-text-muted uppercase tracking-wider px-4 mb-2">{t('landing_more')}</div>
             <button
               onClick={() => { setMenuOpen(false); setLangOpen(true); }}
               className="p-3.5 px-4 rounded-xl text-base font-medium text-text-muted hover:bg-bg3 w-full text-left bg-transparent border-none cursor-pointer"
             >
-              🌐 Language <span className="text-[13px] text-text-muted ml-1">{lang.toUpperCase()}</span>
+              🌐 {t('landing_language')} <span className="text-[13px] text-text-muted ml-1">{lang.toUpperCase()}</span>
             </button>
             <Link
               href="/help"
               onClick={() => setMenuOpen(false)}
               className="p-3.5 px-4 rounded-xl text-base font-medium text-text-muted hover:bg-bg3 block"
             >
-              📚 Help & FAQ
+              📚 {t('landing_help')}
             </Link>
           </div>
         </div>

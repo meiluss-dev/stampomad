@@ -101,7 +101,7 @@ export function LanguageModal({ open, onOpenChange, apiKey }: { open: boolean; o
         headers,
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4000,
+          max_tokens: 8192,
           messages: [{
             role: 'user',
             content: `Translate these UI strings for a travel app into ${langName}. Return ONLY a JSON object with the same keys and translated values. No markdown, no explanation, just the JSON. Keep emoji unchanged.\n\n${stringsToTranslate}`
