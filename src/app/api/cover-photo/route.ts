@@ -6,25 +6,36 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(req: NextRequest) {
-  const key = process.env.UNSPLASH_ACCESS_KEY;
-  if (!key) return NextResponse.json({ error: 'No Unsplash key configured' }, { status: 500 });
+async function fetchWikimediaImage(query: string): Promise<string | null> {
+  const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`;
 
+  const res = await fetch(searchUrl);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const pages = data.query?.pages;
+  if (!pages) return null;
+
+  for (const page of Object.values(pages) as any[]) {
+    const info = page.imageinfo?.[0];
+    if (!info?.thumburl) continue;
+    const mime = info.extmetadata?.MIMEType?.value || '';
+    if (mime && !mime.startsWith('image/')) continue;
+    const url = info.thumburl as string;
+    if (url.endsWith('.svg') || url.includes('.ogg') || url.includes('.ogv')) continue;
+    return url;
+  }
+  return null;
+}
+
+export async function POST(req: NextRequest) {
   const { tripId, userId, city, country } = await req.json();
   if (!tripId || !userId) return NextResponse.json({ error: 'Missing tripId or userId' }, { status: 400 });
 
-  const query = city || country || 'travel';
-  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query + ' landmark')}&orientation=landscape&per_page=1&client_id=${key}`;
-
   try {
-    const res = await fetch(url);
-    if (!res.ok) return NextResponse.json({ error: 'Unsplash API error' }, { status: 502 });
-
-    const data = await res.json();
-    const photo = data.results?.[0];
-    if (!photo) return NextResponse.json({ coverUrl: null });
-
-    const coverUrl = photo.urls?.regular || photo.urls?.small;
+    // Try city first, then country
+    let coverUrl = await fetchWikimediaImage(`${city || country} landmark`);
+    if (!coverUrl && city) coverUrl = await fetchWikimediaImage(`${country} landmark`);
     if (!coverUrl) return NextResponse.json({ coverUrl: null });
 
     await supabase

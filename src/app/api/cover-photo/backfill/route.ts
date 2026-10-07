@@ -6,10 +6,29 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(req: NextRequest) {
-  const key = process.env.UNSPLASH_ACCESS_KEY;
-  if (!key) return NextResponse.json({ error: 'No Unsplash key configured' }, { status: 500 });
+async function fetchWikimediaImage(query: string): Promise<string | null> {
+  const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`;
 
+  const res = await fetch(searchUrl);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const pages = data.query?.pages;
+  if (!pages) return null;
+
+  for (const page of Object.values(pages) as any[]) {
+    const info = page.imageinfo?.[0];
+    if (!info?.thumburl) continue;
+    const mime = info.extmetadata?.MIMEType?.value || '';
+    if (mime && !mime.startsWith('image/')) continue;
+    const url = info.thumburl as string;
+    if (url.endsWith('.svg') || url.includes('.ogg') || url.includes('.ogv')) continue;
+    return url;
+  }
+  return null;
+}
+
+export async function POST(req: NextRequest) {
   const { userId } = await req.json();
   if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
 
@@ -33,14 +52,10 @@ export async function POST(req: NextRequest) {
   let filled = 0;
   for (const t of needsCover) {
     const query = t.cities?.split(',')[0]?.trim() || t.name;
-    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query + ' landmark')}&orientation=landscape&per_page=1&client_id=${key}`;
 
     try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = await res.json();
-      const photo = data.results?.[0];
-      const coverUrl = photo?.urls?.regular || photo?.urls?.small;
+      let coverUrl = await fetchWikimediaImage(`${query} landmark`);
+      if (!coverUrl) coverUrl = await fetchWikimediaImage(`${t.name} landmark`);
       if (!coverUrl) continue;
 
       await supabase
@@ -50,8 +65,8 @@ export async function POST(req: NextRequest) {
         .eq('user_id', userId);
       filled++;
 
-      // Respect Unsplash rate limit (50/hr free tier)
-      await new Promise(r => setTimeout(r, 1200));
+      // Small delay to be polite to Wikimedia
+      await new Promise(r => setTimeout(r, 500));
     } catch {
       continue;
     }
